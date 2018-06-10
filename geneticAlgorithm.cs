@@ -20,11 +20,11 @@ namespace RouteNavigation
         static public int tournamentWinnerCount = 1;
         static public int breedersCount = 16;
         static public int offSpringPoolSize = 4;
-        static public double crossoverProbability = .6;
+        static public double crossoverProbability = .4;
 
         static public double elitismRatio = .005;
         static public double mutationProbability = .2;
-        static public int mutationAlleleMax = 10;
+        static public int mutationAlleleMax = 20;
         static public double growthDecayExponent = 1;
         static public bool toggleIterationsExponent = true;
         protected int currentIteration = 0;
@@ -73,6 +73,15 @@ namespace RouteNavigation
             return true;
         }
 
+        public void detectDuplicates (List<RouteCalculator> calcs)
+        {
+            List<RouteCalculator> duplicateCalcs = calcs.GroupBy(c => c.GetHashCode()).Where(g => g.Skip(1).Any()).SelectMany(c => c).ToList();
+            int duplicatesCount = duplicateCalcs.Count;
+
+            Logging.Logger.LogMessage("There are  " + duplicateCalcs.Count + " Duplicates", "INFO");
+        }
+
+
         public void calculateBestRoutes()
         {
             List<List<Location>> startingPopulation = initializePopulation(populationSize);
@@ -117,14 +126,16 @@ namespace RouteNavigation
 
         public List<RouteCalculator> GeneticAlgorithmFitness(List<RouteCalculator> calcs)
         {
-            List<RouteCalculator> elites = new List<RouteCalculator>();
-            calcs.SortByDistanceAsc();
+
+
             double iterationsDouble = iterations;
             int eliteCount = Convert.ToInt32(Math.Round(elitismRatio * calcs.Count()));
-            if (eliteCount < 1)
+            if (eliteCount < 1 && elitismRatio > 0)
                 eliteCount = 1;
-
+            calcs.SortByDistanceAsc();
+            List<RouteCalculator> elites = new List<RouteCalculator>();
             elites.AddRange(calcs.Take(eliteCount));
+            calcs.RemoveRange(0, eliteCount);
             Logging.Logger.LogMessage(String.Format("Preserving {0} elites", eliteCount),"DEBUG");
 
             List<RouteCalculator> breeders = geneticSelection(calcs);
@@ -140,8 +151,6 @@ namespace RouteNavigation
             offspring = geneticMutation(offspring);
 
             calcs = threadCalculations(offspring, calcs);
-
-
 
             /*List<List<Location>> randomSampleMutate = new List<List<Location>>();
             int mutationCount = Convert.ToInt32(Math.Round(mutationProbability * decayFunction() * calcs.Count));
@@ -167,7 +176,7 @@ namespace RouteNavigation
             //Logging.Logger.LogMessage(String.Format("{0} elites preserved.", elites.Count));
             //remove the worst performers relative to the mutated offspring count and the elite count that was preserved
             calcs.SortByDistanceDesc();
-            for (int x = 0; x < elites.Count + offspring.Count; x++)
+            for (int x = 0; x < offspring.Count; x++)
                 calcs.Remove(calcs.First());
 
             Logging.Logger.LogMessage(String.Format("Pool size is: {0}", calcs.Count),"DEBUG");
