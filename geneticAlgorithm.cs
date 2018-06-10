@@ -13,21 +13,19 @@ namespace RouteNavigation
 {
     public class GeneticAlgorithm
     {
-        static protected int iterations = 2500;
+        static protected int iterations = 1000;
         static public int populationSize = 5000;
         static public int neighborCount = 60;
-        static public int tournamentSize = 20;
-        //static public int selectionProbability = 1;
+        static public int tournamentSize = 150;
         static public int tournamentWinnerCount = 1;
-        static public int breedersCount = 8;
-        static public int offSpringPoolSize = 2;
-        static public double crossoverProbability = .35;
-        //static public double crossoverRatio = .4;
-        //need to actually implement elitism
-        static public double elitismRatio = .01;
-        static public double mutationProbability = .02;
-        static public double mutationRate = .01;
-        static public double growthDecayExponent = 1.25;
+        static public int breedersCount = 16;
+        static public int offSpringPoolSize = 4;
+        static public double crossoverProbability = .6;
+
+        static public double elitismRatio = .005;
+        static public double mutationProbability = .2;
+        static public int mutationAlleleMax = 10;
+        static public double growthDecayExponent = 1;
         static public bool toggleIterationsExponent = true;
         protected int currentIteration = 0;
 
@@ -37,7 +35,7 @@ namespace RouteNavigation
         protected List<Vehicle> allVehicles = dataAccess.GetVehicles();
         static object lockObject = new object();
         RouteCalculator generalCalc = new RouteCalculator();
-        private Random rng = new Random(1050);
+        private Random rng = new Random();
 
         public List<List<Location>> initializePopulation(int populationSize)
         {
@@ -251,13 +249,13 @@ namespace RouteNavigation
                     breeders = breedersoriginal.ToList();
                 }
 
-                //distribute the next selected index with a quadratic bias towards lower distance values as sorted above.  That is, put bias of reproduction towards strong breeders.
-                int randomIndex = Convert.ToInt32(Math.Floor((rng.Next(breeders.Count) + 1) * (Math.Pow(rng.NextDouble(), 2))));
+                //distribute the next selected index with a growth bias towards lower distance values as sorted above.  That is, put bias of reproduction towards strong breeders.
+                int randomIndex = Convert.ToInt32(Math.Floor((rng.Next(breeders.Count)) * (Math.Pow(rng.NextDouble(), growthFunction()))));
                 //int randomIndex = rng.Next(breeders.Count);
                 RouteCalculator parentA = breeders[randomIndex];
                 breeders.Remove(parentA);
                 //randomIndex = rng.Next(breeders.Count);
-                randomIndex = Convert.ToInt32(Math.Floor((rng.Next(breeders.Count) + 1) * (Math.Pow(rng.NextDouble(), 2))));
+                randomIndex = Convert.ToInt32(Math.Floor((rng.Next(breeders.Count)) * (Math.Pow(rng.NextDouble(), growthFunction()))));
                 RouteCalculator parentB = breeders[randomIndex];
                 breeders.Remove(parentB);
 
@@ -460,10 +458,9 @@ namespace RouteNavigation
                 foreach (List<Location> mutateLocations in mutateLocationsList)
                 {
                     //next couple lines effectively ensure a mutation gene count of at least 1
-                    int upperBound = Convert.ToInt32(Math.Round(decayFunction() * mutationRate * mutateLocations.Count));
-                    if (upperBound < 1)
-                        upperBound = 1;
-                    int mutationGeneQuantity = rng.Next(1, upperBound);
+                    int upperBound = Convert.ToInt32(Math.Round(decayFunction() * mutationAlleleMax));
+
+                    int mutationGeneQuantity = rng.Next(1, Math.Max(1,upperBound));
                     Logger.LogMessage(String.Format("mutation gene quantity is {0}", mutationGeneQuantity), "DEBUG");
                     for (int y = 0; y < mutationGeneQuantity; y++)
                     {
@@ -486,7 +483,6 @@ namespace RouteNavigation
                     }
                 }
             }
-
 
             Logger.LogMessage(string.Format("Returning {0} mutated locations", mutateLocationsList.Count), "DEBUG");
             return mutateLocationsList;
