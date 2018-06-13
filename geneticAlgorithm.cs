@@ -13,7 +13,7 @@ namespace RouteNavigation
 {
     public class GeneticAlgorithm
     {
-        static protected int iterations = 200;
+        static protected int iterations = 20;
         static public int populationSize = 200;
         static public int neighborCount = 60;
         static public int tournamentSize = 10;
@@ -24,7 +24,7 @@ namespace RouteNavigation
 
         static public double elitismRatio = .005;
         static public double mutationProbability = .1;
-        static public int mutationAlleleMax = 8;
+        static public int mutationAlleleMax = 4;
         static public double growthDecayExponent = 1;
         static public bool toggleIterationsExponent = true;
         protected int currentIteration = 0;

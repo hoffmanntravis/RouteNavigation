@@ -37,10 +37,10 @@
                             <b>Date</b>
                         </td>
                         <td id="td4" runat="server">
-                            <b>Origin</b>
+                            <b>Average Location Distance (miles)</b>
                         </td>
                         <td id="td5" runat="server">
-                            <b>Destination</b>
+                            <b>Total Route Length (miles)</b>
                         </td>
                         <td id="td6" runat="server">
                             <b>Vehicle Id</b>
@@ -75,10 +75,10 @@
                         <asp:Label ID="label2" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label3" runat="server" Text='<%# Eval("origin_location_address") %>'></asp:Label>
+                        <asp:Label ID="label3" runat="server" Text='<%# Eval("average_location_distance_miles") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label4" runat="server" Text='<%# Eval("destination_location_address") %>'></asp:Label>
+                        <asp:Label ID="label4" runat="server" Text='<%# Eval("distance_miles") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label5" runat="server" Text='<%# Eval("vehicle_id") %>'></asp:Label>
@@ -110,10 +110,10 @@
                     <asp:Label ID="label2" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label3" runat="server" Text='<%# Eval("origin_location_address") %>'></asp:Label>
+                    <asp:Label ID="label3" runat="server" Text='<%# Eval("average_location_distance_miles") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label4" runat="server" Text='<%# Eval("destination_location_address") %>'></asp:Label>
+                    <asp:Label ID="label4" runat="server" Text='<%# Eval("distance_miles") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label5" runat="server" Text='<%# Eval("vehicle_id") %>'></asp:Label>

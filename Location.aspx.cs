@@ -329,25 +329,10 @@ namespace RouteNavigation
             columnName = lstSearchFilters.SelectedValue;
             filterString = TxtSearchFilter.Text;
             dataAccess.GetLocationData(dataTable, columnName, filterString);
-            RoundDataTable(dataTable, 2);
+            extensions.RoundDataTable(dataTable, 2);
             LocationsListView.DataSource = dataTable;
             LocationsListView.ItemPlaceholderID = "itemPlaceHolder";
             LocationsListView.DataBind();
-        }
-
-        protected void RoundDataTable(DataTable dataTable, int roundInt = 2)
-        {
-            foreach (DataColumn dc in dataTable.Columns)
-            {
-                if (dc.DataType.Equals(typeof(double)))
-                {
-                    foreach (DataRow dr in dataTable.Rows)
-                    {
-                        if (dr[dc] != DBNull.Value)
-                            dr[dc] = Math.Round(Convert.ToDouble(dr[dc]), roundInt);
-                    }
-                }
-            }
         }
 
         protected string purifyCsvDataForPostgreImport(string[] expectedHeaders, string Content, char delimiter = ',')

@@ -17,6 +17,7 @@ namespace RouteNavigation
         public string mapsUrl;
         public Vehicle assignedVehicle;
         public List<Location> allLocations = new List<Location>();
+        public double averageLocationDistance;
 
         public Route(Location o, Location d)
         {

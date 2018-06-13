@@ -17,7 +17,7 @@ namespace RouteNavigation
         protected GeneticAlgorithm ga = new GeneticAlgorithm();
         protected DataAccess dataAccess;
         protected RouteCalculator calc;
-        protected DataTable table;
+        protected DataTable dataTable;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
@@ -78,8 +78,9 @@ namespace RouteNavigation
 
         protected void BindGridView()
         {
-            table = dataAccess.GetRouteInformationData();
-            RoutesListView.DataSource = table;
+            dataTable = dataAccess.GetRouteInformationData();
+            RoutesListView.DataSource = dataTable;
+            extensions.RoundDataTable(dataTable, 2);
             RoutesListView.ItemPlaceholderID = "itemPlaceHolder";
             RoutesListView.DataBind();
         }

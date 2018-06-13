@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Security.Cryptography;
+using System.Data;
+
 namespace RouteNavigation
 {
     public static class extensions
@@ -32,6 +34,21 @@ namespace RouteNavigation
         {
             list.Sort((x, y) => y.metadata.routesLengthMiles.CompareTo(x.metadata.routesLengthMiles));
             return list;
+        }
+
+        public static void RoundDataTable(DataTable dataTable, int roundInt = 2)
+        {
+            foreach (DataColumn dc in dataTable.Columns)
+            {
+                if (dc.DataType.Equals(typeof(double)))
+                {
+                    foreach (DataRow dr in dataTable.Rows)
+                    {
+                        if (dr[dc] != DBNull.Value)
+                            dr[dc] = Math.Round(Convert.ToDouble(dr[dc]), roundInt);
+                    }
+                }
+            }
         }
 
     }

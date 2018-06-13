@@ -41,9 +41,15 @@
                             <b>Total Time</b>
                         </td>
                         <td id="td7" runat="server">
-                            <b>Process Start Time</b>
+                            <b>Average Route Distance Miles</b>
                         </td>
                         <td id="td8" runat="server">
+                            <b>Route Distance Std Dev</b>
+                        </td>
+                        <td id="td9" runat="server">
+                            <b>Process Start Time</b>
+                        </td>
+                        <td id="td10" runat="server">
                             <b>Process End Time</b>
                         </td>
                         <td id="itemPlaceHolder" runat="server"></td>
@@ -84,10 +90,16 @@
                         <asp:Label ID="label5" runat="server" Text='<%# Eval("total_time") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label6" runat="server" Text='<%# Eval("date_started") %>'></asp:Label>
+                        <asp:Label ID="label6" runat="server" Text='<%# Eval("average_route_distance_miles") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label7" runat="server" Text='<%# Eval("date_completed") %>'></asp:Label>
+                        <asp:Label ID="label7" runat="server" Text='<%# Eval("route_distance_std_dev") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="label8" runat="server" Text='<%# Eval("date_started") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="label9" runat="server" Text='<%# Eval("date_completed") %>'></asp:Label>
                     </td>
                 </tr>
             </div>
@@ -112,11 +124,17 @@
                     <td>
                         <asp:Label ID="label5" runat="server" Text='<%# Eval("total_time") %>'></asp:Label>
                     </td>
-                    <td>
-                        <asp:Label ID="label6" runat="server" Text='<%# Eval("date_started") %>'></asp:Label>
+                   <td>
+                        <asp:Label ID="label6" runat="server" Text='<%# Eval("average_route_distance_miles") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label7" runat="server" Text='<%# Eval("date_completed") %>'></asp:Label>
+                        <asp:Label ID="label7" runat="server" Text='<%# Eval("route_distance_std_dev") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="label8" runat="server" Text='<%# Eval("date_started") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="label9" runat="server" Text='<%# Eval("date_completed") %>'></asp:Label>
                     </td>
             </tr>
         </SelectedItemTemplate>

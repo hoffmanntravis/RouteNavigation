@@ -56,7 +56,7 @@ namespace RouteNavigation
             }
         }
 
-        public void UpdateRouteBatchMetadata(int id, int locationsIntakeCount, int locationsProcessedCount, int locationsOrphanedCount, double totalDistanceMiles, TimeSpan totalTime)
+        public void UpdateRouteBatchMetadata(int id, int locationsIntakeCount, int locationsProcessedCount, int locationsOrphanedCount, double totalDistanceMiles, TimeSpan totalTime, double averageRouteDistanceMiles, double averageRouteDistanceStdDev)
         {
             using (NpgsqlCommand cmd = new NpgsqlCommand("update_route_batch_metadata"))
             {
@@ -66,6 +66,8 @@ namespace RouteNavigation
                 cmd.Parameters.AddWithValue("p_locations_orphaned_count", NpgsqlTypes.NpgsqlDbType.Integer, locationsOrphanedCount);
                 cmd.Parameters.AddWithValue("p_total_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, totalDistanceMiles);
                 cmd.Parameters.AddWithValue("p_total_time", NpgsqlTypes.NpgsqlDbType.Interval, totalTime);
+                cmd.Parameters.AddWithValue("p_average_route_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, averageRouteDistanceMiles);
+                cmd.Parameters.AddWithValue("p_route_distance_std_dev", NpgsqlTypes.NpgsqlDbType.Double, averageRouteDistanceStdDev);
                 RunStoredProcedure(cmd);
             }
         }
@@ -657,6 +659,7 @@ namespace RouteNavigation
                         cmd.Parameters.AddWithValue("p_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.distanceMiles);
                         cmd.Parameters.AddWithValue("p_vehicle_id", NpgsqlTypes.NpgsqlDbType.Integer, route.assignedVehicle.id);
                         cmd.Parameters.AddWithValue("p_maps_url", NpgsqlTypes.NpgsqlDbType.Varchar, apiRoute.mapsUrl);
+                        cmd.Parameters.AddWithValue("p_average_location_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.averageLocationDistance);
 
                         RunStoredProcedure(cmd);
                     }
@@ -690,7 +693,7 @@ namespace RouteNavigation
         {
             try
             {
-                UpdateRouteBatchMetadata(batchId, metadata.intakeLocations.Count, metadata.processedLocations.Count, metadata.orphanedLocations.Count, metadata.routesLengthMiles, metadata.routesDuration);
+                UpdateRouteBatchMetadata(batchId, metadata.intakeLocations.Count, metadata.processedLocations.Count, metadata.orphanedLocations.Count, metadata.routesLengthMiles, metadata.routesDuration, metadata.averageRouteDistanceMiles, metadata.averageRouteDistanceStdDev);
             }
             catch (Exception exception)
             {

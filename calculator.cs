@@ -187,6 +187,7 @@ namespace RouteNavigation
 
                 potentialRoute.allLocations.Add(origin);
                 potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations);
+                potentialRoute.averageLocationDistance = calculateAverageLocationDistance(potentialRoute);
                 Logging.Logger.LogMessage("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles, "DEBUG");
                 routes.Add(potentialRoute);
             }
@@ -222,7 +223,9 @@ namespace RouteNavigation
                 metadata.routesLengthMiles += route.distanceMiles;
             }
 
-            metadata.locationsHash = (this.metadata.processedLocations).GetHashCode();
+            metadata.averageRouteDistanceMiles = calculateAverageRouteDistance(routes);
+            metadata.averageRouteDistanceStdDev = calculateRoutesStdDev(routes);
+            //metadata.locationsHash = (this.metadata.processedLocations).GetHashCode();
             metadata.orphanedLocations = allLocations.Where(x => !metadata.processedLocations.Any(y => y.address == x.address)).ToList();
             return routes;
         }
@@ -465,17 +468,36 @@ namespace RouteNavigation
             return route;
         }
 
-        protected static double calculateAverageRouteDistance(Route route)
+        public static double calculateAverageRouteDistance(List<Route> routes)
         {
             double average = 0;
-            List<Location> locations = new List<Location>();
-            locations.AddRange(route.waypoints);
-            locations.Add(route.destination);
-            foreach (Location location in locations)
+            double totalDistance = 0;
+            foreach (Route route in routes)
             {
-
+                totalDistance += route.distanceMiles;
             }
+
+            average = totalDistance / routes.Count;
             return average;
+        }
+
+        public static double calculateAverageLocationDistance(Route route)
+        {
+            double average = route.distanceMiles / route.allLocations.Count;
+            return average;
+        }
+
+        private double calculateRoutesStdDev(List<Route> routes)
+        {
+            List<double> values = new List<double>();
+
+            foreach (Route route in routes)
+            {
+                values.Add(route.distanceMiles);
+            }
+
+            double avg = calculateAverageRouteDistance(routes);
+            return Math.Sqrt(values.Average(v => Math.Pow(v - avg, 2)));
         }
 
         protected bool CheckVehicleCanAcceptMoreLiquid(Vehicle vehicle, Location location)
@@ -523,6 +545,8 @@ namespace RouteNavigation
         {
             public int locationsHash;
             public double routesLengthMiles;
+            public double averageRouteDistanceMiles;
+            public double averageRouteDistanceStdDev;
             public TimeSpan routesDuration;
             public List<Location> intakeLocations = new List<Location>();
             public List<Location> orphanedLocations = new List<Location>();
