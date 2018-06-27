@@ -143,6 +143,8 @@
     <Content Include="Content\Site.css" />
     <Content Include="Content\table.css" />
     <Content Include="Default.aspx" />
+    <Content Include="images\down_arrow.svg" />
+    <Content Include="images\up_arrow.svg" />
     <Content Include="Location.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />

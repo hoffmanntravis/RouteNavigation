@@ -44,9 +44,10 @@
                         <td id="td1" runat="server">
                             <b>id</b>
                         </td>
-                        <td id="tdLocationName" runat="server">
+                        <td id="tdLocationName" runat="server" >
                             <b>Location Name</b>
-                        </td>
+                            <asp:ImageButton id="imgLocationNameSort" CommandName="" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByLocationName_Click" CommandArgument="ID"/>
+                           </td>
                         <td id="tdClientPriority" onclick="tdClientPriority_click" runat="server">
                             <b>Client Priority</b>
                         </td>

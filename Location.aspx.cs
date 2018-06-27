@@ -22,7 +22,7 @@ namespace RouteNavigation
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            //initialize objects in page load since they make a sync calls that fail while the page is still starting up
+            //initialize objects in page load since they make async calls that fail while the page is still starting up
             dataAccess = new DataAccess();
             if (!Page.IsPostBack)
             {
@@ -243,6 +243,30 @@ namespace RouteNavigation
 
         }
 
+        protected void SortByLocationName_Click(object sender, ImageClickEventArgs e)
+        {
+            ImageButton image = (ImageButton)sender;
+            if (ViewState["sortLocationAscending"] == null)
+            {
+                ViewState["sortLocationAscending"] = false;
+                BindGridView("loation_name", null, false);
+                image.ImageUrl = "~/images/down_arrow.svg";
+            }
+            else if(ViewState["sortLocationAscending"].ToString() == Boolean.TrueString)
+            {
+                ViewState["sortLocationAscending"] = false;
+                BindGridView("loation_name", null, false);
+
+                image.ImageUrl = "~/images/down_arrow.svg";
+            }
+            else if (ViewState["sortLocationAscending"].ToString() == Boolean.FalseString)
+            {
+                ViewState["sortLocationAscending"] = true;
+                BindGridView("loation_name", null, true);
+                image.ImageUrl = "~/images/up_arrow.svg";
+            }
+        }
+
         protected void BtnImportCsv_Click(object sender, EventArgs e)
         {
             try
@@ -315,20 +339,20 @@ namespace RouteNavigation
             foreach (Location location in locations)
             {
                 dataAccess.UpdateGpsCoordinates(location.address, location.id);
-                //Google API calls will fail if called to rapidly
+                //Google API calls will fail if called too rapidly
                 Thread.Sleep(2000);
             }
             LocationsListView.EditIndex = -1;
             BindGridView();
         }
 
-
-
-        protected void BindGridView(string columnName = "location_name", string filterString = null)
+        protected void BindGridView(string columnName = "location_name", string filterString = null, bool ascending = true)
         {
+            if (ViewState["sortLocationAscending"] != null)
+                ascending = Boolean.Parse(ViewState["sortLocationAscending"].ToString());
             columnName = lstSearchFilters.SelectedValue;
             filterString = TxtSearchFilter.Text;
-            dataAccess.GetLocationData(dataTable, columnName, filterString);
+            dataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
             extensions.RoundDataTable(dataTable, 2);
             LocationsListView.DataSource = dataTable;
             LocationsListView.ItemPlaceholderID = "itemPlaceHolder";
@@ -369,7 +393,7 @@ namespace RouteNavigation
                 bool lineHasData = false;
                 for (int x = 0; x < row.Length - 1; x++)
                 {
-                    
+
                     if (lineHasData == false)
                     {
                         if (row[x] != null && row[x] != "")
@@ -394,12 +418,5 @@ namespace RouteNavigation
             }
             return updatedContent;
         }
-
-
-
-
-
-
-
     }
 }

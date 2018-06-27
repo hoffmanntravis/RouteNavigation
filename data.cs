@@ -181,7 +181,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable GetLocationData(DataTable dataTable, string columnName = "location_name", string filterString = null)
+        public DataTable GetLocationData(DataTable dataTable, string columnName = "location_name", string filterString = null, bool ascending = true)
         {
             try
             {
@@ -192,7 +192,10 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, filterString);
-
+                if (ascending == false)
+                    cmd.Parameters.AddWithValue("p_ascending", NpgsqlTypes.NpgsqlDbType.Boolean, false);
+                else
+                    cmd.Parameters.AddWithValue("p_ascending", NpgsqlTypes.NpgsqlDbType.Boolean, DBNull.Value);
                 ReadStoredProcedureIntoDataTable(cmd, dataTable);
             }
             catch (Exception exception)
