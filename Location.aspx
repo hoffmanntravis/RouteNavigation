@@ -42,41 +42,52 @@
                 <table runat="server">
                     <tr runat="server">
                         <td id="td1" runat="server">
+                            <asp:ImageButton id="imgLocationIdSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByLocationId_Click" />
                             <b>id</b>
                         </td>
                         <td id="tdLocationName" runat="server" >
                             <b>Location Name</b>
-                            <asp:ImageButton id="imgLocationNameSort" CommandName="" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByLocationName_Click" CommandArgument="ID"/>
+                            <asp:ImageButton id="imgLocationNameSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByLocationName_Click" />
                            </td>
                         <td id="tdClientPriority" onclick="tdClientPriority_click" runat="server">
+                            <asp:ImageButton id="imgClientPrioritySort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByClientPriority_Click" />
                             <b>Client Priority</b>
                         </td>
                         <td id="td3" runat="server">
+                            <asp:ImageButton id="imgAddressSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByAddress_Click" />
                             <b>Address</b>
                         </td>
                         <td id="td4" runat="server">
+                            <asp:ImageButton id="imgPickupIntervalSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByPickupInterval_Click" />
                             <b>Pickup Interval Days</b>
                         </td>
-                        <td id="td5" runat="server">
+                        <td id="td5" runat="server">                            
+                            <asp:ImageButton id="imgLastVisitedSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByLastVisited_Click" />
                             <b>Last Visited</b>
                         </td>
                         <td id="td6" runat="server">
+                            <asp:ImageButton id="imgCapacitySort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByCapacity_Click" />
                             <b>Capacity (glns)</b>
                         </td>
                         <td id="td7" runat="server">
+                            <asp:ImageButton id="imgVehicleSizeSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByVehicleSize_Click" />
                             <b>Vehicle Size</b>
                         </td>
                         <td id="td8" width="100" runat="server">
+                            <asp:ImageButton id="imgContactNameSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByContactName_Click" />
                             <b>Contact Name</b>
                         </td>
                         <td id="td9" width="100" runat="server">
+                            <asp:ImageButton id="imgContactEmailSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByContactEmail_Click" />
                             <b>Contact Email</b>
                         </td>
                         <td id="td10" width="100" runat="server">
+                            <asp:ImageButton id="imgDaysUntilDueSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByDaysUntilDue_Click" />
                             <b>Days Until Due</b>
                         </td>
 
                         <td id="td11" width="100" runat="server">
+                            <asp:ImageButton id="imgMatrixWeightSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" onclick="SortByMatrixWeight_Click" />
                             <b>Matrix Weight</b>
                         </td>
                         <td id="td12" width="100" runat="server">

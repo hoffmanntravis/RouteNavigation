@@ -243,26 +243,89 @@ namespace RouteNavigation
 
         }
 
+
+        protected void SortByLocationId_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "id");
+        }
+
         protected void SortByLocationName_Click(object sender, ImageClickEventArgs e)
         {
+            locationSort(sender, "location_name");
+        }
+
+        protected void SortByClientPriority_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "client_priority");
+        }
+
+        protected void SortByAddress_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "address");
+        }
+
+        protected void SortByPickupInterval_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "pickup_interval_days");
+        }
+
+        protected void SortByLastVisited_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "last_visited");
+        }
+
+        protected void SortByCapacity_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "capacity_gallons");
+        }
+
+        protected void SortByVehicleSize_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "vehicle_size");
+        }
+
+        protected void SortByContactName_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "contact_name");
+        }
+
+        protected void SortByContactEmail_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "contact_email");
+        }
+
+        protected void SortByDaysUntilDue_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "days_until_due");
+        }
+
+        protected void SortByMatrixWeight_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "matrix_weight");
+        }
+
+        protected void locationSort(object sender, string sortProperty)
+        {
+            string viewStatePropertyName = "sortLocation" + sortProperty;
+
             ImageButton image = (ImageButton)sender;
-            if (ViewState["sortLocationAscending"] == null)
+            if (ViewState[viewStatePropertyName] == null)
             {
-                ViewState["sortLocationAscending"] = false;
-                BindGridView("loation_name", null, false);
+                ViewState[viewStatePropertyName] = false;
+                BindGridView(sortProperty, null, false);
                 image.ImageUrl = "~/images/down_arrow.svg";
             }
-            else if(ViewState["sortLocationAscending"].ToString() == Boolean.TrueString)
+            else if (ViewState[viewStatePropertyName].ToString() == Boolean.TrueString)
             {
-                ViewState["sortLocationAscending"] = false;
-                BindGridView("loation_name", null, false);
+                ViewState[viewStatePropertyName] = false;
+                BindGridView(sortProperty, null, false);
 
                 image.ImageUrl = "~/images/down_arrow.svg";
             }
-            else if (ViewState["sortLocationAscending"].ToString() == Boolean.FalseString)
+            else if (ViewState[viewStatePropertyName].ToString() == Boolean.FalseString)
             {
-                ViewState["sortLocationAscending"] = true;
-                BindGridView("loation_name", null, true);
+                ViewState[viewStatePropertyName] = true;
+                BindGridView(sortProperty, null, true);
                 image.ImageUrl = "~/images/up_arrow.svg";
             }
         }
@@ -348,8 +411,8 @@ namespace RouteNavigation
 
         protected void BindGridView(string columnName = "location_name", string filterString = null, bool ascending = true)
         {
-            if (ViewState["sortLocationAscending"] != null)
-                ascending = Boolean.Parse(ViewState["sortLocationAscending"].ToString());
+            //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
+            if (columnName == null)
             columnName = lstSearchFilters.SelectedValue;
             filterString = TxtSearchFilter.Text;
             dataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
