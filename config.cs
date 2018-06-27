@@ -49,6 +49,8 @@ namespace RouteNavigation
         public double oilPickupAverageDurationMinutes = 30;
         public double greasePickupAverageDurationMinutes = 30;
         public int minimDaysUntilPickup = 0;
+        public double routeDistanceMaxMiles = 50;
+        public double nearbyLocationDistance = 20;
 
         protected void SetOriginLocation(int id)
         {

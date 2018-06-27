@@ -344,6 +344,8 @@ namespace RouteNavigation
                     config.matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
                 if (row["maximum_days_overdue"] != DBNull.Value)
                     config.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
+                if (row["route_distance_max_miles"] != DBNull.Value)
+                    config.Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
             }
 
             foreach (DataRow row in features.Rows)

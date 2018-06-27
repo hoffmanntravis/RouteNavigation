@@ -34,12 +34,12 @@ namespace RouteNavigation
             txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
             txtMinimumDaysUntilPickup.Text = Config.Calculation.minimDaysUntilPickup.ToString();
             txtRouteMaxHours.Text = Config.Calculation.routeMaxHours.ToString();
+            txtRouteDistanceMaxMiles.Text = Config.Calculation.routeDistanceMaxMiles.ToString();
             txtOriginLocationId.Text = Config.Calculation.OriginLocationId.ToString();
             txtMatrixOverDueMultiplier.Text = Config.matrix.overDueMultiplier.ToString();
             txtMatrixDaysUntilDueExponent.Text = Config.matrix.daysUntilDueExponent.ToString();
             txtMatrixDistanceFromSource.Text = Config.matrix.distanceFromSourceMultiplier.ToString();
             txtMatrixPriorityMultiplier.Text = Config.matrix.priorityMultiplier.ToString();
-            txtMaximumDaysOverdue.Text = Config.maximumDaysOverdue.ToString();
 
             if (Calculation.origin != null)
             {
@@ -89,14 +89,14 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_current_fill_level_error_margin", NpgsqlTypes.NpgsqlDbType.Double, txtCurrentFillLevelErrorMargin.Text);
                 if (txtRouteMaxHours.Text != null && txtRouteMaxHours.Text != "")
                     cmd.Parameters.AddWithValue("p_route_max_hours", NpgsqlTypes.NpgsqlDbType.Double, txtRouteMaxHours.Text);
+                if (txtRouteDistanceMaxMiles.Text != null && txtRouteDistanceMaxMiles.Text != "")
+                    cmd.Parameters.AddWithValue("p_route_distance_max_miles", NpgsqlTypes.NpgsqlDbType.Double, txtRouteDistanceMaxMiles.Text);
                 if (txtOilPickupAverageDuration.Text != null && txtOilPickupAverageDuration.Text != "")
                     cmd.Parameters.AddWithValue("p_oil_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtOilPickupAverageDuration.Text.ToString())));
                 if (txtMaximumDaysOverdue.Text != null && txtMaximumDaysOverdue.Text != "")
                     cmd.Parameters.AddWithValue("p_maximum_days_overdue", NpgsqlTypes.NpgsqlDbType.Integer, txtMaximumDaysOverdue.Text);
                 if (txtGreasePickupAverageDuration.Text != null && txtGreasePickupAverageDuration.Text != "")
                     cmd.Parameters.AddWithValue("p_grease_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtGreasePickupAverageDuration.Text.ToString())));
-
-
 
                 dataAccess.RunStoredProcedure(cmd);
                 BindData();

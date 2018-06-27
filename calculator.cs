@@ -16,7 +16,7 @@ namespace RouteNavigation
         public Metadata metadata = new Metadata();
         public List<Route> routes = new List<Route>();
         public Location origin = new Location();
-        public int neighborCount = 50;
+        public int neighborCount = 60;
         protected Config config;
         protected List<Location> allLocations;
         protected List<Vehicle> allVehicles;
@@ -119,9 +119,11 @@ namespace RouteNavigation
                 Location destination = FindNearestLocation(origin, compatibleLocations);
                 Route potentialRoute = new Route(origin, destination);
 
+                potentialRoute.allLocations.Add(origin);
+                potentialRoute.allLocations.Add(destination);
                 compatibleLocations.Remove(destination);
-                Location searchStart = destination;
-
+                //Location searchStart = destination;
+                Location previousLocation = origin;
                 while (compatibleLocations.Count > 0)
                 {
                     //get the nearest location in the list of compatible locations based on distance algorithm (lat / lng)
@@ -144,17 +146,35 @@ namespace RouteNavigation
                         compatibleLocations.Remove(nextLocation);
                         continue;
                     }
+                    //get the current total distance, including the trip back to the depot for comparison to max distance setting
+                    potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations) + CalculateDistance(nextLocation, origin);
+                    Logging.Logger.LogMessage(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles), "DEBUG");
 
+                    if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
+                    {
+                        //if the location is within a certain radius, visit anyway even if it exceeds the total mileage
+                        if (CalculateDistance(previousLocation,nextLocation) > Convert.ToDouble(potentialRoute.distanceMiles / 10.0))
+                        {
+                            //Logging.Logger.LogMessage(string.Format("distance from {0} to {1} is {2} compared to route length {3} divided by ten ({4})", previousLocation, nextLocation, CalculateDistance(previousLocation, nextLocation), potentialRoute.distanceMiles, potentialRoute.distanceMiles / 10), "INFO");
+
+                            compatibleLocations.Remove(nextLocation);
+                            continue;
+                        }
+                    }
                     //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
                     vehicle.currentGallons += nextLocation.currentGallonsEstimate;
 
                     //add in the average visit time
                     potentialRoute.waypoints.Add(nextLocation);
+                    potentialRoute.allLocations.Add(nextLocation);
                     potentialRoute.totalTime += nextLocation.visitTime;
                     availableLocations.Remove(nextLocation);
                     compatibleLocations.Remove(nextLocation);
-                    searchStart = nextLocation;
+                    //searchStart = nextLocation;
+                    previousLocation = nextLocation;
                 }
+
+                potentialRoute.allLocations.Add(origin);
 
                 /*//override nearest location with locations along the route if they are within five miles
                 foreach (Location apiLoc in apiRoute.waypoints)
@@ -182,10 +202,7 @@ namespace RouteNavigation
                 potentialRoute.date = startDate;
                 potentialRoute = calculateTSPRouteNN(potentialRoute);
                 //potentialRoute = calculateTSPRouteTwoOpt(potentialRoute);
-                potentialRoute.allLocations.Add(origin);
-                potentialRoute.allLocations.AddRange(potentialRoute.waypoints);
 
-                potentialRoute.allLocations.Add(origin);
                 potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations);
                 potentialRoute.averageLocationDistance = calculateAverageLocationDistance(potentialRoute);
                 Logging.Logger.LogMessage("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles, "DEBUG");
