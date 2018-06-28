@@ -42,6 +42,7 @@ namespace RouteNavigation
             {
                 BtnCalculateRoutes.Visible = false;
                 BindGridView();
+                dataAccess.RefreshApiCache();
                 ga.calculateBestRoutes();
             }
             catch (Exception exception)

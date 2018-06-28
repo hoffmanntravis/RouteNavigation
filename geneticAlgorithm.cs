@@ -376,7 +376,6 @@ namespace RouteNavigation
             Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
             /*
 
-
             int routeHashParentA = generateRouteHash(parentALocations);
             int routeHashParentB = generateRouteHash(parentBLocations);
 

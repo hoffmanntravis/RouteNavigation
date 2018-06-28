@@ -7,8 +7,8 @@ namespace RouteNavigation
 {
     public class Location
     { 
-    public double lat;
-    public double lng;
+    public double lat = Double.NaN;
+    public double lng = Double.NaN;
 
     public int clientPriority;
         public int id;

@@ -229,7 +229,7 @@ namespace RouteNavigation
                 }
 
                 dataAccess.UpdateMatrixWeight(id);
-                RefreshApiCache();
+                dataAccess.RefreshApiCache();
                 LocationsListView.EditIndex = -1;
                 BindGridView();
             }
@@ -393,18 +393,7 @@ namespace RouteNavigation
 
         protected void RefreshApiCache_Click(object sender, EventArgs e)
         {
-            RefreshApiCache(false);
-        }
-
-        protected void RefreshApiCache(bool fillEmptyOnly = true)
-        {
-            List<Location> locations = dataAccess.GetLocations();
-            foreach (Location location in locations)
-            {
-                dataAccess.UpdateGpsCoordinates(location.address, location.id);
-                //Google API calls will fail if called too rapidly
-                Thread.Sleep(2000);
-            }
+            dataAccess.RefreshApiCache(false);
             LocationsListView.EditIndex = -1;
             BindGridView();
         }

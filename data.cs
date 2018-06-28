@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Web;
 
 namespace RouteNavigation
@@ -14,6 +15,7 @@ namespace RouteNavigation
         static protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
         static protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
+
         public void UpdateDbConfigWithApiStrings()
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
@@ -24,6 +26,22 @@ namespace RouteNavigation
                 cmd.Parameters.AddWithValue("p_google_api_key", NpgsqlTypes.NpgsqlDbType.Varchar, apiKey);
                 cmd.Parameters.AddWithValue("p_google_api_illegal_characters", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Char, illegalCharacters);
                 RunStoredProcedure(cmd);
+            }
+        }
+
+        public void RefreshApiCache(bool fillEmptyOnly = true)
+        {
+            List<Location> locations;
+            if (fillEmptyOnly)
+                locations = GetLocations().Where(l => l.lat is Double.NaN || l.lng is Double.NaN).ToList();
+            else
+                locations = GetLocations();
+
+            foreach (Location location in locations)
+            {
+                UpdateGpsCoordinates(location.address, location.id);
+                //Google API calls will fail if called too rapidly
+                Thread.Sleep(2000);
             }
         }
 

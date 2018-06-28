@@ -240,9 +240,17 @@ namespace RouteNavigation
                 metadata.routesLengthMiles += route.distanceMiles;
             }
 
-            metadata.averageRouteDistanceMiles = calculateAverageRouteDistance(routes);
-            metadata.averageRouteDistanceStdDev = calculateRoutesStdDev(routes);
-            //metadata.locationsHash = (this.metadata.processedLocations).GetHashCode();
+            if (routes.Count > 0)
+            {
+                metadata.averageRouteDistanceMiles = calculateAverageRouteDistance(routes);
+                metadata.averageRouteDistanceStdDev = calculateRoutesStdDev(routes);
+                //metadata.locationsHash = (this.metadata.processedLocations).GetHashCode();
+            }
+            else
+            {
+                Logging.Logger.LogMessage("Unable to create any routes.", "ERROR");
+            }
+
             metadata.orphanedLocations = allLocations.Where(x => !metadata.processedLocations.Any(y => y.address == x.address)).ToList();
             return routes;
         }
