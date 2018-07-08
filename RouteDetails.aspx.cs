@@ -33,7 +33,6 @@ namespace RouteNavigation
 
         protected void RoutesListView_PagePropertiesChanging(object sender, EventArgs e)
         {
-
         }
 
         protected void BindGridView()

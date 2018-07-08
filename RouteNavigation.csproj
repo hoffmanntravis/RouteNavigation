@@ -145,6 +145,14 @@
     <Content Include="Default.aspx" />
     <Content Include="images\down_arrow.svg" />
     <Content Include="images\up_arrow.svg" />
+    <Content Include="leaflet\images\layers-2x.png" />
+    <Content Include="leaflet\images\layers.png" />
+    <Content Include="leaflet\images\marker-icon-2x.png" />
+    <Content Include="leaflet\images\marker-icon.png" />
+    <Content Include="leaflet\images\marker-shadow.png" />
+    <Content Include="leaflet\leaflet-src.js" />
+    <Content Include="leaflet\leaflet.css" />
+    <Content Include="leaflet\leaflet.js" />
     <Content Include="Location.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -152,8 +160,17 @@
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="olmaps\ol.css.map" />
+    <Content Include="olmaps\ol.js.map" />
+    <Content Include="leaflet\leaflet-src.js.map" />
+    <Content Include="leaflet\leaflet.js.map" />
+    <Content Include="LocationCoordinates.ashx" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="olmaps\ol.css" />
+    <Content Include="olmaps\ol.js" />
+    <Content Include="map.aspx" />
+    <Content Include="LocationDetailsJson.aspx" />
     <Content Include="RouteDetails.aspx" />
     <Content Include="Batch.aspx" />
     <Content Include="Routes.aspx" />
@@ -208,6 +225,9 @@
     <Compile Include="extensions.cs" />
     <Compile Include="geneticAlgorithm.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="LocationCoordinates.ashx.cs">
+      <DependentUpon>LocationCoordinates.ashx</DependentUpon>
+    </Compile>
     <Compile Include="location.cs" />
     <Compile Include="config.cs" />
     <Compile Include="route.cs" />
@@ -241,6 +261,20 @@
     <Compile Include="apiLocation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="apiRoute.cs" />
+    <Compile Include="map.aspx.cs">
+      <DependentUpon>map.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="map.aspx.designer.cs">
+      <DependentUpon>map.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="LocationDetailsJson.aspx.cs">
+      <DependentUpon>LocationDetailsJson.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="LocationDetailsJson.aspx.designer.cs">
+      <DependentUpon>LocationDetailsJson.aspx</DependentUpon>
+    </Compile>
     <Compile Include="RouteDetails.aspx.cs">
       <DependentUpon>RouteDetails.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
