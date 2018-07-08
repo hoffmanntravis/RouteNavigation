@@ -13,7 +13,7 @@ namespace RouteNavigation
 {
     public class GeneticAlgorithm
     {
-        static protected int iterations = 20;
+        static protected int iterations = 100;
         static public int populationSize = 200;
         static public int neighborCount = 60;
         static public int tournamentSize = 10;
@@ -47,7 +47,6 @@ namespace RouteNavigation
                 startingPopulation.Add(new List<Location>(allLocations).Shuffle(rng).ToList());
             }
 
-            Logging.Logger.LogMessage("Created random locations pool", "INFO");
             return startingPopulation;
         }
 
@@ -78,57 +77,72 @@ namespace RouteNavigation
             List<RouteCalculator> duplicateCalcs = calcs.GroupBy(c => c.GetHashCode()).Where(g => g.Skip(1).Any()).SelectMany(c => c).ToList();
             int duplicatesCount = duplicateCalcs.Count;
 
-            Logging.Logger.LogMessage("There are  " + duplicateCalcs.Count + " Duplicates", "INFO");
+            Logging.Logger.LogMessage("There are " + duplicateCalcs.Count + " Duplicates", "INFO");
         }
 
 
         public void calculateBestRoutes()
         {
-            List<List<Location>> startingPopulation = initializePopulation(populationSize);
-            //create a batch id for identifying a series of routes calculated together
-            int batchId = dataAccess.GetNextRouteBatchId();
-            dataAccess.InsertRouteBatch();
-
-            //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
-
-            generalCalc.UpdateDistanceFromSource(allLocations);
-            generalCalc.UpdateMatrixWeight(allLocations);
-            dataAccess.UpdateDaysUntilDue();
-
-            List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
-            fitnessCalcs = threadCalculations(startingPopulation, fitnessCalcs);
-
-            fitnessCalcs.SortByDistanceAsc();
-            double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
-            Logger.LogMessage(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation), "INFO");
-
-            for (int i = 0; i < iterations; i++)
+            try
             {
-                Logger.LogMessage(string.Format("Beginning iteration {0}", i, "DEBUG"));
-                currentIteration = i;
-                fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
+                List<List<Location>> startingPopulation = initializePopulation(populationSize);
+                //create a batch id for identifying a series of routes calculated together
+                int batchId = dataAccess.GetNextRouteBatchId();
+                dataAccess.InsertRouteBatch();
+
+                //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
+
+                //generalCalc.UpdateDistanceFromSource(allLocations);
+                //generalCalc.UpdateMatrixWeight(allLocations);
+                dataAccess.UpdateDaysUntilDue();
+
+                List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
+
+                Logging.Logger.LogMessage("Threading intialized locations pool into calculation class instances", "INFO");
+
+                fitnessCalcs = threadCalculations(startingPopulation, fitnessCalcs);
+
+                Logging.Logger.LogMessage("Created random locations pool", "INFO");
 
                 fitnessCalcs.SortByDistanceAsc();
-                double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
-                Logger.LogMessage(string.Format("Iteration {0} produced a shortest distance of {1}.", i, shortestDistance, "INFO"));
+                double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
+
+                int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
+                Logger.LogMessage(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount), "INFO");
+
+                Logger.LogMessage(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation), "INFO");
+
+                for (int i = 0; i < iterations; i++)
+                {
+                    Logger.LogMessage(string.Format("Beginning iteration {0}", i, "DEBUG"));
+                    currentIteration = i;
+                    fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
+
+                    fitnessCalcs.SortByDistanceAsc();
+                    double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
+                    emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
+                    Logger.LogMessage(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount), "INFO");
+                    Logger.LogMessage(string.Format("Iteration {0} produced a shortest distance of {1}.", i, shortestDistance, "INFO"));
+                }
+
+                //fully optimized the GA selected route with 3opt swap
+                RouteCalculator bestCalc = fitnessCalcs.First();
+                //foreach (Route route in bestCalc.routes)
+                //    bestCalc.calculateTSPRouteTwoOpt(route);
+                dataAccess.insertRoutes(batchId, bestCalc.routes);
+                Logging.Logger.LogMessage(String.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
+                dataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
+
+                Logging.Logger.LogMessage("Finished calculations.", "INFO");
             }
-
-            //fully optimized the GA selected route with 3opt swap
-            RouteCalculator bestCalc = fitnessCalcs.First();
-            foreach (Route route in bestCalc.routes)
-                bestCalc.calculateTSPRouteTwoOpt(route);
-            dataAccess.insertRoutes(batchId, bestCalc.routes);
-            Logging.Logger.LogMessage(String.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
-            dataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
-
-            Logging.Logger.LogMessage("Finished calculations.", "INFO");
+            catch (Exception e)
+            {
+                Logging.Logger.LogMessage(e.Message, "ERROR");
+            }
         }
 
         public List<RouteCalculator> GeneticAlgorithmFitness(List<RouteCalculator> calcs)
         {
-
-
-            double iterationsDouble = iterations;
             int eliteCount = Convert.ToInt32(Math.Round(elitismRatio * calcs.Count()));
             if (eliteCount < 1 && elitismRatio > 0)
                 eliteCount = 1;
@@ -196,11 +210,11 @@ namespace RouteNavigation
         {
 
             SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
-            foreach (List<Location> list in locationsList)
+            foreach (List<Location> locations in locationsList)
             {
                 Thread thread = new Thread(Action =>
                 {
-                    RouteCalculator c = runCalculations(list);
+                    RouteCalculator c = runCalculations(locations);
                     lock(lockObject)
                     calcs.Add(c);
                 });
@@ -210,9 +224,8 @@ namespace RouteNavigation
             }
 
             foreach (Thread t in threads)
-            {
                 t.Join();
-            }
+
             return calcs;
         }
 
@@ -476,7 +489,7 @@ namespace RouteNavigation
                         Location displacedGene = mutateLocations[displacedGeneIndex];
                         mutateLocations.RemoveAt(displacedGeneIndex);
 
-                        int insertGeneIndex = rng.Next(mutateLocationsList.Count);
+                        int insertGeneIndex = rng.Next(mutateLocations.Count);
                         /*double proximalInsertionChance = .5;
 
                         //Have a percent chance of the mutation occurring at a neighbor location of the displaced gene instead of randomly

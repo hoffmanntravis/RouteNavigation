@@ -13,18 +13,18 @@ namespace RouteNavigation
     public int clientPriority;
         public int id;
         public int pickupIntervalDays;
-        public int vehicleSize;
+        public int vehicleSize = int.MaxValue;
         public Vehicle assignedVehicle;
         public string locationName;
         public string address;
         public string contactName;
         public string contactEmail;
-        public double capacityGallons;
-        public double daysUntilDue;
+        public double capacityGallons = 0;
+        public double daysUntilDue = int.MinValue;
         public double matrixWeight;
         public double distanceFromSource;
 
-        public DateTime lastVisited;
+        public DateTime lastVisited = default(DateTime);
         public double currentGallonsEstimate;
         public TimeSpan visitTime;
         public List<Location> neighbors = new List<Location>();

@@ -26,15 +26,14 @@
     <asp:TextBox class="tableInput" ID="txtMatrixOverDueMultiplier" runat="server"></asp:TextBox>
     <div>If feature 'Prioritize nearest location' is enabled, the closest distance will be factored into matrix weight calculations.</div>
     <asp:TextBox class="tableInput" ID="txtMatrixDistanceFromSource" runat="server"></asp:TextBox>
-    <div>Maximum distance of a route</div>
-    <asp:TextBox class="tableInput" ID="txtRouteDistanceMaxMiles" runat="server"></asp:TextBox>
 
     <h3>Calculation Parameters</h3>
     <div>Enter the minimum number of days that is acceptable to attempt a pickup (pickup interval - (now - last visited))</div>
     <asp:TextBox class="tableInput" ID="txtMinimumDaysUntilPickup" runat="server"></asp:TextBox>
     <div>Enter the maximum number of days overdue that is acceptable to attempt a pickup</div>
     <asp:TextBox class="tableInput" ID="txtMaximumDaysOverdue" runat="server"></asp:TextBox>
-
+    <div>Maximum distance of a route</div>
+    <asp:TextBox class="tableInput" ID="txtRouteDistanceMaxMiles" runat="server"></asp:TextBox>
     <div>Enter the maximum number of hours that is acceptable for a route</div>
     <asp:TextBox class="tableInput" ID="txtRouteMaxHours" runat="server"></asp:TextBox>
     <div>
