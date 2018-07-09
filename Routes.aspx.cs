@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -15,7 +17,6 @@ namespace RouteNavigation
     public partial class _Routes : Page
     {
         protected GeneticAlgorithm ga = new GeneticAlgorithm();
-        protected DataAccess dataAccess;
         protected RouteCalculator calc;
         protected DataTable dataTable;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
@@ -23,11 +24,10 @@ namespace RouteNavigation
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            dataAccess = new DataAccess();
             calc = new RouteCalculator();
             if (!Page.IsPostBack)
             {
-                dataAccess.UpdateDbConfigWithApiStrings();
+                DataAccess.UpdateDbConfigWithApiStrings();
                 BindGridView();
             }
         }
@@ -42,7 +42,7 @@ namespace RouteNavigation
             {
                 BtnCalculateRoutes.Visible = false;
                 BindGridView();
-                dataAccess.RefreshApiCache();
+                DataAccess.RefreshApiCache();
                 ga.calculateBestRoutes();
             }
             catch (Exception exception)
@@ -60,7 +60,7 @@ namespace RouteNavigation
             string csvData = "";
             try
             {
-                csvData = dataAccess.RunPostgreExport("(select * from route_details)", csvData);
+                csvData = DataAccess.RunPostgreExport("(select * from route_details)", csvData);
             }
             catch (Exception exception)
             {
@@ -79,7 +79,7 @@ namespace RouteNavigation
 
         protected void BindGridView()
         {
-            dataTable = dataAccess.GetRouteInformationData();
+            dataTable = DataAccess.GetRouteInformationData();
             RoutesListView.DataSource = dataTable;
             extensions.RoundDataTable(dataTable, 2);
             RoutesListView.ItemPlaceholderID = "itemPlaceHolder";

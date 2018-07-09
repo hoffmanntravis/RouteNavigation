@@ -24,7 +24,7 @@ namespace RouteNavigation
         protected string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
         protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
 
-        protected DataAccess dataAccess = new DataAccess();
+        
 
         public ApiRoute(RouteNavigation.Route route)
         {
@@ -45,8 +45,8 @@ namespace RouteNavigation
                     foreach (Step step in leg.Steps)
                     {
                         Location stepLocation = new Location();
-                        stepLocation.lat = step.End_location.Lat;
-                        stepLocation.lng = step.End_location.Lng;
+                        stepLocation.coordinates.lat = step.End_location.Lat;
+                        stepLocation.coordinates.lng = step.End_location.Lng;
                         waypoints.Add(stepLocation);
                     }
                 }

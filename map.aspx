@@ -3,52 +3,89 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <div id="map"></div>
 
+
     <link rel="stylesheet" href="/leaflet/leaflet.css" type="text/css">
     <script src="/leaflet/leaflet.js"></script>
     <script type="text/javascript">
         function showMap() {
             // set up the map
-            map = new L.Map('map');
+
 
             // create the tile layer with correct attribution
             var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
             var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
-            var osm = new L.TileLayer(osmUrl, { minZoom: 1, maxZoom: 30, attribution: osmAttrib });
 
-            // start the map in South-East England
-            map.setView(new L.LatLng(51.3, 0.7), 10);
+            var coordinates = <%=jsonCoordinates %>;
+            var mapX = <%=mapXCoordinate %>;
+            var mapY = <%=mapYCoordinate %>;
+
+            var locations = [];
+            for (index = 0; index < coordinates.length; index++) {
+                var marker = L.marker([coordinates[index].lat, coordinates[index].lng]);
+                locations.push(marker);
+            };
+
+            var locationsLayerGroup = L.layerGroup(locations);
+
+            map = new L.Map('map',
+                {
+                    center: [mapX, mapY],
+                    layers: locationsLayerGroup,
+                    zoom: 10
+                });
+
+            var overlayMaps = {
+                "Locations": locationsLayerGroup
+            };
+
+            L.control.layers(null, overlayMaps).addTo(map);
+
+            var osm = new L.TileLayer(osmUrl,
+                {
+                    minZoom: 1,
+                    maxZoom: 30,
+                    attribution: osmAttrib
+                }).addTo(map);
 
             map.addLayer(osm);
             $("#map").height($(window).height() * .9);
             map.invalidateSize();
 
+            for (index = 0; index < coordinates.length - 1; index++) {
+                var pointA = new L.LatLng(coordinates[index].lat, coordinates[index].lng);
+                var pointB = new L.LatLng(coordinates[index + 1].lat, coordinates[index + 1].lng);
+                var pointList = [pointA, pointB];
 
-            getJson('/LocationCoordinates.ashx?locationId=15589', function (err, locations) {
-                if (err != null) {
-                    console.error(err);
-                } else {
-                    for (index = 0; index < locations.length; x++)
-                    {
-                        addMarker(locations[index].coordinates_latitude, locations[index].coordinates_longitude);
-                    };
-                }
-            });
+                var firstpolyline = new L.Polyline(pointList, {
+                    color: 'blue',
+                    weight: 5,
+                    opacity: .8,
+                    smoothFactor: 2
+                });
+                
+                firstpolyline.addTo(map);
 
-        }
 
-        var getJson = function (url, callback) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.responseType = 'json';
-            xhr.onload = function () {
-                var status = xhr.status;
-                if (status === 200) {
-                    callback(null, xhr.response);
-                } else {
-                    callback(status, xhr.response);
-                }
             };
-            xhr.send();
+
+
+            function connectDots(data) {
+                var features = data.features,
+                    feature,
+                    c = [],
+                    i;
+
+                for (i = 0; i < features.length; i += 1) {
+                    feature = features[i];
+                    // Make sure this feature is a point.
+                    if (feature.geometry === "Point") {
+                        c.push(feature.geometry.coordinates);
+                    }
+                }
+                return c;
+            }
+
+
         }
 
         function addMarker(x, y) {

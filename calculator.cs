@@ -25,7 +25,7 @@ namespace RouteNavigation
         static Object calcLock = new Object();
         protected int routePosition = 0;
 
-        static protected DataAccess dataAccess = new DataAccess();
+        static 
 
         //protected double matrixDistanceFromSourceMultiplier = 1;
 
@@ -54,9 +54,9 @@ namespace RouteNavigation
 
         public RouteCalculator()
         {
-            config = dataAccess.GetConfig();
-            allLocations = new List<Location>(dataAccess.GetLocations());
-            allVehicles = new List<Vehicle>(dataAccess.GetVehicles());
+            config = DataAccess.GetConfig();
+            allLocations = new List<Location>(DataAccess.GetLocations());
+            allVehicles = new List<Vehicle>(DataAccess.GetVehicles());
 
             origin = Calculation.origin;
             //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
@@ -163,7 +163,7 @@ namespace RouteNavigation
 
                         if (potentialRoute.distanceMiles is Double.NaN)
                         {
-                            Logging.Logger.LogMessage(String.Format("Locations are {0} and {1} with gps coordinates of {2}:{3} and {4}:{5}", origin, nextLocation, origin.lat, origin.lng, nextLocation.lat, nextLocation.lng), "ERROR");
+                            Logging.Logger.LogMessage(String.Format("Locations are {0} and {1} with gps coordinates of {2}:{3} and {4}:{5}", origin, nextLocation, origin.coordinates.lat, origin.coordinates.lng, nextLocation.coordinates.lat, nextLocation.coordinates.lng), "ERROR");
                             Logging.Logger.LogMessage("potentialRoute.distanceMiles is Double.NaN", "ERROR");
                         }
 
@@ -713,7 +713,7 @@ namespace RouteNavigation
         {
             try
             {
-                dataAccess.UpdateDistanceFromSource(locations);
+                DataAccess.UpdateDistanceFromSource(locations);
             }
             catch (Exception exception)
             {
@@ -730,7 +730,7 @@ namespace RouteNavigation
                 {
                     location.matrixWeight = CalculateWeight(location);
                 }
-                dataAccess.UpdateMatrixWeight(locations);
+                DataAccess.UpdateMatrixWeight(locations);
             }
             catch (Exception exception)
             {
@@ -767,10 +767,10 @@ namespace RouteNavigation
         protected static double CalculateDistance(Location p1, Location p2)
         {
             var R = 6378137; // Earth’s mean radius in meter
-            var dLat = Radians(p2.lat - p1.lat);
-            var dLong = Radians(p2.lng - p1.lng);
+            var dLat = Radians(p2.coordinates.lat - p1.coordinates.lat);
+            var dLong = Radians(p2.coordinates.lng - p1.coordinates.lng);
             var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-              Math.Cos(Radians(p1.lat)) * Math.Cos(Radians(p2.lat)) *
+              Math.Cos(Radians(p1.coordinates.lat)) * Math.Cos(Radians(p2.coordinates.lat)) *
               Math.Sin(dLong / 2) * Math.Sin(dLong / 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             var d = R * c;

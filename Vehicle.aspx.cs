@@ -17,13 +17,11 @@ namespace RouteNavigation
 {
     public partial class _Vehicle : Page
     {
-        protected DataAccess dataAccess;
         protected RouteCalculator calc;
 
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            dataAccess = new DataAccess();
             calc = new RouteCalculator();
             if (!Page.IsPostBack)
             {
@@ -36,7 +34,7 @@ namespace RouteNavigation
             string id = e.Keys["id"].ToString();
             NpgsqlCommand cmd = new NpgsqlCommand("delete_vehicle");
             cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
-            dataAccess.RunStoredProcedure(cmd);
+            DataAccess.RunStoredProcedure(cmd);
             BindGridView();
         }
         protected void VehiclesListView_RowEditing(object sender, ListViewEditEventArgs e)
@@ -81,7 +79,7 @@ namespace RouteNavigation
                 }
 
 
-                dataAccess.RunStoredProcedure(cmd);
+                DataAccess.RunStoredProcedure(cmd);
                 VehiclesListView.EditIndex = -1;
                 BindGridView();
             }
@@ -141,7 +139,7 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_physical_size", NpgsqlTypes.NpgsqlDbType.Integer, vehiclePhysicalSize);
                 }
 
-                dataAccess.RunStoredProcedure(cmd);
+                DataAccess.RunStoredProcedure(cmd);
                 VehiclesListView.EditIndex = -1;
                 BindGridView();
             }
@@ -174,8 +172,8 @@ namespace RouteNavigation
                     return;
                 }
                 NpgsqlCommand cmd = new NpgsqlCommand("delete FROM vehicle;");
-                dataAccess.RunSqlCommandText(cmd);
-                dataAccess.RunPostgreImport("vehicle", Content);
+                DataAccess.RunSqlCommandText(cmd);
+                DataAccess.RunPostgreImport("vehicle", Content);
                 BindGridView();
             }
             catch (Exception exception)
@@ -191,7 +189,7 @@ namespace RouteNavigation
             string csvData = "";
             try
             {
-                csvData = dataAccess.RunPostgreExport("vehicle", csvData);
+                csvData = DataAccess.RunPostgreExport("vehicle", csvData);
             }
             catch (Exception exception)
             {
@@ -210,7 +208,7 @@ namespace RouteNavigation
 
         protected void BindGridView(string columnName = "name", string filterString = null)
         {
-            DataTable table = dataAccess.GetVehicleData(columnName, filterString);
+            DataTable table = DataAccess.GetVehicleData(columnName, filterString);
             VehiclesListView.DataSource = table;
             VehiclesListView.ItemPlaceholderID = "itemPlaceHolder";
             VehiclesListView.DataBind();

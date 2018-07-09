@@ -6,15 +6,13 @@ using System.Web;
 namespace RouteNavigation
 {
     public class Location
-    { 
-    public double lat = Double.NaN;
-    public double lng = Double.NaN;
-
-    public int clientPriority;
+    {
+        public Coordinates coordinates = new Coordinates();
+        public Vehicle assignedVehicle;
+        public int clientPriority;
         public int id;
         public int pickupIntervalDays;
         public int vehicleSize = int.MaxValue;
-        public Vehicle assignedVehicle;
         public string locationName;
         public string address;
         public string contactName;
@@ -29,4 +27,11 @@ namespace RouteNavigation
         public TimeSpan visitTime;
         public List<Location> neighbors = new List<Location>();
     }
+
+    public class Coordinates
+    {
+        public double lat = Double.NaN;
+        public double lng = Double.NaN;
+    }
+
 }

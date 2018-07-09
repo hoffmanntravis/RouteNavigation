@@ -12,14 +12,12 @@ namespace RouteNavigation
 {
     public partial class _RouteDetails : Page
     {
-        protected DataAccess dataAccess;
         protected DataTable table;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            dataAccess = new DataAccess();
             try
             {
                 if (!Page.IsPostBack)
@@ -42,7 +40,7 @@ namespace RouteNavigation
             {
                 int routeId = int.Parse(queryStringId);
 
-                table = dataAccess.GetRouteDetailsData(routeId);
+                table = DataAccess.GetRouteDetailsData(routeId);
                 RouteDetailsListView.DataSource = table;
                 RouteDetailsListView.DataBind();
             }

@@ -13,7 +13,7 @@ namespace RouteNavigation
     {
         public string response;
         protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
-        protected DataAccess dataAccess = new DataAccess();
+        
         public async Task CallApi(string url)
         {
 
@@ -35,7 +35,7 @@ namespace RouteNavigation
             }
             try
             {
-                dataAccess.UpsertApiMetadata();
+                DataAccess.UpsertApiMetadata();
             }
             catch (Exception exception)
             {

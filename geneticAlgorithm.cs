@@ -29,10 +29,9 @@ namespace RouteNavigation
         static public bool toggleIterationsExponent = true;
         protected int currentIteration = 0;
 
-        static protected DataAccess dataAccess = new DataAccess();
-        protected Config config = dataAccess.GetConfig();
-        protected List<Location> allLocations = dataAccess.GetLocations();
-        protected List<Vehicle> allVehicles = dataAccess.GetVehicles();
+        protected Config config = DataAccess.GetConfig();
+        protected List<Location> allLocations = DataAccess.GetLocations();
+        protected List<Vehicle> allVehicles = DataAccess.GetVehicles();
         static object lockObject = new object();
         RouteCalculator generalCalc = new RouteCalculator();
         private Random rng = new Random();
@@ -87,14 +86,14 @@ namespace RouteNavigation
             {
                 List<List<Location>> startingPopulation = initializePopulation(populationSize);
                 //create a batch id for identifying a series of routes calculated together
-                int batchId = dataAccess.GetNextRouteBatchId();
-                dataAccess.InsertRouteBatch();
+                int batchId = DataAccess.GetNextRouteBatchId();
+                DataAccess.InsertRouteBatch();
 
                 //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
 
                 //generalCalc.UpdateDistanceFromSource(allLocations);
                 //generalCalc.UpdateMatrixWeight(allLocations);
-                dataAccess.UpdateDaysUntilDue();
+                DataAccess.UpdateDaysUntilDue();
 
                 List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
 
@@ -129,9 +128,9 @@ namespace RouteNavigation
                 RouteCalculator bestCalc = fitnessCalcs.First();
                 //foreach (Route route in bestCalc.routes)
                 //    bestCalc.calculateTSPRouteTwoOpt(route);
-                dataAccess.insertRoutes(batchId, bestCalc.routes);
+                DataAccess.insertRoutes(batchId, bestCalc.routes);
                 Logging.Logger.LogMessage(String.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
-                dataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
+                DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
 
                 Logging.Logger.LogMessage("Finished calculations.", "INFO");
             }

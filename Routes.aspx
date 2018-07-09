@@ -89,8 +89,9 @@
                     <td>
                         <asp:Label ID="label7" runat="server" Text='<%# Eval("vehicle_model") %>'></asp:Label>
                     </td>
+                    
                     <td>
-                        <a href="<%# Eval("maps_url") %>" target="_blank">Google Maps
+                        <a href="/map?routeId=<%# Eval("id") %>">Map
                     </td>
                     <td>
                         <a href="/RouteDetails?routeId=<%# Eval("id") %>">Route Details

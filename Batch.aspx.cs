@@ -15,13 +15,11 @@ namespace RouteNavigation
     public partial class _Batch : Page
     {
         protected DataTable table;
-        protected DataAccess dataAccess;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            dataAccess = new DataAccess();
             if (!Page.IsPostBack)
             {
                 BindGridView();
@@ -36,7 +34,7 @@ namespace RouteNavigation
 
         protected void BindGridView()
         {
-            table = dataAccess.getRouteBatchData();
+            table = DataAccess.getRouteBatchData();
             BatchListView.DataSource = table;
             BatchListView.ItemPlaceholderID = "itemPlaceHolder";
             BatchListView.DataBind();

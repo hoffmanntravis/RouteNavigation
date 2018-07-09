@@ -16,7 +16,7 @@ namespace WebApplication1
     /// </summary>
     public class Handler1 : IHttpHandler
     {
-        protected DataAccess dataAccess = new DataAccess();
+        
         protected DataTable table;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
@@ -28,7 +28,7 @@ namespace WebApplication1
             {
                 int routeId = int.Parse(queryStringId);
 
-                table = dataAccess.GetLocationData(routeId);
+                table = DataAccess.GetLocationData(routeId);
 
                 jsonResponse = DataTableToJSONWithJavaScriptSerializer(table);
             }

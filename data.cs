@@ -8,15 +8,14 @@ using System.Web;
 
 namespace RouteNavigation
 {
-    public class DataAccess
+    public static class DataAccess
     {
-        static protected string apiKey = System.Configuration.ConfigurationManager.AppSettings["googleApiKey"];
-        static protected string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
-        static protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
-        static protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        static string apiKey = System.Configuration.ConfigurationManager.AppSettings["googleApiKey"];
+        static string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
+        static string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
+        static string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
-
-        public void UpdateDbConfigWithApiStrings()
+        public static void UpdateDbConfigWithApiStrings()
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
             {
@@ -29,11 +28,11 @@ namespace RouteNavigation
             }
         }
 
-        public void RefreshApiCache(bool fillEmptyOnly = true)
+        public static void RefreshApiCache(bool fillEmptyOnly = true)
         {
             List<Location> locations;
             if (fillEmptyOnly)
-                locations = GetLocations().Where(l => l.lat is Double.NaN || l.lng is Double.NaN).ToList();
+                locations = GetLocations().Where(l => l.coordinates.lat is Double.NaN || l.coordinates.lng is Double.NaN).ToList();
             else
                 locations = GetLocations();
 
@@ -45,7 +44,7 @@ namespace RouteNavigation
             }
         }
 
-        public int GetNextRouteId()
+        public static int GetNextRouteId()
         {
             int id;
             using (NpgsqlCommand cmd = new NpgsqlCommand("select_next_route_id"))
@@ -53,7 +52,7 @@ namespace RouteNavigation
             return id;
         }
 
-        public int GetNextRouteBatchId()
+        public static int GetNextRouteBatchId()
         {
             int id;
             using (NpgsqlCommand cmd = new NpgsqlCommand("select_next_route_batch_id"))
@@ -61,7 +60,7 @@ namespace RouteNavigation
             return id;
         }
 
-        public int RunStoredProcedure(NpgsqlCommand cmd)
+        public static int RunStoredProcedure(NpgsqlCommand cmd)
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
             {
@@ -74,7 +73,7 @@ namespace RouteNavigation
             }
         }
 
-        public void UpdateRouteBatchMetadata(int id, int locationsIntakeCount, int locationsProcessedCount, int locationsOrphanedCount, double totalDistanceMiles, TimeSpan totalTime, double averageRouteDistanceMiles, double averageRouteDistanceStdDev)
+        public static void UpdateRouteBatchMetadata(int id, int locationsIntakeCount, int locationsProcessedCount, int locationsOrphanedCount, double totalDistanceMiles, TimeSpan totalTime, double averageRouteDistanceMiles, double averageRouteDistanceStdDev)
         {
             using (NpgsqlCommand cmd = new NpgsqlCommand("update_route_batch_metadata"))
             {
@@ -92,7 +91,7 @@ namespace RouteNavigation
 
 
 
-        public void InsertRouteBatch()
+        public static void InsertRouteBatch()
         {
             using (NpgsqlCommand cmd = new NpgsqlCommand("insert_route_batch"))
             {
@@ -100,7 +99,7 @@ namespace RouteNavigation
             }
         }
 
-        public void InsertRouteLocation(int locationId, int insertOrder, int routeId)
+        public static void InsertRouteLocation(int locationId, int insertOrder, int routeId)
         {
             using (NpgsqlCommand cmd = new NpgsqlCommand("insert_route_location"))
             {
@@ -111,7 +110,7 @@ namespace RouteNavigation
             }
         }
 
-        public int RunSqlCommandText(NpgsqlCommand cmd)
+        public static int RunSqlCommandText(NpgsqlCommand cmd)
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
             {
@@ -124,7 +123,7 @@ namespace RouteNavigation
             }
         }
 
-        public string RunPostgreExport(string tableName, string csvData)
+        public static string RunPostgreExport(string tableName, string csvData)
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
             {
@@ -135,7 +134,7 @@ namespace RouteNavigation
             return csvData;
         }
 
-        public void RunPostgreImport(string tableName, string Content)
+        public static void RunPostgreImport(string tableName, string Content)
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
             {
@@ -148,7 +147,7 @@ namespace RouteNavigation
             }
         }
 
-        public bool ReadStoredProcedureIntoDataTable(NpgsqlCommand cmd, DataTable dataTable)
+        public static bool ReadStoredProcedureIntoDataTable(NpgsqlCommand cmd, DataTable dataTable)
         {
             Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString);
 
@@ -164,7 +163,7 @@ namespace RouteNavigation
 
         }
 
-        public string ReadStoredProcedureAsString(NpgsqlCommand cmd)
+        public static string ReadStoredProcedureAsString(NpgsqlCommand cmd)
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
             {
@@ -177,7 +176,7 @@ namespace RouteNavigation
             }
         }
 
-        public DataTable GetVehicleData(string columnName = "name", string filterString = null)
+        public static DataTable GetVehicleData(string columnName = "name", string filterString = null)
         {
             DataTable dataTable = new DataTable();
             try
@@ -199,7 +198,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable GetLocationData(DataTable dataTable, string columnName = "location_name", string filterString = null, bool ascending = true)
+        public static DataTable GetLocationData(DataTable dataTable, string columnName = "location_name", string filterString = null, bool ascending = true)
         {
             try
             {
@@ -223,7 +222,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable GetLocationData(int id)
+        public static DataTable GetLocationData(int id)
         {
             UpdateDaysUntilDue();
             DataTable dataTable = new DataTable();
@@ -241,7 +240,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable GetConfigData()
+        public static DataTable GetConfigData()
         {
             DataTable dataTable = new DataTable();
             try
@@ -256,7 +255,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable GetFeaturesData()
+        public static DataTable GetFeaturesData()
         {
             DataTable dataTable = new DataTable();
             try
@@ -271,7 +270,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable GetRouteInformationData()
+        public static DataTable GetRouteInformationData()
         {
             DataTable dataTable = new DataTable();
             NpgsqlCommand cmd = new NpgsqlCommand("select_route_information");
@@ -280,7 +279,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable getRouteBatchData()
+        public static DataTable getRouteBatchData()
         {
             DataTable dataTable = new DataTable();
             NpgsqlCommand cmd = new NpgsqlCommand("select_route_batch");
@@ -288,7 +287,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        internal DataTable GetRouteDetailsData(int routeId)
+        public static DataTable GetRouteDetailsData(int routeId)
         {
             DataTable dataTable = new DataTable();
 
@@ -299,7 +298,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public DataTable GetRouteData(int id)
+        public static DataTable GetRouteData(int id)
         {
             DataTable dataTable = new DataTable();
             NpgsqlCommand cmd = new NpgsqlCommand("select_route_by_id");
@@ -309,7 +308,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public List<Location> GetLocations(string columnName = "location_name", string filterString = null)
+        public static List<Location> GetLocations(string columnName = "location_name", string filterString = null)
         {
             DataTable dataTable = new DataTable();
             GetLocationData(dataTable, columnName, filterString);
@@ -317,7 +316,7 @@ namespace RouteNavigation
             return list;
         }
 
-        public Config GetConfig()
+        public static Config GetConfig()
         {
             DataTable configsDataTable = GetConfigData();
             DataTable featuresDataTable = GetFeaturesData();
@@ -326,7 +325,7 @@ namespace RouteNavigation
             return config;
         }
 
-        public Location GetLocationById(int id)
+        public static Location GetLocationById(int id)
         {
             UpdateDaysUntilDue();
             DataTable dataTable = GetLocationData(id);
@@ -338,7 +337,7 @@ namespace RouteNavigation
                 return null;
         }
 
-        public Config ConvertDataTablesToConfig(DataTable configs, DataTable features)
+        public static Config ConvertDataTablesToConfig(DataTable configs, DataTable features)
         {
             Config config = new Config();
             foreach (DataRow row in configs.Rows)
@@ -380,7 +379,7 @@ namespace RouteNavigation
             return config;
         }
 
-        public List<Location> ConvertDataTableToLocationsList(DataTable dataTable)
+        public static List<Location> ConvertDataTableToLocationsList(DataTable dataTable)
         {
             List<Location> locations = new List<Location>();
             foreach (DataRow row in dataTable.Rows)
@@ -403,9 +402,9 @@ namespace RouteNavigation
                 if (row["vehicle_size"] != DBNull.Value)
                     location.vehicleSize = int.Parse(row["vehicle_size"].ToString());
                 if (row["coordinates_latitude"] != DBNull.Value)
-                    location.lat = double.Parse(row["coordinates_latitude"].ToString());
+                    location.coordinates.lat = double.Parse(row["coordinates_latitude"].ToString());
                 if (row["coordinates_longitude"] != DBNull.Value)
-                    location.lng = double.Parse(row["coordinates_longitude"].ToString());
+                    location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
                 if (row["distance_from_source"] != DBNull.Value)
                     location.distanceFromSource = double.Parse(row["distance_from_source"].ToString());
                 if (row["pickup_interval_days"] != DBNull.Value)
@@ -423,14 +422,30 @@ namespace RouteNavigation
             return locations;
         }
 
-        public List<Vehicle> GetVehicles(string columnName = "name", string filterString = null)
+        public static List<Location> ConvertRouteDetailsDataTableToLocationCoordinates(DataTable dataTable)
+        {
+            List<Location> locations = new List<Location>();
+            foreach (DataRow row in dataTable.Rows)
+            {
+
+                Location location = new Location();
+                if (row["coordinates_latitude"] != DBNull.Value)
+                    location.coordinates.lat = double.Parse(row["coordinates_latitude"].ToString());
+                if (row["coordinates_longitude"] != DBNull.Value)
+                    location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
+                locations.Add(location);
+            }
+            return locations;
+        }
+
+        public static List<Vehicle> GetVehicles(string columnName = "name", string filterString = null)
         {
             DataTable dataTable = GetVehicleData(columnName, filterString);
             List<Vehicle> vehicles = ConvertDataTableToVehiclesList(dataTable);
             return vehicles;
         }
 
-        public List<Vehicle> ConvertDataTableToVehiclesList(DataTable dataTable)
+        public static List<Vehicle> ConvertDataTableToVehiclesList(DataTable dataTable)
         {
             List<Vehicle> vehicles = new List<Vehicle>();
 
@@ -454,7 +469,7 @@ namespace RouteNavigation
             return vehicles;
         }
 
-        public List<Route> ConvertDataTableToRoutesList(DataTable dataTable)
+        public static List<Route> ConvertDataTableToRoutesList(DataTable dataTable)
         {
             List<Route> routes = new List<Route>();
 
@@ -492,14 +507,14 @@ namespace RouteNavigation
             return routes;
         }
 
-        public List<Route> GetRoutes(string columnName = "id", string filterString = null)
+        public static List<Route> GetRoutes(string columnName = "id", string filterString = null)
         {
             DataTable dataTable = GetRouteInformationData();
             List<Route> routes = ConvertDataTableToRoutesList(dataTable);
             return routes;
         }
 
-        public string GetAddressByCoordinates(double lat, double lng)
+        public static string GetAddressByCoordinates(double lat, double lng)
         {
             NpgsqlConnection connection = null;
             string address = "";
@@ -526,7 +541,7 @@ namespace RouteNavigation
             return address;
         }
 
-        public void UpsertApiMetadata()
+        public static void UpsertApiMetadata()
         {
             try
             {
@@ -549,7 +564,7 @@ namespace RouteNavigation
             }
         }
 
-        public void UpdateDistanceFromSource(List<Location> locations)
+        public static void UpdateDistanceFromSource(List<Location> locations)
         {
             foreach (Location location in locations)
             {
@@ -569,7 +584,7 @@ namespace RouteNavigation
         }
 
 
-        public void UpdateFeature(string name, bool enabled)
+        public static void UpdateFeature(string name, bool enabled)
         {
             try
             {
@@ -587,7 +602,7 @@ namespace RouteNavigation
 
 
 
-        public void UpdateMatrixWeight(List<Location> locations)
+        public static void UpdateMatrixWeight(List<Location> locations)
         {
             foreach (Location location in locations)
             {
@@ -608,7 +623,7 @@ namespace RouteNavigation
             }
         }
 
-        public void UpdateDaysUntilDue()
+        public static void UpdateDaysUntilDue()
         {
             try
             {
@@ -622,7 +637,7 @@ namespace RouteNavigation
             }
         }
 
-        public void UpdateMatrixWeight(int id)
+        public static void UpdateMatrixWeight(int id)
         {
             Location location = GetLocationById(id);
             List<Location> locationList = new List<Location>();
@@ -630,7 +645,7 @@ namespace RouteNavigation
             UpdateMatrixWeight(locationList);
         }
 
-        public void UpdateGpsCoordinates(string address, int id)
+        public static void UpdateGpsCoordinates(string address, int id)
         {
             ApiLocation location = new ApiLocation(address);
 
@@ -649,7 +664,7 @@ namespace RouteNavigation
             }
         }
 
-        public void DeleteRouteDependencies(int id)
+        public static void DeleteRouteDependencies(int id)
         {
             using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
                 RunSqlCommandText(cmd);
@@ -663,7 +678,7 @@ namespace RouteNavigation
             }
         }
 
-        public void insertRoutes(int batchId, List<Route> routes)
+        public static void insertRoutes(int batchId, List<Route> routes)
         {
             foreach (Route route in routes)
             {
@@ -712,7 +727,7 @@ namespace RouteNavigation
             }
         }
 
-        public void UpdateRouteMetadata(int batchId, RouteCalculator.Metadata metadata)
+        public static void UpdateRouteMetadata(int batchId, RouteCalculator.Metadata metadata)
         {
             try
             {

@@ -26,7 +26,6 @@ namespace RouteNavigation
 
     public class Calculation
     {
-        protected DataAccess dataAccess = new DataAccess();
         public static Location origin;
 
         private int _originLocationId;
@@ -52,12 +51,12 @@ namespace RouteNavigation
         public double routeDistanceMaxMiles = 50;
         public double nearbyLocationDistance = 20;
 
-        protected void SetOriginLocation(int id)
+        protected static void SetOriginLocation(int id)
         {
             //only set origin once since it is a static variable, and we don't want to call the DB every time origin is requested
             if (origin == null)
             {
-                Location o = dataAccess.GetLocationById(id);
+                Location o = DataAccess.GetLocationById(id);
                 origin = o;
             }
         }

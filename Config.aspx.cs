@@ -8,14 +8,12 @@ namespace RouteNavigation
     public partial class _Config : Page
     {
 
-        static protected DataAccess dataAccess;
         protected Config Config;
 
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            dataAccess = new DataAccess();
-            Config = dataAccess.GetConfig();
+            Config = DataAccess.GetConfig();
             if (!Page.IsPostBack)
             {
                 BindData();
@@ -24,7 +22,7 @@ namespace RouteNavigation
 
         protected void BindData()
         {
-            Config = dataAccess.GetConfig();
+            Config = DataAccess.GetConfig();
             if (Config.Features.prioritizeNearestLocation)
                 txtChkPrioritizeNearestLocation.Checked = true;
             if (Config.Features.vehicleFillLevel)
@@ -53,7 +51,7 @@ namespace RouteNavigation
             try
             {
                 Config.Calculation.OriginLocationId = (int.Parse(txtOriginLocationId.Text));
-                Location newOrigin = dataAccess.GetLocationById(Config.Calculation.OriginLocationId);
+                Location newOrigin = DataAccess.GetLocationById(Config.Calculation.OriginLocationId);
                 if (newOrigin == null)
                 {
                     Exception exception = new Exception("Unable to resolve origin id: <" + txtOriginLocationId.Text + "> to a Location in the location table.  Please update this to a corresponding location, creating one if necessary.");
@@ -64,13 +62,13 @@ namespace RouteNavigation
 
                 //This section / data structure could use a rework to be less explicitly mapped to the db keys
                 if (txtChkPrioritizeNearestLocation.Checked == true)
-                    dataAccess.UpdateFeature("prioritize_nearest_location", true);
+                    DataAccess.UpdateFeature("prioritize_nearest_location", true);
                 else
-                    dataAccess.UpdateFeature("prioritize_nearest_location", false);
+                    DataAccess.UpdateFeature("prioritize_nearest_location", false);
                 if (txtChkVehicleFillLevel.Checked == true)
-                    dataAccess.UpdateFeature("vehicle_fill_level", true);
+                    DataAccess.UpdateFeature("vehicle_fill_level", true);
                 else
-                    dataAccess.UpdateFeature("vehicle_fill_level", false);
+                    DataAccess.UpdateFeature("vehicle_fill_level", false);
 
                 NpgsqlCommand cmd = new NpgsqlCommand("upsert_config");
                 if (txtOriginLocationId.Text != null && txtOriginLocationId.Text != "")
@@ -98,7 +96,7 @@ namespace RouteNavigation
                 if (txtGreasePickupAverageDuration.Text != null && txtGreasePickupAverageDuration.Text != "")
                     cmd.Parameters.AddWithValue("p_grease_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtGreasePickupAverageDuration.Text.ToString())));
 
-                dataAccess.RunStoredProcedure(cmd);
+                DataAccess.RunStoredProcedure(cmd);
                 BindData();
             }
             catch (Exception exception)

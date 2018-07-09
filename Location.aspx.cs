@@ -17,13 +17,11 @@ namespace RouteNavigation
 {
     public partial class _Locations : Page
     {
-        protected DataAccess dataAccess;
         DataTable dataTable = new DataTable();
 
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make async calls that fail while the page is still starting up
-            dataAccess = new DataAccess();
             if (!Page.IsPostBack)
             {
                 populateDrpSearchFilter();
@@ -55,7 +53,7 @@ namespace RouteNavigation
         protected void LocationsListView_RowDeleting(object sender, ListViewDeleteEventArgs e)
         {
             int id = int.Parse(e.Keys["id"].ToString());
-            dataAccess.DeleteRouteDependencies(id);
+            DataAccess.DeleteRouteDependencies(id);
             //calculator.calculateRoutes();
             BindGridView();
         }
@@ -119,8 +117,8 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                 }
 
-                dataAccess.RunStoredProcedure(cmd);
-                dataAccess.UpdateMatrixWeight(int.Parse(id));
+                DataAccess.RunStoredProcedure(cmd);
+                DataAccess.UpdateMatrixWeight(int.Parse(id));
                 LocationsListView.EditIndex = -1;
                 BindGridView();
             }
@@ -163,7 +161,7 @@ namespace RouteNavigation
             //Finding the controls from Gridview for the row which is going to update  
             int id;
             using (NpgsqlCommand cmd = new NpgsqlCommand("select_next_location_id"))
-                id = int.Parse(dataAccess.ReadStoredProcedureAsString(cmd));
+                id = int.Parse(DataAccess.ReadStoredProcedureAsString(cmd));
 
             string clientPriority = ((TextBox)e.Item.FindControl("txtInsertClientPriority")).Text;
             string locationName = ((TextBox)e.Item.FindControl("txtInsertClientName")).Text;
@@ -215,7 +213,7 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                     }
-                    dataAccess.RunStoredProcedure(cmd);
+                    DataAccess.RunStoredProcedure(cmd);
                 }
 
                 try
@@ -228,8 +226,8 @@ namespace RouteNavigation
                     Logging.Logger.LogMessage(exception.ToString());
                 }
 
-                dataAccess.UpdateMatrixWeight(id);
-                dataAccess.RefreshApiCache();
+                DataAccess.UpdateMatrixWeight(id);
+                DataAccess.RefreshApiCache();
                 LocationsListView.EditIndex = -1;
                 BindGridView();
             }
@@ -350,15 +348,15 @@ namespace RouteNavigation
                 Content = purifyCsvDataForPostgreImport(expectedHeaders, Content);
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location;"))
-                    dataAccess.RunSqlCommandText(cmd);
+                    DataAccess.RunSqlCommandText(cmd);
                 using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
-                    dataAccess.RunSqlCommandText(cmd);
+                    DataAccess.RunSqlCommandText(cmd);
                 using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM location;"))
-                    dataAccess.RunSqlCommandText(cmd);
+                    DataAccess.RunSqlCommandText(cmd);
 
                 string expectedHeaderString = String.Join(",", expectedHeaders);
 
-                dataAccess.RunPostgreImport(String.Format("location ({0}) ", expectedHeaderString), Content);
+                DataAccess.RunPostgreImport(String.Format("location ({0}) ", expectedHeaderString), Content);
                 BindGridView();
             }
             catch (Exception exception)
@@ -374,7 +372,7 @@ namespace RouteNavigation
             string csvData = "";
             try
             {
-                csvData = dataAccess.RunPostgreExport("location", csvData);
+                csvData = DataAccess.RunPostgreExport("location", csvData);
             }
             catch (Exception exception)
             {
@@ -393,7 +391,7 @@ namespace RouteNavigation
 
         protected void RefreshApiCache_Click(object sender, EventArgs e)
         {
-            dataAccess.RefreshApiCache(false);
+            DataAccess.RefreshApiCache(false);
             LocationsListView.EditIndex = -1;
             BindGridView();
         }
@@ -404,7 +402,7 @@ namespace RouteNavigation
             if (columnName == null)
             columnName = lstSearchFilters.SelectedValue;
             filterString = TxtSearchFilter.Text;
-            dataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
+            DataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
             extensions.RoundDataTable(dataTable, 2);
             LocationsListView.DataSource = dataTable;
             LocationsListView.ItemPlaceholderID = "itemPlaceHolder";
