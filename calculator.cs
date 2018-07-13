@@ -6,8 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
-
-
+using System.Device.Location;
 
 namespace RouteNavigation
 {
@@ -25,22 +24,10 @@ namespace RouteNavigation
         static Object calcLock = new Object();
         protected int routePosition = 0;
 
-        static 
-
         //protected double matrixDistanceFromSourceMultiplier = 1;
 
         protected DateTime startDate = (System.DateTime.Now.Date).AddDays(1);
 
-        /*public async Task Calculate()
-        {
-            await Task.Run(() =>
-            {
-                lock (calcLock)
-                {
-                    GeneticAlgorithm ga = new GeneticAlgorithm();
-                }
-            });
-        }*/
 
         public RouteCalculator(Config c, List<Location> locations, List<Vehicle> vehicles)
         {
@@ -764,9 +751,10 @@ namespace RouteNavigation
             return x * Math.PI / 180;
         }
 
+
         protected static double CalculateDistance(Location p1, Location p2)
         {
-            var R = 6378137; // Earth’s mean radius in meter
+            var R = 3963.190592; // Earth’s mean radius in miles
             var dLat = Radians(p2.coordinates.lat - p1.coordinates.lat);
             var dLong = Radians(p2.coordinates.lng - p1.coordinates.lng);
             var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
@@ -774,8 +762,6 @@ namespace RouteNavigation
               Math.Sin(dLong / 2) * Math.Sin(dLong / 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             var d = R * c;
-            var metersInMile = 1609.34;
-            d = d / metersInMile;
             return d; // returns the distance in miles
         }
     }

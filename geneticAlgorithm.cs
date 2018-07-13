@@ -14,17 +14,17 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         static protected int iterations = 100;
-        static public int populationSize = 200;
-        static public int neighborCount = 60;
-        static public int tournamentSize = 10;
-        static public int tournamentWinnerCount = 1;
-        static public int breedersCount = 128;
-        static public int offSpringPoolSize = 64;
-        static public double crossoverProbability = .4;
+        static public int populationSize = 2000;
+        static public int neighborCount = 200;
+        static public int tournamentSize = 32;
+        static public int tournamentWinnerCount = 16;
+        static public int breedersCount = 8;
+        static public int offSpringPoolSize = 4;
+        static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
         static public double mutationProbability = .1;
-        static public int mutationAlleleMax = 4;
+        static public int mutationAlleleMax = 2;
         static public double growthDecayExponent = 1;
         static public bool toggleIterationsExponent = true;
         protected int currentIteration = 0;
@@ -84,6 +84,11 @@ namespace RouteNavigation
         {
             try
             {
+                if (generalCalc.origin == null)
+                {
+                    Exception e = new Exception("Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.");
+                    throw e;
+                }
                 List<List<Location>> startingPopulation = initializePopulation(populationSize);
                 //create a batch id for identifying a series of routes calculated together
                 int batchId = DataAccess.GetNextRouteBatchId();

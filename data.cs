@@ -727,6 +727,12 @@ namespace RouteNavigation
             }
         }
 
+        public static int GetLatestBatchId()
+        {
+            int id = DataAccess.GetNextRouteBatchId() - 1;
+            return id;
+        }
+
         public static void UpdateRouteMetadata(int batchId, RouteCalculator.Metadata metadata)
         {
             try

@@ -58,9 +58,9 @@
 
                 var firstpolyline = new L.Polyline(pointList, {
                     color: 'blue',
-                    weight: 5,
+                    weight: 8,
                     opacity: .8,
-                    smoothFactor: 2
+                    smoothFactor: 10
                 });
                 
                 firstpolyline.addTo(map);

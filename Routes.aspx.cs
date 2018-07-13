@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.UI;
@@ -16,6 +17,7 @@ namespace RouteNavigation
 {
     public partial class _Routes : Page
     {
+        private static object syncLock = new object();
         protected GeneticAlgorithm ga = new GeneticAlgorithm();
         protected RouteCalculator calc;
         protected DataTable dataTable;
@@ -43,7 +45,16 @@ namespace RouteNavigation
                 BtnCalculateRoutes.Visible = false;
                 BindGridView();
                 DataAccess.RefreshApiCache();
-                ga.calculateBestRoutes();
+
+                //If calculateBestRoutes already has the lock, discard the request
+                if (!(Monitor.TryEnter(syncLock)))
+                {
+                }
+                else
+                {
+                    lock (syncLock)
+                        ga.calculateBestRoutes();
+                }
             }
             catch (Exception exception)
             {
@@ -58,9 +69,12 @@ namespace RouteNavigation
         protected void BtnExportCsv_Click(object sender, EventArgs e)
         {
             string csvData = "";
+
+            int latestBatchId = DataAccess.GetLatestBatchId();
+
             try
             {
-                csvData = DataAccess.RunPostgreExport("(select * from route_details)", csvData);
+                csvData = DataAccess.RunPostgreExport("(select * from route_details where batch_id = " + latestBatchId + ")", csvData);
             }
             catch (Exception exception)
             {
