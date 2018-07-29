@@ -11,7 +11,6 @@ namespace RouteNavigation
         public Matrix matrix = new Matrix();
         public Calculation Calculation = new Calculation();
         public Features Features = new Features();
-        public int maximumDaysOverdue = 60;
         static string logLevelString = "INFO";
         public static string logLevel = logLevelString.ToUpper();
     }
@@ -45,11 +44,16 @@ namespace RouteNavigation
 
         public double currentFillLevelErrorMarginPercent = 0;
         public double routeMaxHours = 12;
+        public DateTime workdayStartTime = DateTime.MinValue;
+        public DateTime workDayEndTime = DateTime.MinValue;
         public double oilPickupAverageDurationMinutes = 30;
         public double greasePickupAverageDurationMinutes = 30;
         public int minimDaysUntilPickup = 0;
+        public int maximumDaysOverdue = 60;
         public double routeDistanceMaxMiles = 50;
         public double nearbyLocationDistance = 20;
+        public double averageCityTravelSpeed = 30;
+        public double averageHighwayTravelSpeed = 70;
 
         protected static void SetOriginLocation(int id)
         {

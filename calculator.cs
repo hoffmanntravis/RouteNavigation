@@ -28,7 +28,6 @@ namespace RouteNavigation
 
         protected DateTime startDate = (System.DateTime.Now.Date).AddDays(1);
 
-
         public RouteCalculator(Config c, List<Location> locations, List<Vehicle> vehicles)
         {
             config = c;
@@ -63,11 +62,13 @@ namespace RouteNavigation
 
         public List<Route> CalculateRoutes(List<Location> availableLocations, List<Vehicle> availableVehicles, DateTime startDate, Location origin, Metadata metadata)
         {
+            DateTime currentTime = config.Calculation.workdayStartTime;
+
             try
             {
                 availableLocations = GetPossibleLocations(availableVehicles, availableLocations);
 
-                List<Location> longOverDueLocations = availableLocations.Where(a => a.daysUntilDue <= (config.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
+                List<Location> longOverDueLocations = availableLocations.Where(a => a.daysUntilDue <= (config.Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
                 availableLocations = availableLocations.Except(longOverDueLocations).ToList();
 
                 if (origin == null)
@@ -132,8 +133,11 @@ namespace RouteNavigation
                                 continue;
                             }
                         }
-                        
-                        if (potentialRoute.totalTime.TotalHours + nextLocation.visitTime.TotalHours > config.Calculation.routeMaxHours)
+                        double nextLocationDistanceMiles = CalculateDistance(nextLocation, origin);
+                        TimeSpan travelTime = CalculateTravelTime(nextLocationDistanceMiles);
+                        double travelTimeHours = travelTime.TotalHours;
+
+                        if (potentialRoute.totalTime.TotalHours + nextLocation.visitTime.TotalHours + travelTimeHours > config.Calculation.routeMaxHours)
                         {
                             //This is only relevent if we have a location in the route.  Otherwise, we may end up with no valid locations.  
                             if (potentialRoute.allLocations.Count > 0)
@@ -142,10 +146,11 @@ namespace RouteNavigation
                                 continue;
                             }
                         }
+
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
 
 
-                        potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations) + CalculateDistance(nextLocation, origin);
+                        potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations) + nextLocationDistanceMiles;
                         Logging.Logger.LogMessage(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles), "DEBUG");
 
                         if (potentialRoute.distanceMiles is Double.NaN)
@@ -160,7 +165,7 @@ namespace RouteNavigation
                             if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
                             {
                                 //if the location is within a certain radius, visit anyway even if it exceeds the total mileage
-                                if (CalculateDistance(previousLocation, nextLocation) > Convert.ToDouble(potentialRoute.distanceMiles / 10.0))
+                                if (nextLocationDistanceMiles > Convert.ToDouble(potentialRoute.distanceMiles / 10.0))
                                 {
                                     //Logging.Logger.LogMessage(string.Format("distance from {0} to {1} is {2} compared to route length {3} divided by ten ({4})", previousLocation, nextLocation, CalculateDistance(previousLocation, nextLocation), potentialRoute.distanceMiles, potentialRoute.distanceMiles / 10), "INFO");
 
@@ -170,14 +175,13 @@ namespace RouteNavigation
                             }
                         }
 
-
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
                         vehicle.currentGallons += nextLocation.currentGallonsEstimate;
 
                         //add in the average visit time
                         potentialRoute.waypoints.Add(nextLocation);
                         potentialRoute.allLocations.Add(nextLocation);
-                        potentialRoute.totalTime += nextLocation.visitTime;
+                        potentialRoute.totalTime += nextLocation.visitTime + travelTime;
                         availableLocations.Remove(nextLocation);
                         compatibleLocations.Remove(nextLocation);
                         //searchStart = nextLocation;
@@ -213,7 +217,11 @@ namespace RouteNavigation
                     potentialRoute = calculateTSPRouteNN(potentialRoute);
                     //potentialRoute = calculateTSPRouteTwoOpt(potentialRoute);
 
+
                     potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations);
+                    TimeSpan routeTravelTime = CalculateTravelTime(potentialRoute.distanceMiles);
+                    currentTime.Add(routeTravelTime);
+                    //currentTime.Add()
                     potentialRoute.averageLocationDistance = calculateAverageLocationDistance(potentialRoute);
                     Logging.Logger.LogMessage("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles, "DEBUG");
                     routes.Add(potentialRoute);
@@ -751,6 +759,26 @@ namespace RouteNavigation
             return x * Math.PI / 180;
         }
 
+        protected TimeSpan CalculateTravelTime(double distanceMiles)
+        {
+            double travelTimeMinutes = 0;
+            double cityRadius = 5;
+            //distance of less than n miles is considered to be within city, since very close locations will not involve highway mileage.
+            //Allow for that same ammount of miles to get on the highway if the distance is greater
+            //This is a very simple heuristic that assumes distances as the crow flies
+            if (distanceMiles < cityRadius)
+            {
+                travelTimeMinutes = distanceMiles * (60 / config.Calculation.averageCityTravelSpeed);
+            }
+            else
+            {
+                travelTimeMinutes += cityRadius * (60 / config.Calculation.averageCityTravelSpeed);
+                travelTimeMinutes += (distanceMiles - cityRadius) * (60 / config.Calculation.averageHighwayTravelSpeed);
+            }
+
+            TimeSpan travelTime = TimeSpan.FromMinutes(travelTimeMinutes);
+            return travelTime;
+        }
 
         protected static double CalculateDistance(Location p1, Location p2)
         {

@@ -13,13 +13,13 @@ namespace RouteNavigation
 {
     public class GeneticAlgorithm
     {
-        static protected int iterations = 100;
+        static protected int iterations = 200;
         static public int populationSize = 2000;
-        static public int neighborCount = 200;
+        static public int neighborCount = 300;
         static public int tournamentSize = 32;
         static public int tournamentWinnerCount = 16;
-        static public int breedersCount = 8;
-        static public int offSpringPoolSize = 4;
+        static public int breedersCount = 12;
+        static public int offSpringPoolSize = 8;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;

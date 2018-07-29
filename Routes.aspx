@@ -11,9 +11,10 @@
             BackColor="#fe6363" CellPadding="5"></asp:ValidationSummary>
     </asp:Panel>
 
+
     <div class="divHeader">
         <asp:Button CssClass="headerRowRight" ID="BtnExportCsv" runat="server" Text="Export data to .CSV" Style="float: right;" OnClick="BtnExportCsv_Click" />
-        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClick="BtnCalculateRoutes_Click"  Text="Recalculate Routes" ToolTip="Use this button to recalcualte routes based on latest location and vehicle data." runat="server" Style="float: left;" />
+        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClientClick="this.disabled = true; this.value = 'Calculating...';"   UseSubmitBehavior="false"  OnClick="BtnCalculateRoutes_Click"  Text="Recalculate Routes" ToolTip="Use this button to recalcualte routes based on latest location and vehicle data." runat="server" Style="float: left;" />
     </div>
 
     <asp:ListView ID="RoutesListView" runat="server"
@@ -135,3 +136,4 @@
         </SelectedItemTemplate>
     </asp:ListView>
 </asp:Content>
+

@@ -160,7 +160,6 @@ namespace RouteNavigation
 
             connection.Close();
             return true;
-
         }
 
         public static string ReadStoredProcedureAsString(NpgsqlCommand cmd)
@@ -222,7 +221,23 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static DataTable GetLocationData(int id)
+        public static DataTable GetLocationTypes()
+        {
+            UpdateDaysUntilDue();
+            DataTable dataTable = new DataTable();
+            try
+            {
+                NpgsqlCommand cmd = new NpgsqlCommand("select_location_types");
+                ReadStoredProcedureIntoDataTable(cmd, dataTable);
+            }
+            catch (Exception exception)
+            {
+                Logging.Logger.LogMessage(exception.ToString(), "ERROR");
+            }
+            return dataTable;
+        }
+
+            public static DataTable GetLocationData(int id)
         {
             UpdateDaysUntilDue();
             DataTable dataTable = new DataTable();
@@ -363,7 +378,11 @@ namespace RouteNavigation
                 if (row["matrix_distance_from_source"] != DBNull.Value)
                     config.matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
                 if (row["maximum_days_overdue"] != DBNull.Value)
-                    config.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
+                    config.Calculation.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
+                if (row["workday_start_time"] != DBNull.Value)
+                    config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
+                if (row["workday_end_time"] != DBNull.Value)
+                    config.Calculation.workDayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
                 if (row["route_distance_max_miles"] != DBNull.Value)
                     config.Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
             }
@@ -409,6 +428,10 @@ namespace RouteNavigation
                     location.distanceFromSource = double.Parse(row["distance_from_source"].ToString());
                 if (row["pickup_interval_days"] != DBNull.Value)
                     location.pickupIntervalDays = int.Parse(row["pickup_interval_days"].ToString());
+                if (row["pickup_window_start_time"] != DBNull.Value)
+                    location.pickupWindowStartTime = DateTime.Parse(row["pickup_window_start_time"].ToString());
+                if (row["pickup_window_end_time"] != DBNull.Value)
+                    location.pickupWindowEndTime = DateTime.Parse(row["pickup_window_end_time"].ToString());
                 if (row["matrix_weight"] != DBNull.Value)
                     location.matrixWeight = double.Parse(row["matrix_weight"].ToString());
                 if (row["contact_name"] != DBNull.Value)
@@ -685,7 +708,7 @@ namespace RouteNavigation
                 route.id = GetNextRouteId();
                 try
                 {
-                    ApiRoute apiRoute = new ApiRoute(route);
+                    //ApiRoute apiRoute = new ApiRoute(route);
 
                     using (NpgsqlCommand cmd = new NpgsqlCommand("insert_route"))
                     {
@@ -696,7 +719,7 @@ namespace RouteNavigation
                         cmd.Parameters.AddWithValue("p_route_date", NpgsqlTypes.NpgsqlDbType.TimestampTZ, route.date);
                         cmd.Parameters.AddWithValue("p_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.distanceMiles);
                         cmd.Parameters.AddWithValue("p_vehicle_id", NpgsqlTypes.NpgsqlDbType.Integer, route.assignedVehicle.id);
-                        cmd.Parameters.AddWithValue("p_maps_url", NpgsqlTypes.NpgsqlDbType.Varchar, apiRoute.mapsUrl);
+                        //cmd.Parameters.AddWithValue("p_maps_url", NpgsqlTypes.NpgsqlDbType.Varchar, apiRoute.mapsUrl);
                         cmd.Parameters.AddWithValue("p_average_location_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.averageLocationDistance);
 
                         RunStoredProcedure(cmd);

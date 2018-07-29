@@ -80,8 +80,6 @@ namespace RouteNavigation
 
 
                 DataAccess.RunStoredProcedure(cmd);
-                VehiclesListView.EditIndex = -1;
-                BindGridView();
             }
             catch (Exception exception)
             {
@@ -91,6 +89,8 @@ namespace RouteNavigation
                 dataValidation.ErrorMessage = ErrorDetails;
                 VehiclesListView.EditIndex = -1;
             }
+            VehiclesListView.EditIndex = -1;
+            BindGridView();
         }
 
         protected void VehiclesListView_RowCancelingEdit(object sender, ListViewCancelEventArgs e)
@@ -140,8 +140,6 @@ namespace RouteNavigation
                 }
 
                 DataAccess.RunStoredProcedure(cmd);
-                VehiclesListView.EditIndex = -1;
-                BindGridView();
             }
             catch (Exception exception)
             {
@@ -150,6 +148,8 @@ namespace RouteNavigation
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
             }
+            VehiclesListView.EditIndex = -1;
+            BindGridView();
         }
 
         protected void FilterVehiclesListView_Click(Object sender, EventArgs e)

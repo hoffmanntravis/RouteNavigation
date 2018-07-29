@@ -21,6 +21,8 @@ namespace RouteNavigation
         public double daysUntilDue = int.MinValue;
         public double matrixWeight;
         public double distanceFromSource;
+        public DateTime pickupWindowStartTime;
+        public DateTime pickupWindowEndTime;
 
         public DateTime lastVisited = default(DateTime);
         public double currentGallonsEstimate;

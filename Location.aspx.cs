@@ -24,12 +24,12 @@ namespace RouteNavigation
             //initialize objects in page load since they make async calls that fail while the page is still starting up
             if (!Page.IsPostBack)
             {
-                populateDrpSearchFilter();
+                populateddlSearchFilter();
                 BindGridView();
             }
         }
 
-        protected void populateDrpSearchFilter()
+        protected void populateddlSearchFilter()
         {
             ListItem locationName = new ListItem();
             locationName.Value = "location_name";
@@ -50,8 +50,43 @@ namespace RouteNavigation
             lstSearchFilters.Items.Insert(3, contactEmail);
         }
 
+        protected void LocationstListView_ItemDataBound(object sender, ListViewItemEventArgs e)
+        {
+            DropDownList ddlEdit = e.Item.FindControl("ddlEditLocationType") as DropDownList;
+            if (ddlEdit != null)
+            {
+                
+                ddlEdit = populateLocationTypeDropDown(ddlEdit);
+                //ddlEdit.DataTextField = LocationsListView.Items[e.Item.DisplayIndex].FindControl()
+                ddlEdit.DataBind();
+            }
+        }
+
+        protected DropDownList populateLocationTypeDropDown(DropDownList ddlLocationType)
+        {
+            DataTable dt = DataAccess.GetLocationTypes();
+
+            ddlLocationType.DataSource = dt;
+            ddlLocationType.DataTextField = "type";
+            ddlLocationType.DataValueField = "id";
+            return ddlLocationType;
+        }
+
+        protected void LocationsListView_ItemCreated(object sender, ListViewItemEventArgs e)
+        {
+            if ((e.Item != null) && (e.Item.ItemType == ListViewItemType.InsertItem))
+            {
+                DropDownList ddlLocationType;
+                ddlLocationType = e.Item.FindControl("ddlInsertLocationType") as DropDownList;
+                ddlLocationType = populateLocationTypeDropDown(ddlLocationType);
+                ddlLocationType.DataBind();
+            }
+
+        }
+
         protected void LocationsListView_RowDeleting(object sender, ListViewDeleteEventArgs e)
         {
+
             int id = int.Parse(e.Keys["id"].ToString());
             DataAccess.DeleteRouteDependencies(id);
             //calculator.calculateRoutes();
@@ -59,6 +94,7 @@ namespace RouteNavigation
         }
         protected void LocationsListView_RowEditing(object sender, ListViewEditEventArgs e)
         {
+
             LocationsListView.EditIndex = e.NewEditIndex;
             BindGridView();
         }
@@ -72,12 +108,16 @@ namespace RouteNavigation
                 string clientPriority = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientPriority")).Text;
                 string locationName = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientName")).Text;
                 string pickupIntervalDays = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupIntervalDays")).Text;
+                string insertPickupWindowStartTime = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupWindowStartTime")).Text;
+                string insertPickupWindowEndTime = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupWindowEndTime")).Text;
                 string lastVisisted = ((TextBox)LocationsListView.EditItem.FindControl("txtEditLastVisited")).Text;
                 string address = ((TextBox)LocationsListView.EditItem.FindControl("txtEditAddress")).Text;
                 string capacityGallons = ((TextBox)LocationsListView.EditItem.FindControl("txtEditCapacityGallons")).Text;
                 string contactName = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactName")).Text;
                 string contactEmail = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactEmail")).Text;
                 string vehicleSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditVehicleSize")).Text;
+                string locationType = ((DropDownList)LocationsListView.EditItem.FindControl("ddlEditLocationType")).SelectedItem.Value;
+
                 NpgsqlCommand cmd = new NpgsqlCommand("update_location");
                 cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
                 if (clientPriority != null && clientPriority != "")
@@ -91,6 +131,14 @@ namespace RouteNavigation
                 if (pickupIntervalDays != null && pickupIntervalDays != "")
                 {
                     cmd.Parameters.AddWithValue("p_pickup_interval_days", NpgsqlTypes.NpgsqlDbType.Integer, pickupIntervalDays.Trim());
+                }
+                if (insertPickupWindowStartTime != null && insertPickupWindowStartTime != "")
+                {
+                    cmd.Parameters.AddWithValue("p_pickup_window_start_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowStartTime.Trim());
+                }
+                if (insertPickupWindowEndTime != null && insertPickupWindowEndTime != "")
+                {
+                    cmd.Parameters.AddWithValue("p_pickup_window_end_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowEndTime.Trim());
                 }
                 if (address != null && address != "")
                 {
@@ -116,11 +164,14 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                 }
+                if (locationType != null && locationType != "")
+                {
+                    cmd.Parameters.AddWithValue("p_location_type", NpgsqlTypes.NpgsqlDbType.Integer, locationType.Trim());
+                }
 
                 DataAccess.RunStoredProcedure(cmd);
                 DataAccess.UpdateMatrixWeight(int.Parse(id));
-                LocationsListView.EditIndex = -1;
-                BindGridView();
+
             }
             catch (Exception exception)
             {
@@ -130,6 +181,8 @@ namespace RouteNavigation
                 dataValidation.ErrorMessage = ErrorDetails;
                 LocationsListView.EditIndex = -1;
             }
+            LocationsListView.EditIndex = -1;
+            BindGridView();
         }
 
         protected void LocationsListView_RowCancelingEdit(object sender, ListViewCancelEventArgs e)
@@ -166,12 +219,15 @@ namespace RouteNavigation
             string clientPriority = ((TextBox)e.Item.FindControl("txtInsertClientPriority")).Text;
             string locationName = ((TextBox)e.Item.FindControl("txtInsertClientName")).Text;
             string pickupIntervalDays = ((TextBox)e.Item.FindControl("txtInsertPickupIntervalDays")).Text;
+            string insertPickupWindowStartTime = ((TextBox)e.Item.FindControl("txtInsertPickupWindowStartTime")).Text;
+            string insertPickupWindowEndTime = ((TextBox)e.Item.FindControl("txtInsertPickupWindowEndTime")).Text;
             string lastVisisted = ((TextBox)e.Item.FindControl("txtInsertLastVisited")).Text;
             string address = ((TextBox)e.Item.FindControl("txtInsertAddress")).Text;
             string capacityGallons = ((TextBox)e.Item.FindControl("txtInsertCapacityGallons")).Text;
             string contactName = ((TextBox)e.Item.FindControl("txtInsertContactName")).Text;
             string contactEmail = ((TextBox)e.Item.FindControl("txtInsertContactEmail")).Text;
             string vehicleSize = ((TextBox)e.Item.FindControl("txtInsertVehicleSize")).Text;
+            string locationType = ((DropDownList)e.Item.FindControl("ddlInsertLocationType")).SelectedItem.Value;
             try
             {
                 using (NpgsqlCommand cmd = new NpgsqlCommand("insert_location"))
@@ -188,6 +244,14 @@ namespace RouteNavigation
                     if (pickupIntervalDays != null && pickupIntervalDays != "")
                     {
                         cmd.Parameters.AddWithValue("p_pickup_interval_days", NpgsqlTypes.NpgsqlDbType.Integer, pickupIntervalDays.Trim());
+                    }
+                    if (insertPickupWindowStartTime != null && insertPickupWindowStartTime != "")
+                    {
+                        cmd.Parameters.AddWithValue("pickup_window_start_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowStartTime.Trim());
+                    }
+                    if (insertPickupWindowEndTime != null && insertPickupWindowEndTime != "")
+                    {
+                        cmd.Parameters.AddWithValue("pickup_window_end_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowEndTime.Trim());
                     }
                     if (address != null && address != "")
                     {
@@ -213,6 +277,11 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                     }
+                    if (locationType != null && locationType != "")
+                    {
+                        cmd.Parameters.AddWithValue("p_location_type", NpgsqlTypes.NpgsqlDbType.Integer, locationType.Trim());
+                    }
+
                     DataAccess.RunStoredProcedure(cmd);
                 }
 
@@ -228,8 +297,6 @@ namespace RouteNavigation
 
                 DataAccess.UpdateMatrixWeight(id);
                 DataAccess.RefreshApiCache();
-                LocationsListView.EditIndex = -1;
-                BindGridView();
             }
             catch (Exception exception)
             {
@@ -238,7 +305,8 @@ namespace RouteNavigation
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
             }
-
+            LocationsListView.EditIndex = -1;
+            BindGridView();
         }
 
 
@@ -272,6 +340,16 @@ namespace RouteNavigation
             locationSort(sender, "last_visited");
         }
 
+        protected void SortByPickupWindowStartTime_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "pickup_window_start_time");
+        }
+
+        protected void SortByPickupWindowEndTime_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "pickup_window_end_time");
+        }
+
         protected void SortByCapacity_Click(object sender, ImageClickEventArgs e)
         {
             locationSort(sender, "capacity_gallons");
@@ -290,6 +368,11 @@ namespace RouteNavigation
         protected void SortByContactEmail_Click(object sender, ImageClickEventArgs e)
         {
             locationSort(sender, "contact_email");
+        }
+
+        protected void SortByType_Click(object sender, ImageClickEventArgs e)
+        {
+            locationSort(sender, "type");
         }
 
         protected void SortByDaysUntilDue_Click(object sender, ImageClickEventArgs e)
@@ -400,7 +483,7 @@ namespace RouteNavigation
         {
             //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
             if (columnName == null)
-            columnName = lstSearchFilters.SelectedValue;
+                columnName = lstSearchFilters.SelectedValue;
             filterString = TxtSearchFilter.Text;
             DataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
             extensions.RoundDataTable(dataTable, 2);
