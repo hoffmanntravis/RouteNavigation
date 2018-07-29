@@ -271,7 +271,8 @@
                     <asp:TextBox class="tableInput" ID="txtEditContactEmail" runat="server" Text='<%# Bind("contact_email") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:DropDownList class="tableInput" ID="ddlEditLocationType"  runat="server"></asp:DropDownList>
+                    <asp:DropDownList class="tableInput" ID="ddlEditLocationType" runat="server"></asp:DropDownList>
+                    <asp:Label ID="lblEditLocationType" runat="server" Text='<%# Eval("type") %>' visible ="false"></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>

@@ -18,7 +18,6 @@ namespace RouteNavigation
     public partial class _Locations : Page
     {
         DataTable dataTable = new DataTable();
-
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make async calls that fail while the page is still starting up
@@ -55,9 +54,8 @@ namespace RouteNavigation
             DropDownList ddlEdit = e.Item.FindControl("ddlEditLocationType") as DropDownList;
             if (ddlEdit != null)
             {
-                
                 ddlEdit = populateLocationTypeDropDown(ddlEdit);
-                //ddlEdit.DataTextField = LocationsListView.Items[e.Item.DisplayIndex].FindControl()
+                ddlEdit.SelectedValue = (e.Item.FindControl("lblEditLocationType") as Label).Text;
                 ddlEdit.DataBind();
             }
         }
