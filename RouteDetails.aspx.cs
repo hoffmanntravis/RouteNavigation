@@ -21,7 +21,7 @@ namespace RouteNavigation
             try
             {
                 if (!Page.IsPostBack)
-                    BindGridView();
+                    BindListView();
             }
             catch (Exception exception)
             {
@@ -33,7 +33,7 @@ namespace RouteNavigation
         {
         }
 
-        protected void BindGridView()
+        protected void BindListView()
         {
             string queryStringId = Request.QueryString["routeId"];
             if (queryStringId != null && queryStringId != "")

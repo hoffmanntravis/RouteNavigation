@@ -50,7 +50,7 @@ namespace RouteNavigation
                 ClientScript.RegisterStartupScript(GetType(), "Javascript", "javascript:addMarker();", true);
 
                 //if (!Page.IsPostBack)
-                //    BindGridView();
+                //    BindListView();
             }
             catch (Exception exception)
             {
@@ -63,7 +63,7 @@ namespace RouteNavigation
 
         }
 
-        /*protected void BindGridView()
+        /*protected void BindListView()
         {
             string queryStringId = Request.QueryString["routeId"];
             if (queryStringId != null && queryStringId != "")

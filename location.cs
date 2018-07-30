@@ -23,6 +23,7 @@ namespace RouteNavigation
         public double distanceFromSource;
         public DateTime pickupWindowStartTime;
         public DateTime pickupWindowEndTime;
+        public string type;
 
         public DateTime lastVisited = default(DateTime);
         public double currentGallonsEstimate;

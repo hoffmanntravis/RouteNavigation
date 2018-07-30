@@ -32,7 +32,7 @@ namespace RouteNavigation
             if (!Page.IsPostBack)
             {
                 DataAccess.UpdateDbConfigWithApiStrings();
-                BindGridView();
+                BindListView();
             }
         }
         protected void RoutesListView_PagePropertiesChanging(object sender, EventArgs e)
@@ -57,7 +57,7 @@ namespace RouteNavigation
                 routeValidation.IsValid = false;
                 routeValidation.ErrorMessage = exception.Message;
             }
-            BindGridView();
+            BindListView();
             BtnCalculateRoutes.Enabled = true;
             BtnCalculateRoutes.Text = btnCalculateRoutesInitialText;
         }
@@ -87,7 +87,7 @@ namespace RouteNavigation
         Response.End();
     }
 
-    protected void BindGridView()
+    protected void BindListView()
     {
         dataTable = DataAccess.GetRouteInformationData();
         RoutesListView.DataSource = dataTable;

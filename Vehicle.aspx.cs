@@ -25,7 +25,7 @@ namespace RouteNavigation
             calc = new RouteCalculator();
             if (!Page.IsPostBack)
             {
-                BindGridView();
+                BindListView();
             }
         }
 
@@ -35,12 +35,12 @@ namespace RouteNavigation
             NpgsqlCommand cmd = new NpgsqlCommand("delete_vehicle");
             cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
             DataAccess.RunStoredProcedure(cmd);
-            BindGridView();
+            BindListView();
         }
         protected void VehiclesListView_RowEditing(object sender, ListViewEditEventArgs e)
         {
             VehiclesListView.EditIndex = e.NewEditIndex;
-            BindGridView();
+            BindListView();
         }
 
         protected void VehiclesListView_RowUpdating(object sender, ListViewUpdateEventArgs e)
@@ -90,19 +90,19 @@ namespace RouteNavigation
                 VehiclesListView.EditIndex = -1;
             }
             VehiclesListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
         protected void VehiclesListView_RowCancelingEdit(object sender, ListViewCancelEventArgs e)
         {
             VehiclesListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
         protected void VehiclesListView_PagePropertiesChanging(object sender, PagePropertiesChangingEventArgs e)
         {
             VehiclesListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
         protected void VehiclesListView_RowInsert(object sender, ListViewInsertEventArgs e)
@@ -149,12 +149,12 @@ namespace RouteNavigation
                 dataValidation.ErrorMessage = ErrorDetails;
             }
             VehiclesListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
         protected void FilterVehiclesListView_Click(Object sender, EventArgs e)
         {
-            BindGridView("name", TxtSearchFilter.Text);
+            BindListView("name", TxtSearchFilter.Text);
         }
 
         protected void BtnImportCsv_Click(object sender, EventArgs e)
@@ -174,7 +174,7 @@ namespace RouteNavigation
                 NpgsqlCommand cmd = new NpgsqlCommand("delete FROM vehicle;");
                 DataAccess.RunSqlCommandText(cmd);
                 DataAccess.RunPostgreImport("vehicle", Content);
-                BindGridView();
+                BindListView();
             }
             catch (Exception exception)
             {
@@ -206,7 +206,7 @@ namespace RouteNavigation
             Response.End();
         }
 
-        protected void BindGridView(string columnName = "name", string filterString = null)
+        protected void BindListView(string columnName = "name", string filterString = null)
         {
             DataTable table = DataAccess.GetVehicleData(columnName, filterString);
             VehiclesListView.DataSource = table;

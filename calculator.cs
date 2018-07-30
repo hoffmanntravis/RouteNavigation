@@ -221,7 +221,11 @@ namespace RouteNavigation
                     potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations);
                     TimeSpan routeTravelTime = CalculateTravelTime(potentialRoute.distanceMiles);
                     currentTime.Add(routeTravelTime);
-                    //currentTime.Add()
+                    double test = config.Calculation.oilPickupAverageDurationMinutes;
+                    test = 5;
+                    potentialRoute.allLocations.Where(a => a.type == "oil").ToList().ForEach(a => currentTime.Add(TimeSpan.FromMinutes(config.Calculation.oilPickupAverageDurationMinutes)));
+                    potentialRoute.allLocations.Where(a => a.type == "grease").ToList().ForEach(a => currentTime.Add(TimeSpan.FromMinutes(config.Calculation.greasePickupAverageDurationMinutes)));
+
                     potentialRoute.averageLocationDistance = calculateAverageLocationDistance(potentialRoute);
                     Logging.Logger.LogMessage("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles, "DEBUG");
                     routes.Add(potentialRoute);
@@ -279,7 +283,7 @@ namespace RouteNavigation
             }
             catch (Exception e)
             {
-                Logging.Logger.LogMessage(e.Message, "ERROR");
+                Logging.Logger.LogMessage(e.ToString(), "ERROR");
             }
 
             return routes;
@@ -761,6 +765,10 @@ namespace RouteNavigation
 
         protected TimeSpan CalculateTravelTime(double distanceMiles)
         {
+            if (distanceMiles == double.NaN)
+            {
+                distanceMiles = 0;
+            }
             double travelTimeMinutes = 0;
             double cityRadius = 5;
             //distance of less than n miles is considered to be within city, since very close locations will not involve highway mileage.
@@ -768,7 +776,7 @@ namespace RouteNavigation
             //This is a very simple heuristic that assumes distances as the crow flies
             if (distanceMiles < cityRadius)
             {
-                travelTimeMinutes = distanceMiles * (60 / config.Calculation.averageCityTravelSpeed);
+                travelTimeMinutes = (double)distanceMiles * (60 / config.Calculation.averageCityTravelSpeed);
             }
             else
             {
@@ -777,6 +785,7 @@ namespace RouteNavigation
             }
 
             TimeSpan travelTime = TimeSpan.FromMinutes(travelTimeMinutes);
+
             return travelTime;
         }
 

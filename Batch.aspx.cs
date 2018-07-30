@@ -22,17 +22,17 @@ namespace RouteNavigation
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
             if (!Page.IsPostBack)
             {
-                BindGridView();
+                BindListView();
             }
         }
         protected void BatchListView_PagePropertiesChanging(object sender, PagePropertiesChangingEventArgs e)
         {
             (BatchListView.FindControl("batchDataPager") as DataPager).SetPageProperties(e.StartRowIndex, e.MaximumRows, false);
-            BindGridView();
+            BindListView();
         }
 
 
-        protected void BindGridView()
+        protected void BindListView()
         {
             table = DataAccess.getRouteBatchData();
             BatchListView.DataSource = table;

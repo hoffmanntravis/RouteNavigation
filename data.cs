@@ -440,6 +440,8 @@ namespace RouteNavigation
                     location.contactEmail = row["contact_email"].ToString();
                 if (row["visit_time"] != DBNull.Value)
                     location.visitTime = TimeSpan.Parse(row["visit_time"].ToString());
+                if (row["type_text"] != DBNull.Value)
+                    location.type = row["type_text"].ToString();
                 locations.Add(location);
             }
             return locations;
@@ -450,7 +452,6 @@ namespace RouteNavigation
             List<Location> locations = new List<Location>();
             foreach (DataRow row in dataTable.Rows)
             {
-
                 Location location = new Location();
                 if (row["coordinates_latitude"] != DBNull.Value)
                     location.coordinates.lat = double.Parse(row["coordinates_latitude"].ToString());
@@ -689,15 +690,28 @@ namespace RouteNavigation
 
         public static void DeleteRouteDependencies(int id)
         {
-            using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
-                RunSqlCommandText(cmd);
-
-            using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location where location_id = " + id + ";"))
-                RunSqlCommandText(cmd);
-            using (NpgsqlCommand cmd = new NpgsqlCommand("delete_location"))
+            try
             {
-                cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
-                RunStoredProcedure(cmd);
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location;"))
+                    RunSqlCommandText(cmd);
+
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
+                    RunSqlCommandText(cmd);
+
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location where location_id = " + id + ";"))
+                    RunSqlCommandText(cmd);
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete_location"))
+                {
+                    cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
+                    RunStoredProcedure(cmd);
+                }
+            }
+
+            catch (Exception e)
+            {
+                Logging.Logger.LogMessage(String.Format("Failed to delete route dependencies for route id {0}", id), "ERROR");
+
+                Logging.Logger.LogMessage(e.ToString());
             }
         }
 

@@ -24,7 +24,7 @@ namespace RouteNavigation
             if (!Page.IsPostBack)
             {
                 populateddlSearchFilter();
-                BindGridView();
+                BindListView();
             }
         }
 
@@ -88,13 +88,13 @@ namespace RouteNavigation
             int id = int.Parse(e.Keys["id"].ToString());
             DataAccess.DeleteRouteDependencies(id);
             //calculator.calculateRoutes();
-            BindGridView();
+            BindListView();
         }
         protected void LocationsListView_RowEditing(object sender, ListViewEditEventArgs e)
         {
 
             LocationsListView.EditIndex = e.NewEditIndex;
-            BindGridView();
+            BindListView();
         }
 
         protected void LocationsListView_RowUpdating(object sender, ListViewUpdateEventArgs e)
@@ -180,26 +180,26 @@ namespace RouteNavigation
                 LocationsListView.EditIndex = -1;
             }
             LocationsListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
         protected void LocationsListView_RowCancelingEdit(object sender, ListViewCancelEventArgs e)
         {
             LocationsListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
         protected void LocationsListView_PagePropertiesChanging(object sender, PagePropertiesChangingEventArgs e)
         {
             (LocationsListView.FindControl("locationDataPager") as DataPager).SetPageProperties(e.StartRowIndex, e.MaximumRows, false);
-            BindGridView("location_name", TxtSearchFilter.Text);
+            BindListView("location_name", TxtSearchFilter.Text);
         }
 
         protected void FilterLocationsListView_Click(Object sender, EventArgs e)
         {
             DataPager DataPager = LocationsListView.FindControl("locationDataPager") as DataPager;
             DataPager.SetPageProperties(0, DataPager.PageSize, false);
-            BindGridView("location_name", TxtSearchFilter.Text);
+            BindListView("location_name", TxtSearchFilter.Text);
         }
 
         protected void TdClientPriority_click(object sender, ListViewCancelEventArgs e)
@@ -304,7 +304,7 @@ namespace RouteNavigation
                 dataValidation.ErrorMessage = ErrorDetails;
             }
             LocationsListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
 
@@ -391,22 +391,23 @@ namespace RouteNavigation
             if (ViewState[viewStatePropertyName] == null)
             {
                 ViewState[viewStatePropertyName] = false;
-                BindGridView(sortProperty, null, false);
+                BindListView(sortProperty, null, false);
                 image.ImageUrl = "~/images/down_arrow.svg";
             }
             else if (ViewState[viewStatePropertyName].ToString() == Boolean.TrueString)
             {
                 ViewState[viewStatePropertyName] = false;
-                BindGridView(sortProperty, null, false);
+                BindListView(sortProperty, null, false);
 
                 image.ImageUrl = "~/images/down_arrow.svg";
             }
             else if (ViewState[viewStatePropertyName].ToString() == Boolean.FalseString)
             {
                 ViewState[viewStatePropertyName] = true;
-                BindGridView(sortProperty, null, true);
+                BindListView(sortProperty, null, true);
                 image.ImageUrl = "~/images/up_arrow.svg";
             }
+            ViewState["LastSortedType"] = sortProperty;
         }
 
         protected void BtnImportCsv_Click(object sender, EventArgs e)
@@ -438,7 +439,7 @@ namespace RouteNavigation
                 string expectedHeaderString = String.Join(",", expectedHeaders);
 
                 DataAccess.RunPostgreImport(String.Format("location ({0}) ", expectedHeaderString), Content);
-                BindGridView();
+                BindListView();
             }
             catch (Exception exception)
             {
@@ -474,14 +475,18 @@ namespace RouteNavigation
         {
             DataAccess.RefreshApiCache(false);
             LocationsListView.EditIndex = -1;
-            BindGridView();
+            BindListView();
         }
 
-        protected void BindGridView(string columnName = "location_name", string filterString = null, bool ascending = true)
+        protected void BindListView(string columnName = null, string filterString = null, bool ascending = true)
         {
             //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
             if (columnName == null)
-                columnName = lstSearchFilters.SelectedValue;
+                if (ViewState["LastSortedType"] == null)
+                    columnName = lstSearchFilters.SelectedValue;
+                else
+                    columnName = ViewState["LastSortedType"].ToString();
+
             filterString = TxtSearchFilter.Text;
             DataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
             extensions.RoundDataTable(dataTable, 2);
