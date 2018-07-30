@@ -70,6 +70,7 @@ namespace RouteNavigation
 
                 List<Location> longOverDueLocations = availableLocations.Where(a => a.daysUntilDue <= (config.Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
                 availableLocations = availableLocations.Except(longOverDueLocations).ToList();
+                availableLocations = availableLocations.Except(availableLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
 
                 if (origin == null)
                 {
@@ -221,10 +222,14 @@ namespace RouteNavigation
                     potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations);
                     TimeSpan routeTravelTime = CalculateTravelTime(potentialRoute.distanceMiles);
                     currentTime.Add(routeTravelTime);
-                    double test = config.Calculation.oilPickupAverageDurationMinutes;
-                    test = 5;
-                    potentialRoute.allLocations.Where(a => a.type == "oil").ToList().ForEach(a => currentTime.Add(TimeSpan.FromMinutes(config.Calculation.oilPickupAverageDurationMinutes)));
-                    potentialRoute.allLocations.Where(a => a.type == "grease").ToList().ForEach(a => currentTime.Add(TimeSpan.FromMinutes(config.Calculation.greasePickupAverageDurationMinutes)));
+
+                    Logging.Logger.LogMessage(String.Format("Current time is {0}", currentTime).ToString(), "DEBUG");
+                    int oilLocationsCount = potentialRoute.allLocations.Where(a => a.type == "oil").ToList().Count;
+                    int greaseLocationsCount = potentialRoute.allLocations.Where(a => a.type == "grease").ToList().Count;
+                    Logging.Logger.LogMessage(String.Format("there are {0} oil locations and {1} grease locations.", oilLocationsCount, greaseLocationsCount), "DEBUG");
+                    currentTime = currentTime.Add(TimeSpan.FromMinutes(oilLocationsCount * config.Calculation.oilPickupAverageDurationMinutes));
+                    currentTime = currentTime.Add(TimeSpan.FromMinutes(oilLocationsCount * config.Calculation.greasePickupAverageDurationMinutes));
+                    Logging.Logger.LogMessage(String.Format("Current time is {0}", currentTime).ToString(), "DEBUG");
 
                     potentialRoute.averageLocationDistance = calculateAverageLocationDistance(potentialRoute);
                     Logging.Logger.LogMessage("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles, "DEBUG");
@@ -765,10 +770,8 @@ namespace RouteNavigation
 
         protected TimeSpan CalculateTravelTime(double distanceMiles)
         {
-            if (distanceMiles == double.NaN)
-            {
-                distanceMiles = 0;
-            }
+
+            distanceMiles = 0;
             double travelTimeMinutes = 0;
             double cityRadius = 5;
             //distance of less than n miles is considered to be within city, since very close locations will not involve highway mileage.
@@ -776,7 +779,7 @@ namespace RouteNavigation
             //This is a very simple heuristic that assumes distances as the crow flies
             if (distanceMiles < cityRadius)
             {
-                travelTimeMinutes = (double)distanceMiles * (60 / config.Calculation.averageCityTravelSpeed);
+                travelTimeMinutes = distanceMiles * (60 / config.Calculation.averageCityTravelSpeed);
             }
             else
             {
@@ -785,7 +788,6 @@ namespace RouteNavigation
             }
 
             TimeSpan travelTime = TimeSpan.FromMinutes(travelTimeMinutes);
-
             return travelTime;
         }
 

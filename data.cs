@@ -365,8 +365,10 @@ namespace RouteNavigation
                     config.Calculation.routeMaxHours = double.Parse(row["route_max_hours"].ToString());
                 if (row["current_fill_level_error_margin"] != DBNull.Value)
                     config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
+                if (row["oil_pickup_average_duration"] != DBNull.Value)
+                    config.Calculation.oilPickupAverageDurationMinutes = TimeSpan.Parse(row["oil_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["grease_pickup_average_duration"] != DBNull.Value)
-                    config.Calculation.oilPickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
+                    config.Calculation.greasePickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["matrix_priority_multiplier"] != DBNull.Value)
                     config.matrix.priorityMultiplier = double.Parse(row["matrix_priority_multiplier"].ToString());
                 if (row["matrix_days_until_due_exponent"] != DBNull.Value)

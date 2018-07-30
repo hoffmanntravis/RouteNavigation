@@ -28,8 +28,8 @@ namespace RouteNavigation
             if (Config.Features.vehicleFillLevel)
                 txtChkVehicleFillLevel.Checked = true;
             txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
-            txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
             txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
+            txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
             txtMinimumDaysUntilPickup.Text = Config.Calculation.minimDaysUntilPickup.ToString();
             txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
 
@@ -96,14 +96,14 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_route_max_hours", NpgsqlTypes.NpgsqlDbType.Double, txtRouteMaxHours.Text);
                 if (txtRouteDistanceMaxMiles.Text != null && txtRouteDistanceMaxMiles.Text != "")
                     cmd.Parameters.AddWithValue("p_route_distance_max_miles", NpgsqlTypes.NpgsqlDbType.Double, txtRouteDistanceMaxMiles.Text);
-                if (txtOilPickupAverageDuration.Text != null && txtOilPickupAverageDuration.Text != "")
-                    cmd.Parameters.AddWithValue("p_oil_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtOilPickupAverageDuration.Text.ToString())));
                 if (txtMaximumDaysOverdue.Text != null && txtMaximumDaysOverdue.Text != "")
                     cmd.Parameters.AddWithValue("p_maximum_days_overdue", NpgsqlTypes.NpgsqlDbType.Integer, txtMaximumDaysOverdue.Text);
                 if (txtWorkDayStart.Text != null && txtWorkDayStart.Text != "")
                     cmd.Parameters.AddWithValue("p_workday_start_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayStart.Text);
                 if (txtWorkDayEnd.Text != null && txtWorkDayEnd.Text != "")
                     cmd.Parameters.AddWithValue("p_workday_end_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayEnd.Text);
+                if (txtOilPickupAverageDuration.Text != null && txtOilPickupAverageDuration.Text != "")
+                    cmd.Parameters.AddWithValue("p_oil_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtOilPickupAverageDuration.Text.ToString())));
                 if (txtGreasePickupAverageDuration.Text != null && txtGreasePickupAverageDuration.Text != "")
                     cmd.Parameters.AddWithValue("p_grease_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtGreasePickupAverageDuration.Text.ToString())));
 
