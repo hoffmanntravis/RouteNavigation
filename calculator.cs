@@ -62,8 +62,8 @@ namespace RouteNavigation
 
         public List<Route> CalculateRoutes(List<Location> availableLocations, List<Vehicle> availableVehicles, DateTime startDate, Location origin, Metadata metadata)
         {
-            DateTime currentTime = config.Calculation.workdayStartTime;
-
+            DateTime startTime = config.Calculation.workdayStartTime;
+            DateTime endTime = config.Calculation.workdayEndTime;
             try
             {
                 availableLocations = GetPossibleLocations(availableVehicles, availableLocations);
@@ -93,12 +93,19 @@ namespace RouteNavigation
                 //availableLocations.Sort((a, b) => b.distanceFromSource.CompareTo(a.distanceFromSource));
 
                 //build routes until all locations are exhausted
+                DateTime currentTime = startTime;
+
                 while (availableLocations.Count > 0)
                 {
                     if (availableVehicles.Count == 0)
                     {
                         //get some more vehicles and start a new day, with new routes
                         startDate = startDate.AddDays(1);
+                        //logic to discard weekends for route days
+                        if (startDate.DayOfWeek == DayOfWeek.Saturday)
+                            startDate = startDate.AddDays(2);
+                        if (startDate.DayOfWeek == DayOfWeek.Sunday)
+                            startDate = startDate.AddDays(1);
                         availableVehicles = allVehicles.Where(a => a.operational == true).ToList();
                     }
 
@@ -136,9 +143,26 @@ namespace RouteNavigation
                         }
                         double nextLocationDistanceMiles = CalculateDistance(nextLocation, origin);
                         TimeSpan travelTime = CalculateTravelTime(nextLocationDistanceMiles);
-                        double travelTimeHours = travelTime.TotalHours;
+                        currentTime.Add(travelTime);
 
-                        if (potentialRoute.totalTime.TotalHours + nextLocation.visitTime.TotalHours + travelTimeHours > config.Calculation.routeMaxHours)
+                        if (nextLocation.pickupWindowStartTime != DateTime.MinValue)
+                            if (currentTime < nextLocation.pickupWindowStartTime)
+                                compatibleLocations.Remove(nextLocation);
+
+                        if (nextLocation.pickupWindowEndTime != DateTime.MinValue)
+                            if (currentTime > nextLocation.pickupWindowEndTime)
+                                compatibleLocations.Remove(nextLocation);
+
+
+                        if (destination.type == "oil")
+                        {
+                            currentTime.Add(TimeSpan.FromMinutes(config.Calculation.oilPickupAverageDurationMinutes));
+                        }
+                        if (destination.type == "grease")
+                        {
+                            currentTime.Add(TimeSpan.FromMinutes(config.Calculation.greasePickupAverageDurationMinutes));
+                        }
+                        if (currentTime > endTime)
                         {
                             //This is only relevent if we have a location in the route.  Otherwise, we may end up with no valid locations.  
                             if (potentialRoute.allLocations.Count > 0)
@@ -276,6 +300,7 @@ namespace RouteNavigation
                 {
                     metadata.averageRouteDistanceMiles = calculateAverageRouteDistance(routes);
                     metadata.averageRouteDistanceStdDev = calculateRoutesStdDev(routes);
+                    metadata.routesDuration = currentTime - startTime;
                     //metadata.locationsHash = (this.metadata.processedLocations).GetHashCode();
                 }
 

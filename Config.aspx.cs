@@ -35,8 +35,8 @@ namespace RouteNavigation
 
             if (Config.Calculation.workdayStartTime != DateTime.MinValue)
                 txtWorkDayStart.Text = Config.Calculation.workdayStartTime.TimeOfDay.ToString();
-            if (Config.Calculation.workDayEndTime != DateTime.MinValue)
-                txtWorkDayEnd.Text = Config.Calculation.workDayEndTime.TimeOfDay.ToString();
+            if (Config.Calculation.workdayEndTime != DateTime.MinValue)
+                txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
 
             txtRouteMaxHours.Text = Config.Calculation.routeMaxHours.ToString();
             txtRouteDistanceMaxMiles.Text = Config.Calculation.routeDistanceMaxMiles.ToString();

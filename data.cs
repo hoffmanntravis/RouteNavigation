@@ -384,7 +384,7 @@ namespace RouteNavigation
                 if (row["workday_start_time"] != DBNull.Value)
                     config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
                 if (row["workday_end_time"] != DBNull.Value)
-                    config.Calculation.workDayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
+                    config.Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
                 if (row["route_distance_max_miles"] != DBNull.Value)
                     config.Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
             }
