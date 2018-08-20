@@ -26,12 +26,15 @@
 
     <asp:ListView ID="LocationsListView" runat="server"
         DataKeyNames="id"
+        OnItemDataBound="LocationstListView_ItemDataBound"
         OnPagePropertiesChanging="LocationsListView_PagePropertiesChanging"
         OnItemEditing="LocationsListView_RowEditing"
         OnItemCanceling="LocationsListView_RowCancelingEdit"
         OnItemUpdating="LocationsListView_RowUpdating"
         OnItemDeleting="LocationsListView_RowDeleting"
         OnItemInserting="LocationsListView_RowInsert"
+        OnItemCreated="LocationsListView_ItemCreated"
+
         InsertItemPosition="LastItem">
 
         <EmptyDataTemplate>
@@ -42,43 +45,67 @@
                 <table runat="server">
                     <tr runat="server">
                         <td id="td1" runat="server">
+                            <asp:ImageButton ID="imgLocationIdSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationId_Click" />
                             <b>id</b>
                         </td>
                         <td id="tdLocationName" runat="server">
                             <b>Location Name</b>
+                            <asp:ImageButton ID="imgLocationNameSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationName_Click" />
                         </td>
                         <td id="tdClientPriority" onclick="tdClientPriority_click" runat="server">
+                            <asp:ImageButton ID="imgClientPrioritySort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByClientPriority_Click" />
                             <b>Client Priority</b>
                         </td>
-                        <td id="td3" runat="server">
+                        <td id="tdAddress" runat="server">
+                            <asp:ImageButton ID="imgAddressSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByAddress_Click" />
                             <b>Address</b>
                         </td>
-                        <td id="td4" runat="server">
+                        <td id="tdPickupIntervalDays" runat="server">
+                            <asp:ImageButton ID="imgPickupIntervalSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupInterval_Click" />
                             <b>Pickup Interval Days</b>
                         </td>
-                        <td id="td5" runat="server">
+                        <td id="tdPickupWindowStartTime" runat="server">
+                            <asp:ImageButton ID="imgPickupWindowStartTimeSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowStartTime_Click" />
+                            <b>Pickup Time Start</b>
+                        </td>
+                        <td id="tdPickupWindowEndTime" runat="server">
+                            <asp:ImageButton ID="imgPickupWindowEndTimeSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowEndTime_Click" />
+                            <b>Pickup Time End</b>
+                        </td>
+                        <td id="tdLastVisited" runat="server">
+                            <asp:ImageButton ID="imgLastVisitedSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLastVisited_Click" />
                             <b>Last Visited</b>
                         </td>
-                        <td id="td6" runat="server">
+                        <td id="tdCapacity" runat="server">
+                            <asp:ImageButton ID="imgCapacitySort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByCapacity_Click" />
                             <b>Capacity (glns)</b>
                         </td>
-                        <td id="td7" runat="server">
+                        <td id="tdVehicleSize" runat="server">
+                            <asp:ImageButton ID="imgVehicleSizeSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByVehicleSize_Click" />
                             <b>Vehicle Size</b>
                         </td>
-                        <td id="td8" width="100" runat="server">
+                        <td id="tdContactName" width="100" runat="server">
+                            <asp:ImageButton ID="imgContactNameSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByContactName_Click" />
                             <b>Contact Name</b>
                         </td>
-                        <td id="td9" width="100" runat="server">
+                        <td id="tdContactEmail" width="100" runat="server">
+                            <asp:ImageButton ID="imgContactEmailSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByContactEmail_Click" />
                             <b>Contact Email</b>
                         </td>
-                        <td id="td10" width="100" runat="server">
-                            <b>Days Until Due</b>
+                        <td id="td2" width="100" runat="server">
+                            <asp:ImageButton ID="imgType" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByType_Click" />
+                            <b>type</b>
                         </td>
 
-                        <td id="td11" width="100" runat="server">
+                        <td id="tdDaysUntilDue" width="100" runat="server">
+                            <asp:ImageButton ID="imgDaysUntilDueSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByDaysUntilDue_Click" />
+                            <b>Days Until Due</b>
+                        </td>
+                        <td id="tdMatrixWeight" width="100" runat="server">
+                            <asp:ImageButton ID="imgMatrixWeightSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByMatrixWeight_Click" />
                             <b>Matrix Weight</b>
                         </td>
-                        <td id="td12" width="100" runat="server">
+                        <td id="tdAction" width="100" runat="server">
                             <b>Action</b>
                         </td>
                         <td id="itemPlaceHolder" runat="server"></td>
@@ -116,26 +143,34 @@
                         <asp:Label ID="label4" runat="server" Text='<%# Eval("pickup_interval_days") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label5" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
+                        <asp:Label ID="label5" runat="server" Text='<%# Eval("pickup_window_start_time") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label6" runat="server" Text='<%# Eval("capacity_gallons") %>'></asp:Label>
+                        <asp:Label ID="label6" runat="server" Text='<%# Eval("pickup_window_end_time") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label7" runat="server" Text='<%# Eval("vehicle_size") %>'></asp:Label>
+                        <asp:Label ID="label7" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label8" runat="server" Text='<%# Eval("contact_name") %>'></asp:Label>
+                        <asp:Label ID="label8" runat="server" Text='<%# Eval("capacity_gallons") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label9" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
-                    </td>
-
-                    <td>
-                        <asp:Label ID="label10" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
+                        <asp:Label ID="label9" runat="server" Text='<%# Eval("vehicle_size") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="lblMatrixWeight" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
+                        <asp:Label ID="label10" runat="server" Text='<%# Eval("contact_name") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="labe11" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="labe12" runat="server" Text='<%# Eval("type_text") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="labe13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="labe14" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:LinkButton ID="btnEdit" Text="Edit" runat="server" CommandName="Edit" />
@@ -162,25 +197,34 @@
                     <asp:Label ID="label4" runat="server" Text='<%# Eval("pickup_interval_days") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label5" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
+                    <asp:Label ID="label5" runat="server" Text='<%# Eval("pickup_window_start_time") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label6" runat="server" Text='<%# Bind("capacity_gallons") %>'></asp:Label>
+                    <asp:Label ID="label6" runat="server" Text='<%# Eval("pickup_window_end_time") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label7" runat="server" Text='<%# Bind("vehicle_size") %>'></asp:Label>
+                    <asp:Label ID="label7" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label8" runat="server" Text='<%# Eval("contact_name") %>'></asp:Label>
+                    <asp:Label ID="label8" runat="server" Text='<%# Bind("capacity_gallons") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label9" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
+                    <asp:Label ID="label9" runat="server" Text='<%# Bind("vehicle_size") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label10" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
+                    <asp:Label ID="label0" runat="server" Text='<%# Eval("contact_name") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="labe11" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
+                    <asp:Label ID="label11" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
+                </td>
+                <td>
+                    <asp:Label ID="label12" runat="server" Text='<%# Bind("type_text") %>'></asp:Label>
+                </td>
+                <td>
+                    <asp:Label ID="label13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
+                </td>
+                <td>
+                    <asp:Label ID="label14" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:LinkButton ID="btnEdit2" Text="Edit" runat="server" CommandName="Edit" />
@@ -206,6 +250,12 @@
                     <asp:TextBox class="tableInput" ID="txtEditPickupIntervalDays" runat="server" Text='<%# Bind("pickup_interval_days") %>'></asp:TextBox>
                 </td>
                 <td>
+                    <asp:TextBox class="tableInput" ID="txtEditPickupWindowStartTime" runat="server" Text='<%# Bind("pickup_window_start_time") %>'></asp:TextBox>
+                </td>
+                <td>
+                    <asp:TextBox class="tableInput" ID="txtEditPickupWindowEndTime" runat="server" Text='<%# Bind("pickup_window_end_time") %>'></asp:TextBox>
+                </td>
+                <td>
                     <asp:TextBox class="tableInput" ID="txtEditLastVisited" runat="server" Text='<%# Bind("last_visited") %>'></asp:TextBox>
                 </td>
                 <td>
@@ -221,6 +271,10 @@
                     <asp:TextBox class="tableInput" ID="txtEditContactEmail" runat="server" Text='<%# Bind("contact_email") %>'></asp:TextBox>
                 </td>
                 <td>
+                    <asp:DropDownList class="tableInput" ID="ddlEditLocationType" runat="server"></asp:DropDownList>
+                    <asp:Label ID="lblEditLocationType" runat="server" Text='<%# Eval("type") %>' visible ="false"></asp:Label>
+                </td>
+                <td>
                     <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
                 </td>
                 <td>
@@ -232,7 +286,6 @@
                 </td>
             </tr>
         </EditItemTemplate>
-
         <InsertItemTemplate>
             <tr id="Tr1" runat="server">
                 <td></td>
@@ -258,6 +311,18 @@
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
+                        <asp:TextBox class="tableInput" ID="txtInsertPickupWindowStartTime" placeholder="06:00" runat="server" Text='<%# Bind("pickup_window_start_time") %>'></asp:TextBox>
+                    </asp:Panel>
+                </td>
+
+                <td>
+                    <asp:Panel runat="server" DefaultButton="btnInsert">
+                        <asp:TextBox class="tableInput" ID="txtInsertPickupWindowEndTime" placeholder="16:00" runat="server" Text='<%# Bind("pickup_window_end_time") %>'></asp:TextBox>
+                    </asp:Panel>
+                </td>
+
+                <td>
+                    <asp:Panel runat="server" DefaultButton="btnInsert">
                         <asp:TextBox class="tableInput" ID="txtInsertLastVisited" placeholder="01/01/2018" runat="server" Text='<%# Bind("last_visited") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
@@ -280,6 +345,9 @@
                     <asp:Panel runat="server" DefaultButton="btnInsert">
                         <asp:TextBox class="tableInput" ID="txtInsertContactEmail" runat="server" Text='<%# Bind("contact_email") %>'></asp:TextBox>
                     </asp:Panel>
+                </td>
+                <td>
+                    <asp:DropDownList class="tableInput" ID="ddlInsertLocationType" runat="server"></asp:DropDownList>
                 </td>
                 <td></td>
                 <td></td>

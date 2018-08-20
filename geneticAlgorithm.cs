@@ -13,13 +13,13 @@ namespace RouteNavigation
 {
     public class GeneticAlgorithm
     {
-        static protected int iterations = 200;
-        static public int populationSize = 2000;
+        static protected int iterations = 20;
+        static public int populationSize = 20;
         static public int neighborCount = 300;
-        static public int tournamentSize = 32;
-        static public int tournamentWinnerCount = 16;
-        static public int breedersCount = 12;
-        static public int offSpringPoolSize = 8;
+        static public int tournamentSize = 4;
+        static public int tournamentWinnerCount = 2;
+        static public int breedersCount = 2;
+        static public int offSpringPoolSize = 4;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
@@ -39,7 +39,7 @@ namespace RouteNavigation
         public List<List<Location>> initializePopulation(int populationSize)
         {
             List<List<Location>> startingPopulation = new List<List<Location>>();
-            Logging.Logger.LogMessage("Creating a randomized starting Population of locations, pool size:" + populationSize,"INFO");
+            Logging.Logging.Logger.Info("Creating a randomized starting Population of locations, pool size:" + populationSize);
 
             for (int x = 0; x < populationSize; x++)
             {
@@ -76,7 +76,7 @@ namespace RouteNavigation
             List<RouteCalculator> duplicateCalcs = calcs.GroupBy(c => c.GetHashCode()).Where(g => g.Skip(1).Any()).SelectMany(c => c).ToList();
             int duplicatesCount = duplicateCalcs.Count;
 
-            Logging.Logger.LogMessage("There are " + duplicateCalcs.Count + " Duplicates", "INFO");
+            Logging.Logging.Logger.Info("There are " + duplicateCalcs.Count + " Duplicates");
         }
 
 
@@ -102,31 +102,31 @@ namespace RouteNavigation
 
                 List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
 
-                Logging.Logger.LogMessage("Threading intialized locations pool into calculation class instances", "INFO");
+                Logging.Logging.Logger.Info("Threading intialized locations pool into calculation class instances");
 
                 fitnessCalcs = threadCalculations(startingPopulation, fitnessCalcs);
 
-                Logging.Logger.LogMessage("Created random locations pool", "INFO");
+                Logging.Logging.Logger.Info("Created random locations pool");
 
                 fitnessCalcs.SortByDistanceAsc();
                 double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
 
                 int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-                Logger.LogMessage(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount), "INFO");
+                Logging.Logging.Logger.Info(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
 
-                Logger.LogMessage(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation), "INFO");
+                Logging.Logging.Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
 
                 for (int i = 0; i < iterations; i++)
                 {
-                    Logger.LogMessage(string.Format("Beginning iteration {0}", i, "DEBUG"));
+                    Logging.Logging.Logger.Info(string.Format("Beginning iteration {0}", i));
                     currentIteration = i;
                     fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
 
                     fitnessCalcs.SortByDistanceAsc();
                     double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
                     emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-                    Logger.LogMessage(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount), "INFO");
-                    Logger.LogMessage(string.Format("Iteration {0} produced a shortest distance of {1}.", i, shortestDistance, "INFO"));
+                    Logging.Logging.Logger.Info(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
+                    Logging.Logging.Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i, shortestDistance));
                 }
 
                 //fully optimized the GA selected route with 3opt swap
@@ -134,14 +134,14 @@ namespace RouteNavigation
                 //foreach (Route route in bestCalc.routes)
                 //    bestCalc.calculateTSPRouteTwoOpt(route);
                 DataAccess.insertRoutes(batchId, bestCalc.routes);
-                Logging.Logger.LogMessage(String.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
+                Logging.Logging.Logger.Info(String.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                 DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
 
-                Logging.Logger.LogMessage("Finished calculations.", "INFO");
+                Logging.Logging.Logger.Info("Finished calculations.");
             }
             catch (Exception e)
             {
-                Logging.Logger.LogMessage(e.Message, "ERROR");
+                Logging.Logging.Logger.Error(e.Message);
             }
         }
 
@@ -154,18 +154,18 @@ namespace RouteNavigation
             List<RouteCalculator> elites = new List<RouteCalculator>();
             elites.AddRange(calcs.Take(eliteCount));
             calcs.RemoveRange(0, eliteCount);
-            Logging.Logger.LogMessage(String.Format("Preserving {0} elites", eliteCount),"DEBUG");
+            Logging.Logging.Logger.Trace(String.Format("Preserving {0} elites", eliteCount));
 
             List<RouteCalculator> breeders = geneticSelection(calcs);
 
-            Logger.LogMessage(string.Format("breeders count is: {0}", breeders.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("breeders count is: {0}", breeders.Count));
 
             List<List<Location>> offspring = produceOffspring(breeders);
 
-            Logger.LogMessage(string.Format("Offspring count is: {0}", offspring.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Offspring count is: {0}", offspring.Count));
 
             //Add in mutated offspring
-            Logger.LogMessage(string.Format("running potential mutation of {0} offspring", offspring.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("running potential mutation of {0} offspring", offspring.Count));
             offspring = geneticMutation(offspring);
 
             calcs = threadCalculations(offspring, calcs);
@@ -191,13 +191,13 @@ namespace RouteNavigation
             //add elites into the list since lower performing items will be removed in place of them
             elites.ForEach(a => calcs.Add(a));
 
-            //Logging.Logger.LogMessage(String.Format("{0} elites preserved.", elites.Count));
+            //Logging.Logging.Logger.Log(String.Format("{0} elites preserved.", elites.Count));
             //remove the worst performers relative to the mutated offspring count and the elite count that was preserved
             calcs.SortByDistanceDesc();
             for (int x = 0; x < offspring.Count; x++)
                 calcs.Remove(calcs.First());
 
-            Logging.Logger.LogMessage(String.Format("Pool size is: {0}", calcs.Count),"DEBUG");
+            Logging.Logging.Logger.Trace(String.Format("Pool size is: {0}", calcs.Count));
 
             return calcs;
         }
@@ -235,8 +235,8 @@ namespace RouteNavigation
 
         public List<RouteCalculator> geneticSelection(List<RouteCalculator> parents)
         {
-            Logger.LogMessage(string.Format("Performing genetic selection from {0} parents", parents.Count), "DEBUG");
-            Logger.LogMessage(string.Format("Parent metadata for parent 0 is processed locations: {0}, orphaned locations: {1} ", parents[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Performing genetic selection from {0} parents", parents.Count));
+            Logging.Logging.Logger.Trace(string.Format("Parent metadata for parent 0 is processed locations: {0}, orphaned locations: {1} ", parents[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count));
 
             List<RouteCalculator> breeders = new List<RouteCalculator>();
             while (breeders.Count < breedersCount)
@@ -252,8 +252,8 @@ namespace RouteNavigation
                 foreach (RouteCalculator winner in winners)
                     breeders.Add(winner);
             }
-            Logger.LogMessage(string.Format("Parent metadata for parent 0 is processed locations: {0}, orphaned locations: {1} ", parents[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count), "DEBUG");
-            Logger.LogMessage(string.Format("Breeders metadata for breeders 0 is processed locations: {0}, orphaned locations: {1} ", breeders[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Parent metadata for parent 0 is processed locations: {0}, orphaned locations: {1} ", parents[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count));
+            Logging.Logging.Logger.Trace(string.Format("Breeders metadata for breeders 0 is processed locations: {0}, orphaned locations: {1} ", breeders[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count));
 
             return breeders;
         }
@@ -261,7 +261,7 @@ namespace RouteNavigation
         public List<List<Location>> produceOffspring(List<RouteCalculator> breeders)
         {
 
-            Logger.LogMessage(string.Format("Producing offspring from {0} breeders", breeders.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Producing offspring from {0} breeders", breeders.Count));
             List<List<Location>> offspring = new List<List<Location>>();
             //make a copy of the original list.  We'll remove from breeders as we populate offspring, but if we need more breeders and run out, we'll refresh the pool with the oirignals.
             breeders.SortByDistanceAsc();
@@ -289,7 +289,7 @@ namespace RouteNavigation
                 List<Location> parentBLocations = new List<Location>(parentB.metadata.processedLocations);
 
                 double crossoverChance = crossoverProbability * growthFunction();
-                Logger.LogMessage(String.Format("Crossover chance is {0}", crossoverChance), "DEBUG");
+                Logging.Logging.Logger.Trace(String.Format("Crossover chance is {0}", crossoverChance));
                 if (growthFunction() * rng.Next(101) <= crossoverChance * 100)
                 {
                     offspring.Add(geneticCrossoverEdgeRecombine(parentALocations, parentBLocations));
@@ -304,7 +304,7 @@ namespace RouteNavigation
                 }
                 //offspring.Add(geneticCrossover(parentB, parentA));
             }
-            Logger.LogMessage(string.Format("Produced {0} offspring", offspring.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Produced {0} offspring", offspring.Count));
             return offspring;
         }
 
@@ -390,7 +390,7 @@ namespace RouteNavigation
             //Get Neighbors for the purposes of edge recombination.  Only assign neighbors here since we don't need them elsewhere.
             parentALocations.Where(a => a.neighbors.Count != neighborCount).ToList().ForEach(a => a.neighbors = RouteCalculator.FindNeighbors(a, parentALocations, neighborCount));
             parentBLocations.Where(a => a.neighbors.Count != neighborCount).ToList().ForEach(a => a.neighbors = RouteCalculator.FindNeighbors(a, parentBLocations, neighborCount));
-            Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
+            Logging.Logging.Logger.Trace("Performing genetic crossover from parents");
             /*
 
             int routeHashParentA = generateRouteHash(parentALocations);
@@ -473,11 +473,11 @@ namespace RouteNavigation
 
             List<int> indexes = new List<int>();
             //if rounding causes the pool size to be 0 with a positive mutationRatio, round up to 1
-            Logger.LogMessage(string.Format("Mutation method received {0} locations", mutateLocationsList.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Mutation method received {0} locations", mutateLocationsList.Count));
 
             double mutationChance = mutationProbability * decayFunction();
-                //rng.Next is exclusive, so to have probabilities 0 to 100 we need to extend the range to 101
-                Logger.LogMessage(String.Format("Mutation chance is {0}", mutationChance),"DEBUG");
+            //rng.Next is exclusive, so to have probabilities 0 to 100 we need to extend the range to 101
+            Logging.Logging.Logger.Trace(String.Format("Mutation chance is {0}", mutationChance));
             if (rng.Next(101) <= mutationChance * 100)
             {
                 foreach (List<Location> mutateLocations in mutateLocationsList)
@@ -486,7 +486,7 @@ namespace RouteNavigation
                     int upperBound = Convert.ToInt32(Math.Round(decayFunction() * mutationAlleleMax));
 
                     int mutationGeneQuantity = rng.Next(1, Math.Max(1,upperBound));
-                    Logger.LogMessage(String.Format("mutation gene quantity is {0}", mutationGeneQuantity), "DEBUG");
+                    Logging.Logging.Logger.Trace(String.Format("mutation gene quantity is {0}", mutationGeneQuantity));
                     for (int y = 0; y < mutationGeneQuantity; y++)
                     {
                         int displacedGeneIndex = rng.Next(mutateLocations.Count);
@@ -509,23 +509,23 @@ namespace RouteNavigation
                 }
             }
 
-            Logger.LogMessage(string.Format("Returning {0} mutated locations", mutateLocationsList.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Returning {0} mutated locations", mutateLocationsList.Count));
             return mutateLocationsList;
         }
 
         public List<RouteCalculator> runTournament(List<RouteCalculator> contestants)
         {
-            Logger.LogMessage(string.Format("Running tournament with {0} contestants", contestants.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Running tournament with {0} contestants", contestants.Count));
 
 
 
             contestants.SortByDistanceAsc();
             List<RouteCalculator>winners = contestants.Take(tournamentWinnerCount).ToList();
 
-            Logger.LogMessage(string.Format("Tournament produced {0} winners", contestants.Count), "DEBUG");
+            Logging.Logging.Logger.Trace(string.Format("Tournament produced {0} winners", contestants.Count));
             foreach (RouteCalculator contestant in contestants)
             {
-                Logger.LogMessage(string.Format("Contestant winner had distance of {0} miles", contestant.metadata.routesLengthMiles), "DEBUG");
+                Logging.Logging.Logger.Trace(string.Format("Contestant winner had distance of {0} miles", contestant.metadata.routesLengthMiles));
             }
 
             //foreach (RouteCalculator contestant in contestants)
@@ -550,19 +550,9 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logger.LogMessage(exception.Message);
+                Logging.Logging.Logger.Error(exception.Message);
             }
             return hash;
-        }
-
-        protected void logLocations(List<Location> locations)
-        {
-            string logString = "";
-            foreach (Location location in locations)
-            {
-                logString += location.locationName + ",";
-            }
-            Logger.LogMessage(logString);
         }
 
         protected double decayFunction()

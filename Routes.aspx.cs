@@ -53,7 +53,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logger.LogMessage(exception.ToString());
+                Logging.Logging.Logger.Error(exception.ToString());
                 routeValidation.IsValid = false;
                 routeValidation.ErrorMessage = exception.Message;
             }

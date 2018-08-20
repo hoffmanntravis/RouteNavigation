@@ -11,9 +11,10 @@
             BackColor="#fe6363" CellPadding="5"></asp:ValidationSummary>
     </asp:Panel>
 
+
     <div class="divHeader">
         <asp:Button CssClass="headerRowRight" ID="BtnExportCsv" runat="server" Text="Export data to .CSV" Style="float: right;" OnClick="BtnExportCsv_Click" />
-        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClick="BtnCalculateRoutes_Click"  Text="Recalculate Routes" ToolTip="Use this button to recalcualte routes based on latest location and vehicle data." runat="server" Style="float: left;" />
+        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClientClick="this.disabled = true; this.value = 'Calculating...';"   UseSubmitBehavior="false"  OnClick="BtnCalculateRoutes_Click"  Text="Recalculate Routes" ToolTip="Use this button to recalcualte routes based on latest location and vehicle data." runat="server" Style="float: left;" />
     </div>
 
     <asp:ListView ID="RoutesListView" runat="server"
@@ -37,10 +38,10 @@
                             <b>Date</b>
                         </td>
                         <td id="td4" runat="server">
-                            <b>Origin</b>
+                            <b>Average Location Distance (miles)</b>
                         </td>
                         <td id="td5" runat="server">
-                            <b>Destination</b>
+                            <b>Total Route Length (miles)</b>
                         </td>
                         <td id="td6" runat="server">
                             <b>Vehicle Id</b>
@@ -75,10 +76,10 @@
                         <asp:Label ID="label2" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label3" runat="server" Text='<%# Eval("origin_location_address") %>'></asp:Label>
+                        <asp:Label ID="label3" runat="server" Text='<%# Eval("average_location_distance_miles") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label4" runat="server" Text='<%# Eval("destination_location_address") %>'></asp:Label>
+                        <asp:Label ID="label4" runat="server" Text='<%# Eval("distance_miles") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label5" runat="server" Text='<%# Eval("vehicle_id") %>'></asp:Label>
@@ -89,8 +90,9 @@
                     <td>
                         <asp:Label ID="label7" runat="server" Text='<%# Eval("vehicle_model") %>'></asp:Label>
                     </td>
+                    
                     <td>
-                        <a href="<%# Eval("maps_url") %>" target="_blank">Google Maps
+                        <a href="/map?routeId=<%# Eval("id") %>">Map
                     </td>
                     <td>
                         <a href="/RouteDetails?routeId=<%# Eval("id") %>">Route Details
@@ -110,10 +112,10 @@
                     <asp:Label ID="label2" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label3" runat="server" Text='<%# Eval("origin_location_address") %>'></asp:Label>
+                    <asp:Label ID="label3" runat="server" Text='<%# Eval("average_location_distance_miles") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label4" runat="server" Text='<%# Eval("destination_location_address") %>'></asp:Label>
+                    <asp:Label ID="label4" runat="server" Text='<%# Eval("distance_miles") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label5" runat="server" Text='<%# Eval("vehicle_id") %>'></asp:Label>
@@ -134,3 +136,4 @@
         </SelectedItemTemplate>
     </asp:ListView>
 </asp:Content>
+

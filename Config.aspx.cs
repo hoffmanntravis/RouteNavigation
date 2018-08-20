@@ -38,7 +38,6 @@ namespace RouteNavigation
             if (Config.Calculation.workdayEndTime != DateTime.MinValue)
                 txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
 
-            txtRouteMaxHours.Text = Config.Calculation.routeMaxHours.ToString();
             txtRouteDistanceMaxMiles.Text = Config.Calculation.routeDistanceMaxMiles.ToString();
             txtOriginLocationId.Text = Config.Calculation.OriginLocationId.ToString();
             txtMatrixOverDueMultiplier.Text = Config.matrix.overDueMultiplier.ToString();
@@ -92,8 +91,6 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_matrix_overdue_multiplier", NpgsqlTypes.NpgsqlDbType.Double, txtMatrixOverDueMultiplier.Text);
                 if (txtCurrentFillLevelErrorMargin.Text != null && txtCurrentFillLevelErrorMargin.Text != "")
                     cmd.Parameters.AddWithValue("p_current_fill_level_error_margin", NpgsqlTypes.NpgsqlDbType.Double, txtCurrentFillLevelErrorMargin.Text);
-                if (txtRouteMaxHours.Text != null && txtRouteMaxHours.Text != "")
-                    cmd.Parameters.AddWithValue("p_route_max_hours", NpgsqlTypes.NpgsqlDbType.Double, txtRouteMaxHours.Text);
                 if (txtRouteDistanceMaxMiles.Text != null && txtRouteDistanceMaxMiles.Text != "")
                     cmd.Parameters.AddWithValue("p_route_distance_max_miles", NpgsqlTypes.NpgsqlDbType.Double, txtRouteDistanceMaxMiles.Text);
                 if (txtMaximumDaysOverdue.Text != null && txtMaximumDaysOverdue.Text != "")
@@ -114,7 +111,7 @@ namespace RouteNavigation
             {
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = exception.Message;
-                Logging.Logger.LogMessage(exception.ToString());
+                Logging.Logging.Logger.Error(exception.ToString());
             }
         }
     }

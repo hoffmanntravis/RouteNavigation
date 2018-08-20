@@ -34,8 +34,6 @@
     <asp:TextBox class="tableInput" ID="txtMaximumDaysOverdue" runat="server"></asp:TextBox>
     <div>Maximum distance of a route</div>
     <asp:TextBox class="tableInput" ID="txtRouteDistanceMaxMiles" runat="server"></asp:TextBox>
-    <div>Enter the maximum number of hours that is acceptable for a route</div>
-    <asp:TextBox class="tableInput" ID="txtRouteMaxHours" runat="server"></asp:TextBox>
 
     <div>Enter the time of day that the workday starts</div>
     <asp:TextBox class="tableInput" placeholder="08:00:00" ID="txtWorkDayStart" runat="server"></asp:TextBox>

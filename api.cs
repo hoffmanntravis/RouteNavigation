@@ -22,7 +22,7 @@ namespace RouteNavigation
             url = ReplaceIllegalCharaters(url);
             try
             {
-                Logging.Logger.LogMessage("Calling: " + url);
+                Logging.Logging.Logger.Trace("Calling: " + url);
                 using (HttpClient httpClient = new HttpClient())
                 {
                     HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
@@ -31,7 +31,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logger.LogMessage(exception.ToString());
+                Logging.Logging.Logger.Error(exception.ToString());
             }
             try
             {
@@ -39,8 +39,8 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logger.LogMessage("Unable to insert record using upsert_api_metadata stored procedure.");
-                Logging.Logger.LogMessage(exception.ToString());
+                Logging.Logging.Logger.Error("Unable to insert record using upsert_api_metadata stored procedure.");
+                Logging.Logging.Logger.Error(exception.ToString());
             }
         }
 

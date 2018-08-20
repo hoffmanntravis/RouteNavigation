@@ -174,7 +174,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of Update was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logging.Logger.LogMessage(exception.ToString());
+                Logging.Logging.Logger.Error(exception.ToString());
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
                 LocationsListView.EditIndex = -1;
@@ -290,7 +290,7 @@ namespace RouteNavigation
                 }
                 catch (Exception exception)
                 {
-                    Logging.Logger.LogMessage(exception.ToString());
+                    Logging.Logging.Logger.Error(exception.ToString());
                 }
 
                 DataAccess.UpdateMatrixWeight(id);
@@ -299,7 +299,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of insert was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logging.Logger.LogMessage(exception.ToString());
+                Logging.Logging.Logger.Error(exception.ToString());
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
             }
@@ -416,7 +416,7 @@ namespace RouteNavigation
             {
                 Stream stream = fileUpload.FileContent;
                 StreamReader reader = new StreamReader(stream);
-                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "matrix_weight", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "visit_time" };
+                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "matrix_weight", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "visit_time", "location_type" };
 
                 string Content = reader.ReadToEnd();
 
@@ -445,7 +445,7 @@ namespace RouteNavigation
             {
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = "Error Loading CSV" + "<br>" + exception.Message;
-                Logging.Logger.LogMessage(exception.ToString());
+                Logging.Logging.Logger.Error(exception.ToString());
             }
         }
 

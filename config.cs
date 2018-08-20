@@ -43,7 +43,6 @@ namespace RouteNavigation
         }
 
         public double currentFillLevelErrorMarginPercent = 0;
-        public double routeMaxHours = 12;
         public DateTime workdayStartTime = DateTime.MinValue;
         public DateTime workdayEndTime = DateTime.MinValue;
         public double oilPickupAverageDurationMinutes = 30;
