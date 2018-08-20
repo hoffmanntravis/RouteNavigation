@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using NLog;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -17,6 +18,7 @@ namespace RouteNavigation
 {
     public partial class _Routes : Page
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         private static object syncLock = new object();
         protected GeneticAlgorithm ga = new GeneticAlgorithm();
         protected RouteCalculator calc;
@@ -53,7 +55,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
                 routeValidation.IsValid = false;
                 routeValidation.ErrorMessage = exception.Message;
             }

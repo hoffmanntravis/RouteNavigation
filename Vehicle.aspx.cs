@@ -11,14 +11,15 @@ using System.Net.Http;
 using System.Web.Script.Serialization;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-
+using System.Threading;
+using NLog;
 
 namespace RouteNavigation
 {
     public partial class _Vehicle : Page
     {
         protected RouteCalculator calc;
-
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
@@ -84,7 +85,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of Update was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
                 VehiclesListView.EditIndex = -1;
@@ -144,7 +145,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of insert was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
             }
@@ -180,7 +181,7 @@ namespace RouteNavigation
             {
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = "Error Loading CSV" + "<br>" + exception.Message;
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
         }
 

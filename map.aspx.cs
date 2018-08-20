@@ -1,8 +1,10 @@
-﻿using Npgsql;
+﻿using NLog;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Web;
 using System.Web.Script.Serialization;
 using System.Web.UI;
@@ -13,7 +15,7 @@ namespace RouteNavigation
 {
     public partial class _Map : Page
     {
-
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         protected DataTable table;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
         public string jsonCoordinates;
@@ -54,7 +56,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
         }
 

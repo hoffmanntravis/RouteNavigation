@@ -12,11 +12,13 @@ using System.Web.Script.Serialization;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Threading;
+using NLog;
 
 namespace RouteNavigation
 {
     public partial class _Locations : Page
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         DataTable dataTable = new DataTable();
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -174,7 +176,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of Update was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
                 LocationsListView.EditIndex = -1;
@@ -290,7 +292,7 @@ namespace RouteNavigation
                 }
                 catch (Exception exception)
                 {
-                    Logging.Logging.Logger.Error(exception.ToString());
+                    Logger.Error(exception.ToString());
                 }
 
                 DataAccess.UpdateMatrixWeight(id);
@@ -299,7 +301,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of insert was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
             }
@@ -445,7 +447,7 @@ namespace RouteNavigation
             {
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = "Error Loading CSV" + "<br>" + exception.Message;
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
         }
 

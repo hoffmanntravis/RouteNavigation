@@ -6,11 +6,14 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
+using System.Threading;
+using NLog;
 
 namespace RouteNavigation
 {
     public class Api
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         public string response;
         protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
         
@@ -22,7 +25,7 @@ namespace RouteNavigation
             url = ReplaceIllegalCharaters(url);
             try
             {
-                Logging.Logging.Logger.Trace("Calling: " + url);
+                Logger.Trace("ThreadId:" + Thread.CurrentThread.ManagedThreadId.ToString() + " " +"Calling: " + url);
                 using (HttpClient httpClient = new HttpClient())
                 {
                     HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
@@ -31,7 +34,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+               Logger.Error(exception.ToString());
             }
             try
             {
@@ -39,8 +42,8 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error("Unable to insert record using upsert_api_metadata stored procedure.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error("Unable to insert record using upsert_api_metadata stored procedure.");
+                Logger.Error(exception.ToString());
             }
         }
 

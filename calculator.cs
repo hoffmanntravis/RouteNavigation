@@ -7,11 +7,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Device.Location;
+using System.Threading;
+using NLog;
 
 namespace RouteNavigation
 {
     public class RouteCalculator
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         public Metadata metadata = new Metadata();
         public List<Route> routes = new List<Route>();
         public Location origin = new Location();
@@ -75,7 +78,7 @@ namespace RouteNavigation
                 if (origin == null)
                 {
                     Exception exception = new Exception("Origin is null.  Please set it in the config page, or calculation will fail.");
-                    Logging.Logging.Logger.Error(exception.ToString());
+                    Logger.Error(exception.ToString());
                     throw exception;
                 }
 
@@ -176,12 +179,12 @@ namespace RouteNavigation
 
 
                         potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations) + nextLocationDistanceMiles;
-                        Logging.Logging.Logger.Trace(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
+                        Logger.Trace(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
 
                         if (potentialRoute.distanceMiles is Double.NaN)
                         {
-                            Logging.Logging.Logger.Error(String.Format("Locations are {0} and {1} with gps coordinates of {2}:{3} and {4}:{5}", origin, nextLocation, origin.coordinates.lat, origin.coordinates.lng, nextLocation.coordinates.lat, nextLocation.coordinates.lng));
-                            Logging.Logging.Logger.Error("potentialRoute.distanceMiles is Double.NaN");
+                            Logger.Error("ThreadId:" + Thread.CurrentThread.ManagedThreadId.ToString() + " "+ String.Format("Locations are {0} and {1} with gps coordinates of {2}:{3} and {4}:{5}", origin, nextLocation, origin.coordinates.lat, origin.coordinates.lng, nextLocation.coordinates.lat, nextLocation.coordinates.lng));
+                            Logger.Error("ThreadId:" + Thread.CurrentThread.ManagedThreadId.ToString() + " "+ "potentialRoute.distanceMiles is Double.NaN");
                         }
 
                         //This is only relevent if we have a location in the route.  Otherwise, we may end up with no valid locations.  
@@ -190,10 +193,15 @@ namespace RouteNavigation
                             if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
                             {
                                 //if the location is within a certain radius, visit anyway even if it exceeds the total mileage
-                                if (nextLocationDistanceMiles > Convert.ToDouble(potentialRoute.distanceMiles / 10.0))
+                                double localRadiusDivisor = 10;
+                                double localRadiusTolerance = potentialRoute.distanceMiles / localRadiusDivisor;
+                                if (nextLocationDistanceMiles < localRadiusTolerance)
                                 {
-                                    //Logging.Logging.Logger.Log(string.Format("distance from {0} to {1} is {2} compared to route length {3} divided by ten ({4})", previousLocation, nextLocation, CalculateDistance(previousLocation, nextLocation), potentialRoute.distanceMiles, potentialRoute.distanceMiles / 10), "INFO");
-
+                                    Logger.Trace(String.Format("Location is within 1/{0} of the total distance of this route ({1} miles compared to {2} miles).  Will not remove from compatible locations.", localRadiusDivisor, nextLocationDistanceMiles, localRadiusTolerance));
+                                }
+                                else
+                                {
+                                    Logger.Trace(String.Format("Removing location {0}.  It is not within 1/{1} of the total distance of this route ({1} miles), and the current route distance of {2} miles is greater than the maximum route distance of {3} miles", nextLocation.locationName, localRadiusDivisor, potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
                                     compatibleLocations.Remove(nextLocation);
                                     continue;
                                 }
@@ -245,9 +253,9 @@ namespace RouteNavigation
                     potentialRoute.totalTime = currentTime - startTime;
                     //int oilLocationsCount = potentialRoute.allLocations.Where(a => a.type == "oil").ToList().Count;
                     //int greaseLocationsCount = potentialRoute.allLocations.Where(a => a.type == "grease").ToList().Count;
-                    //Logging.Logging.Logger.Log(String.Format("there are {0} oil locations and {1} grease locations.", oilLocationsCount, greaseLocationsCount), "DEBUG");
+                    //Logger.Log(String.Format("there are {0} oil locations and {1} grease locations.", oilLocationsCount, greaseLocationsCount), "DEBUG");
                     potentialRoute.averageLocationDistance = calculateAverageLocationDistance(potentialRoute);
-                    Logging.Logging.Logger.Info("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles);
+                    Logger.Info("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles);
                     routes.Add(potentialRoute);
                 }
 
@@ -283,7 +291,7 @@ namespace RouteNavigation
 
                     if (metadata.routesLengthMiles is Double.NaN)
                     {
-                        Logging.Logging.Logger.Error("metadata.routesLengthMiles is Double.NaN");
+                        Logger.Error("metadata.routesLengthMiles is Double.NaN");
                     }
                 }
 
@@ -297,14 +305,14 @@ namespace RouteNavigation
 
                 else
                 {
-                    Logging.Logging.Logger.Error("Unable to create any routes.");
+                    Logger.Error("Unable to create any routes.");
                 }
 
                 metadata.orphanedLocations = allLocations.Where(x => !metadata.processedLocations.Any(y => y.address == x.address)).ToList();
             }
             catch (Exception e)
             {
-                Logging.Logging.Logger.Error(e.ToString());
+                Logger.Error(e.ToString());
             }
 
             return routes;
@@ -368,7 +376,7 @@ namespace RouteNavigation
                 iterations++;
             }
             while (bestDistance < previousBestDistance);
-            Logging.Logging.Logger.Trace("Ran " + iterations + " iterations of ThreeOpt TSP");
+            Logger.Trace("Ran " + iterations + " iterations of ThreeOpt TSP");
             return route;
         }
 
@@ -401,7 +409,7 @@ namespace RouteNavigation
                 iterations++;
             }
             while (bestDistance < previousBestDistance);
-            Logging.Logging.Logger.Info("Ran " + iterations + " iterations of TwoOpt TSP");
+            Logger.Info("Ran " + iterations + " iterations of TwoOpt TSP");
             return route;
         }
 
@@ -478,7 +486,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.Message);
+                Logger.Error(exception.Message);
             }
             return hash;
         }
@@ -487,12 +495,12 @@ namespace RouteNavigation
         {
             try
             {
-                Logging.Logging.Logger.Trace("attempting to TSP. Rearranging locations...");
+                Logger.Trace("attempting to TSP. Rearranging locations...");
                 route.waypoints = nearestNeighbor(route.waypoints);
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.Message);
+                Logger.Error(exception.Message);
             }
             return route;
         }
@@ -501,12 +509,12 @@ namespace RouteNavigation
         {
             try
             {
-                //Logging.Logging.Logger.Log("attempting to TSP. Rearranging locations...");
+                //Logger.Log("attempting to TSP. Rearranging locations...");
                 route.waypoints = TwoOptSwap(route.waypoints);
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.Message);
+                Logger.Error(exception.Message);
             }
             return route;
         }
@@ -515,12 +523,12 @@ namespace RouteNavigation
         {
             try
             {
-                //Logging.Logging.Logger.Log("attempting to TSP. Rearranging locations...");
+                //Logger.Log("attempting to TSP. Rearranging locations...");
                 route.waypoints = ThreeOptSwap(route.waypoints);
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.Message);
+                Logger.Error(exception.Message);
             }
             return route;
         }
@@ -685,7 +693,7 @@ namespace RouteNavigation
                 {
                     nearestLocation = location;
                     shortestDistance = thisDistance;
-                    Logging.Logging.Logger.Trace(nearestLocation.address + " : is " + shortestDistance + " miles from " + source.address);
+                    Logger.Trace(nearestLocation.address + ": is " + shortestDistance + " miles from " + source.address);
                 }
             }
             return nearestLocation;
@@ -725,7 +733,7 @@ namespace RouteNavigation
         {
             locations.Sort((a, b) => b.matrixWeight.CompareTo(a.matrixWeight));
             List<Location> highestPrioritylocations = locations.Take(guaranteedVisitedlocationsCount).ToList();
-            Logging.Logging.Logger.Trace("Got highest priority locations: " + highestPrioritylocations.ToList().ToString());
+            Logger.Trace("Got highest priority locations: " + highestPrioritylocations.ToList().ToString());
             return highestPrioritylocations;
         }
 
@@ -737,8 +745,8 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error("Unable to append distanceFromSource data for the RouteCalculator Class.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error("Unable to append distanceFromSource data for the RouteCalculator Class.");
+                Logger.Error(exception.ToString());
             }
         }
 
@@ -754,8 +762,8 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error("Unable to append matrixWeight data for the RouteCalculator Class.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error("Unable to append matrixWeight data for the RouteCalculator Class.");
+                Logger.Error(exception.ToString());
             }
         }
 

@@ -10,11 +10,14 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Web.Script.Serialization;
 using Newtonsoft.Json.Linq;
+using System.Threading;
+using NLog;
 
 namespace RouteNavigation
 {
     public class ApiLocation
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         public double latitude;
         public double longitude;
         protected string url = System.Configuration.ConfigurationManager.AppSettings["googleGeocodeApiUrl"];
@@ -35,14 +38,14 @@ namespace RouteNavigation
             if (root.Status == "OVER_QUERY_LIMIT")
             {
                 Exception exception = new Exception("Google API returned Status:" + root.Status + ".  This is considered fatal.  Please check your api usage, or check with an administrator as to why this status is occurring.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
                 throw exception;
 
             }
             else if (root.Status != "OK")
             {
                 Exception exception = new Exception("Google API returned Status:" + root.Status + ".  Please check your api usage, or check with an administrator as to why this status is occurring.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
 
             if (root.Results.Count > 0)
@@ -52,7 +55,7 @@ namespace RouteNavigation
             }
             else
             {
-                Logging.Logging.Logger.Error("Unable to parse json coordinates from " + url);
+                Logger.Error("Unable to parse json coordinates from " + url);
             }
         }
 

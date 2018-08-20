@@ -1,10 +1,12 @@
 ﻿using Newtonsoft.Json;
+using NLog;
 using Npgsql;
 using RouteNavigation;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -13,6 +15,7 @@ namespace RouteNavigation
 
     public class ApiRoute
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         public string mapsUrl;
         public List<Location> waypoints = new List<Location>();
         public TimeSpan duration;
@@ -53,7 +56,7 @@ namespace RouteNavigation
             }
             else
             {
-                Logging.Logging.Logger.Error("Unable to parse json properties from " + directionsApiUrl);
+                Logger.Error("ThreadId:" + Thread.CurrentThread.ManagedThreadId.ToString() + " "+ "Unable to parse json properties from " + directionsApiUrl);
             }
         }
 
@@ -68,7 +71,7 @@ namespace RouteNavigation
             mapsUrl = mapsUrl.Replace(" ", "+");
             mapsUrl = mapsUrl.Replace("#", " ");
             mapsUrl = ReplaceIllegalCharaters(mapsUrl);
-            Logging.Logging.Logger.Trace("Constructed google maps url: " + mapsUrl);
+            Logger.Trace("Constructed google maps url: " + mapsUrl);
 
             return mapsUrl;
         }
@@ -98,14 +101,14 @@ namespace RouteNavigation
             if (root.Status == "OVER_QUERY_LIMIT")
             {
                 Exception exception = new Exception("Google API returned Status:" + root.Status + ".  This is considered fatal.  Please check your api usage, or check with an administrator as to why this status is occurring.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
                 throw exception;
 
             }
             else if (root.Status != "OK")
             {
                 Exception exception = new Exception("Google API returned Status:" + root.Status + ".  Please check your api usage, or check with an administrator as to why this status is occurring.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
 
             return root;

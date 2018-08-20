@@ -1,8 +1,10 @@
-﻿using Npgsql;
+﻿using NLog;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -12,6 +14,7 @@ namespace RouteNavigation
 {
     public partial class _RouteDetails : Page
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         protected DataTable table;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
@@ -25,7 +28,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
         }
 

@@ -7,12 +7,14 @@ using System.Web;
 using System.Web.Script.Serialization;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-
+using System.Threading;
+using NLog;
 
 namespace RouteNavigation
 {
     public partial class _LocationDetailsJson : Page
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         protected DataTable table;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
@@ -26,7 +28,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
         }
 

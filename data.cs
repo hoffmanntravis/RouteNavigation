@@ -11,6 +11,7 @@ namespace RouteNavigation
 {
     public static class DataAccess
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         static string apiKey = System.Configuration.ConfigurationManager.AppSettings["googleApiKey"];
         static string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
         static string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
@@ -193,7 +194,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
             return dataTable;
         }
@@ -217,7 +218,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
             return dataTable;
         }
@@ -233,7 +234,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
             return dataTable;
         }
@@ -251,7 +252,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
             return dataTable;
         }
@@ -266,7 +267,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
             return dataTable;
         }
@@ -281,7 +282,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
             return dataTable;
         }
@@ -558,8 +559,8 @@ namespace RouteNavigation
                 catch (Exception exception)
                 {
 
-                     Logging.Logging.Logger.Error("Unable to retreive address from coordinates" + lat + "," + lng);
-                    Logging.Logging.Logger.Error(exception.ToString());
+                     Logger.Error("Unable to retreive address from coordinates" + lat + "," + lng);
+                    Logger.Error(exception.ToString());
                 }
             }
             return address;
@@ -583,8 +584,8 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error("Unable to api call data.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error("Unable to api call data.");
+                Logger.Error(exception.ToString());
             }
         }
 
@@ -601,8 +602,8 @@ namespace RouteNavigation
                 }
                 catch (Exception exception)
                 {
-                    Logging.Logging.Logger.Error("Unable to append distance data.");
-                    Logging.Logging.Logger.Error(exception.ToString());
+                    Logger.Error("Unable to append distance data.");
+                    Logger.Error(exception.ToString());
                 }
             }
         }
@@ -619,8 +620,8 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error("Unable to update features.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error("Unable to update features.");
+                Logger.Error(exception.ToString());
             }
         }
 
@@ -641,8 +642,8 @@ namespace RouteNavigation
                 }
                 catch (Exception exception)
                 {
-                    Logging.Logging.Logger.Error("Unable to append Matrix Weight data for the RouteCalculator Class.");
-                    Logging.Logging.Logger.Error(exception.ToString());
+                    Logger.Error("Unable to append Matrix Weight data for the RouteCalculator Class.");
+                    Logger.Error(exception.ToString());
                 }
             }
         }
@@ -656,8 +657,8 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error("Unable to update days until due for the RouteCalculator Class.");
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error("Unable to update days until due for the RouteCalculator Class.");
+                Logger.Error(exception.ToString());
             }
         }
 
@@ -709,9 +710,9 @@ namespace RouteNavigation
 
             catch (Exception e)
             {
-                Logging.Logging.Logger.Error(String.Format("Failed to delete route dependencies for route id {0}", id));
+                Logger.Error(string.Format("Failed to delete route dependencies for route id {0}", id));
 
-                Logging.Logging.Logger.Error(e.ToString());
+                Logger.Error(e.ToString());
             }
         }
 
@@ -742,7 +743,7 @@ namespace RouteNavigation
                 }
                 catch (Exception exception)
                 {
-                    Logging.Logging.Logger.Error(exception.ToString());
+                    Logger.Error(exception.ToString());
                 }
 
                 try
@@ -759,7 +760,7 @@ namespace RouteNavigation
                 }
                 catch (Exception exception)
                 {
-                    Logging.Logging.Logger.Error(exception.ToString());
+                    Logger.Error(exception.ToString());
                 }
             }
         }
@@ -778,7 +779,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
         }
     }

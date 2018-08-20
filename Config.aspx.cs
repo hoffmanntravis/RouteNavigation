@@ -1,5 +1,7 @@
-﻿using Npgsql;
+﻿using NLog;
+using Npgsql;
 using System;
+using System.Threading;
 using System.Web.UI;
 
 
@@ -7,7 +9,7 @@ namespace RouteNavigation
 {
     public partial class _Config : Page
     {
-
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
         protected Config Config;
 
         protected void Page_Load(object sender, EventArgs e)
@@ -111,7 +113,7 @@ namespace RouteNavigation
             {
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = exception.Message;
-                Logging.Logging.Logger.Error(exception.ToString());
+                Logger.Error(exception.ToString());
             }
         }
     }
