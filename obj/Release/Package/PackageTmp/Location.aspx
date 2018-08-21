@@ -34,7 +34,6 @@
         OnItemDeleting="LocationsListView_RowDeleting"
         OnItemInserting="LocationsListView_RowInsert"
         OnItemCreated="LocationsListView_ItemCreated"
-
         InsertItemPosition="LastItem">
 
         <EmptyDataTemplate>
@@ -45,65 +44,64 @@
                 <table runat="server">
                     <tr runat="server">
                         <td id="td1" runat="server">
-                            <asp:ImageButton ID="imgLocationIdSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationId_Click" />
                             <b>id</b>
+                            <asp:ImageButton ID="imgSortLocationId" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationId_Click" />
                         </td>
                         <td id="tdLocationName" runat="server">
                             <b>Location Name</b>
-                            <asp:ImageButton ID="imgLocationNameSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationName_Click" />
+                            <asp:ImageButton ID="imgSortLocationName" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationName_Click" />
                         </td>
                         <td id="tdClientPriority" onclick="tdClientPriority_click" runat="server">
-                            <asp:ImageButton ID="imgClientPrioritySort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByClientPriority_Click" />
                             <b>Client Priority</b>
+                            <asp:ImageButton ID="imgSortClientPriority" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByClientPriority_Click" />
                         </td>
                         <td id="tdAddress" runat="server">
-                            <asp:ImageButton ID="imgAddressSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByAddress_Click" />
                             <b>Address</b>
+                            <asp:ImageButton ID="imgSortAddress" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByAddress_Click" />
                         </td>
                         <td id="tdPickupIntervalDays" runat="server">
-                            <asp:ImageButton ID="imgPickupIntervalSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupInterval_Click" />
                             <b>Pickup Interval Days</b>
+                            <asp:ImageButton ID="imgSortPickupInterval" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupInterval_Click" />
                         </td>
                         <td id="tdPickupWindowStartTime" runat="server">
-                            <asp:ImageButton ID="imgPickupWindowStartTimeSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowStartTime_Click" />
                             <b>Pickup Time Start</b>
+                            <asp:ImageButton ID="imgSortPickupWindowStartTime" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowStartTime_Click" />
                         </td>
                         <td id="tdPickupWindowEndTime" runat="server">
-                            <asp:ImageButton ID="imgPickupWindowEndTimeSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowEndTime_Click" />
                             <b>Pickup Time End</b>
+                            <asp:ImageButton ID="imgSortPickupWindowEndTime" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowEndTime_Click" />
                         </td>
                         <td id="tdLastVisited" runat="server">
-                            <asp:ImageButton ID="imgLastVisitedSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLastVisited_Click" />
                             <b>Last Visited</b>
+                            <asp:ImageButton ID="imgSortLastVisited" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLastVisited_Click" />
                         </td>
                         <td id="tdCapacity" runat="server">
-                            <asp:ImageButton ID="imgCapacitySort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByCapacity_Click" />
                             <b>Capacity (glns)</b>
+                            <asp:ImageButton ID="imgSortCapacity" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByCapacity_Click" />
                         </td>
                         <td id="tdVehicleSize" runat="server">
-                            <asp:ImageButton ID="imgVehicleSizeSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByVehicleSize_Click" />
                             <b>Vehicle Size</b>
+                            <asp:ImageButton ID="imgSortVehicleSize" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByVehicleSize_Click" />
                         </td>
                         <td id="tdContactName" width="100" runat="server">
-                            <asp:ImageButton ID="imgContactNameSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByContactName_Click" />
                             <b>Contact Name</b>
+                            <asp:ImageButton ID="imgSortContactName" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByContactName_Click" />
                         </td>
                         <td id="tdContactEmail" width="100" runat="server">
-                            <asp:ImageButton ID="imgContactEmailSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByContactEmail_Click" />
                             <b>Contact Email</b>
+                            <asp:ImageButton ID="imgSortContactEmail" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByContactEmail_Click" />
                         </td>
                         <td id="td2" width="100" runat="server">
-                            <asp:ImageButton ID="imgType" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByType_Click" />
                             <b>type</b>
+                            <asp:ImageButton ID="imgSortType" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByType_Click" />
                         </td>
-
                         <td id="tdDaysUntilDue" width="100" runat="server">
-                            <asp:ImageButton ID="imgDaysUntilDueSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByDaysUntilDue_Click" />
                             <b>Days Until Due</b>
+                            <asp:ImageButton ID="imgSortDaysUntilDue" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByDaysUntilDue_Click" />
                         </td>
                         <td id="tdMatrixWeight" width="100" runat="server">
-                            <asp:ImageButton ID="imgMatrixWeightSort" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByMatrixWeight_Click" />
                             <b>Matrix Weight</b>
+                            <asp:ImageButton ID="imgSortMatrixWeight" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByMatrixWeight_Click" />
                         </td>
                         <td id="tdAction" width="100" runat="server">
                             <b>Action</b>
@@ -112,7 +110,7 @@
                     </tr>
                     <tr>
                         <td colspan="14">
-                            <asp:DataPager ID="locationDataPager" runat="server" PagedControlID="LocationsListView" PageSize="10">
+                            <asp:DataPager ID="locationDataPager" runat="server" PagedControlID="LocationsListView" PageSize="9">
                                 <Fields>
                                     <asp:NextPreviousPagerField ButtonType="Link" ShowFirstPageButton="true" ShowPreviousPageButton="true" ShowNextPageButton="false" />
                                     <asp:NumericPagerField ButtonType="Link" ButtonCount="10" />
@@ -120,6 +118,8 @@
                                 </Fields>
                             </asp:DataPager>
                         </td>
+                        <td></td>
+                        <td></td>
                     </tr>
                 </table>
             </div>
@@ -272,7 +272,7 @@
                 </td>
                 <td>
                     <asp:DropDownList class="tableInput" ID="ddlEditLocationType" runat="server"></asp:DropDownList>
-                    <asp:Label ID="lblEditLocationType" runat="server" Text='<%# Eval("type") %>' visible ="false"></asp:Label>
+                    <asp:Label ID="lblEditLocationType" runat="server" Text='<%# Eval("type") %>' Visible="false"></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
