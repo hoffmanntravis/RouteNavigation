@@ -14,7 +14,7 @@
 
     <div class="divHeader">
         <asp:Button CssClass="headerRowRight" ID="BtnExportCsv" runat="server" Text="Export data to .CSV" Style="float: right;" OnClick="BtnExportCsv_Click" />
-        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClientClick="this.disabled = true; this.value = 'Calculating...';"   UseSubmitBehavior="false"  OnClick="BtnCalculateRoutes_Click"  Text="Recalculate Routes" ToolTip="Use this button to recalcualte routes based on latest location and vehicle data." runat="server" Style="float: left;" />
+        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClientClick="this.disabled = true; this.value = 'Calculating...';" UseSubmitBehavior="false" OnClick="BtnCalculateRoutes_Click" Text="Recalculate Routes" ToolTip="Use this button to recalcualte routes based on latest location and vehicle data." runat="server" Style="float: left;" />
     </div>
 
     <asp:ListView ID="RoutesListView" runat="server"
@@ -52,10 +52,10 @@
                         <td id="td8" runat="server">
                             <b>Vehicle Model</b>
                         </td>
-                        <td id="td9" runat="server">
+                        <td id="td10" runat="server">
                             <b>Maps Url</b>
                         </td>
-                        <td id="td10" runat="server">
+                        <td id="td11" runat="server">
                             <b>Route Details</b>
                         </td>
                         <td id="itemPlaceHolder" runat="server"></td>
@@ -90,7 +90,6 @@
                     <td>
                         <asp:Label ID="label7" runat="server" Text='<%# Eval("vehicle_model") %>'></asp:Label>
                     </td>
-                    
                     <td>
                         <a href="/map?routeId=<%# Eval("id") %>">Map
                     </td>
@@ -135,5 +134,7 @@
             </tr>
         </SelectedItemTemplate>
     </asp:ListView>
+    <asp:Label ID="activityId" runat="server" Text='<%# Eval("activity_id") %>'> </asp:Label>
+
 </asp:Content>
 

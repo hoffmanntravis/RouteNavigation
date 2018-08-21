@@ -4,6 +4,8 @@ using System.Linq;
 using System.Web;
 using System.Security.Cryptography;
 using System.Data;
+using NLog;
+using System.Diagnostics;
 
 namespace RouteNavigation
 {
@@ -50,9 +52,5 @@ namespace RouteNavigation
                 }
             }
         }
-
     }
-
-
-
 }

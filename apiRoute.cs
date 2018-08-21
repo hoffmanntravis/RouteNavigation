@@ -27,8 +27,6 @@ namespace RouteNavigation
         protected string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
         protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
 
-        
-
         public ApiRoute(RouteNavigation.Route route)
         {
             //API's return an object into a class, where we create a 'RootObject' that holds all subproperties of the rest data.
@@ -71,7 +69,7 @@ namespace RouteNavigation
             mapsUrl = mapsUrl.Replace(" ", "+");
             mapsUrl = mapsUrl.Replace("#", " ");
             mapsUrl = ReplaceIllegalCharaters(mapsUrl);
-            Logger.Trace("Constructed google maps url: " + mapsUrl);
+            LogEventInfo logEvent = new LogEventInfo(NLog.LogLevel.Trace,Logger.Name,"Constructed google maps url: " + mapsUrl);
 
             return mapsUrl;
         }

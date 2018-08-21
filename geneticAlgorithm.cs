@@ -14,13 +14,13 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 200;
+        static protected int iterations = 100;
         static public int populationSize = 200;
         static public int neighborCount = 80;
-        static public int tournamentSize = 40;
-        static public int tournamentWinnerCount = 12;
-        static public int breedersCount = 8;
-        static public int offSpringPoolSize = 4;
+        static public int tournamentSize = 10;
+        static public int tournamentWinnerCount = 2;
+        static public int breedersCount = 2;
+        static public int offSpringPoolSize = 1;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
@@ -115,7 +115,7 @@ namespace RouteNavigation
                 double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
 
                 int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-                Logger.Info(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
+                Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
 
                 Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
 
@@ -128,15 +128,15 @@ namespace RouteNavigation
                     fitnessCalcs.SortByDistanceAsc();
                     double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
                     emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-                    Logger.Info(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
-                    Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i, shortestDistance));
+                    Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
+                    Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
                 }
 
                 //fully optimized the GA selected route with 3opt swap
                 RouteCalculator bestCalc = fitnessCalcs.First();
                 //foreach (Route route in bestCalc.routes)
                 //    bestCalc.calculateTSPRouteTwoOpt(route);
-                DataAccess.insertRoutes(batchId, bestCalc.routes);
+                DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                 Logger.Info(string.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                 DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
 
@@ -222,10 +222,11 @@ namespace RouteNavigation
                 Thread thread = new Thread(Action =>
                 {
                     RouteCalculator c = runCalculations(locations);
-                    lock(lockObject)
+                    lock (lockObject)
                     calcs.Add(c);
                 });
 
+                thread.Priority = ThreadPriority.Normal;
                 threads.Add(thread);
                 thread.Start();
             }

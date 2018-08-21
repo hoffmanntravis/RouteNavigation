@@ -271,6 +271,7 @@
       <DependentUpon>About.aspx</DependentUpon>
     </Compile>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="data.cs" />
     <Compile Include="extensions.cs" />
     <Compile Include="geneticAlgorithm.cs" />

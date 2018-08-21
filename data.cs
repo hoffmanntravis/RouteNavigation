@@ -716,7 +716,7 @@ namespace RouteNavigation
             }
         }
 
-        public static void insertRoutes(int batchId, List<Route> routes)
+        public static void insertRoutes(int batchId, List<Route> routes, Guid activityId)
         {
             foreach (Route route in routes)
             {
@@ -736,6 +736,7 @@ namespace RouteNavigation
                         cmd.Parameters.AddWithValue("p_vehicle_id", NpgsqlTypes.NpgsqlDbType.Integer, route.assignedVehicle.id);
                         //cmd.Parameters.AddWithValue("p_maps_url", NpgsqlTypes.NpgsqlDbType.Varchar, apiRoute.mapsUrl);
                         cmd.Parameters.AddWithValue("p_average_location_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.averageLocationDistance);
+                        cmd.Parameters.AddWithValue("p_activity_id", NpgsqlTypes.NpgsqlDbType.Uuid, activityId);
 
                         RunStoredProcedure(cmd);
                     }

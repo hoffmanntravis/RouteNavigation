@@ -9,6 +9,7 @@ using System.Web;
 using System.Device.Location;
 using System.Threading;
 using NLog;
+using System.Diagnostics;
 
 namespace RouteNavigation
 {
@@ -19,9 +20,11 @@ namespace RouteNavigation
         public List<Route> routes = new List<Route>();
         public Location origin = new Location();
         public int neighborCount = 60;
+        public Guid activityId;
         protected Config config;
         protected List<Location> allLocations;
         protected List<Vehicle> allVehicles;
+        protected double localRadiusDivisor = 50;
 
         public List<Location> orphanedLocations = new List<Location>();
         static Object calcLock = new Object();
@@ -65,6 +68,8 @@ namespace RouteNavigation
 
         public List<Route> CalculateRoutes(List<Location> availableLocations, List<Vehicle> availableVehicles, DateTime startDate, Location origin, Metadata metadata)
         {
+            Trace.CorrelationManager.ActivityId = Guid.NewGuid();
+            activityId = Trace.CorrelationManager.ActivityId;
             DateTime startTime = config.Calculation.workdayStartTime;
             DateTime endTime = config.Calculation.workdayEndTime;
             try
@@ -145,9 +150,13 @@ namespace RouteNavigation
                                 continue;
                             }
                         }
-                        double nextLocationDistanceMiles = CalculateDistance(nextLocation, origin);
+                        double nextLocationDistanceMiles = CalculateDistance(previousLocation, nextLocation);
+                        double distanceToDepot = CalculateDistance(nextLocation, origin);
                         TimeSpan travelTime = CalculateTravelTime(nextLocationDistanceMiles);
                         potentialTime += travelTime;
+
+
+                        //If the location is not allowed before or after a certain time and the potential time has been exceeded, remove it.  Calc will advance a day and deal with it at that point if it's not compatible currently.
 
                         if (nextLocation.pickupWindowStartTime != DateTime.MinValue)
                             if (potentialTime < nextLocation.pickupWindowStartTime)
@@ -165,15 +174,6 @@ namespace RouteNavigation
                         {
                             potentialTime += TimeSpan.FromMinutes(config.Calculation.greasePickupAverageDurationMinutes);
                         }
-                        if (potentialTime > endTime)
-                        {
-                            //This is only relevent if we have a location in the route.  Otherwise, we may end up with no valid locations.  
-                            if (potentialRoute.allLocations.Count > 0)
-                            {
-                                compatibleLocations.Remove(nextLocation);
-                                continue;
-                            }
-                        }
 
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
 
@@ -183,30 +183,40 @@ namespace RouteNavigation
 
                         if (potentialRoute.distanceMiles is Double.NaN)
                         {
-                            Logger.Error("ThreadId:" + Thread.CurrentThread.ManagedThreadId.ToString() + " "+ String.Format("Locations are {0} and {1} with gps coordinates of {2}:{3} and {4}:{5}", origin, nextLocation, origin.coordinates.lat, origin.coordinates.lng, nextLocation.coordinates.lat, nextLocation.coordinates.lng));
-                            Logger.Error("ThreadId:" + Thread.CurrentThread.ManagedThreadId.ToString() + " "+ "potentialRoute.distanceMiles is Double.NaN");
+                            Logger.Error(String.Format("Locations are {0} and {1} with gps coordinates of {2}:{3} and {4}:{5}", origin, nextLocation, origin.coordinates.lat, origin.coordinates.lng, nextLocation.coordinates.lat, nextLocation.coordinates.lng));
+                            Logger.Error("potentialRoute.distanceMiles is Double.NaN");
                         }
 
+                        double localRadiusTolerance = distanceToDepot / localRadiusDivisor;
                         //This is only relevent if we have a location in the route.  Otherwise, we may end up with no valid locations.  
                         if (potentialRoute.allLocations.Count > 0)
                         {
+                            //if the location is within a certain radius, even if it means the day length being exceeded
+                            if (potentialTime > endTime)
+                            {
+                                    Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.locationName, potentialTime, endTime));
+                                    compatibleLocations.Remove(nextLocation);
+                                    continue;
+                            }
+
                             if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
                             {
                                 //if the location is within a certain radius, visit anyway even if it exceeds the total mileage
-                                double localRadiusDivisor = 10;
-                                double localRadiusTolerance = potentialRoute.distanceMiles / localRadiusDivisor;
                                 if (nextLocationDistanceMiles < localRadiusTolerance)
                                 {
-                                    Logger.Trace(String.Format("Location is within 1/{0} of the total distance of this route ({1} miles compared to {2} miles).  Will not remove from compatible locations.", localRadiusDivisor, nextLocationDistanceMiles, localRadiusTolerance));
+                                    Logger.Trace(String.Format("Distance from {1} to {0} is within 1/{2} of the distance back to the depot ({3} miles compared to {4} miles).  Will not remove from compatible locations.", nextLocation.locationName, previousLocation.locationName, localRadiusDivisor, nextLocationDistanceMiles, localRadiusTolerance));
                                 }
                                 else
                                 {
-                                    Logger.Trace(String.Format("Removing location {0}.  It is not within 1/{1} of the total distance of this route ({1} miles), and the current route distance of {2} miles is greater than the maximum route distance of {3} miles", nextLocation.locationName, localRadiusDivisor, potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
+                                    Logger.Trace(String.Format("Removing location {0}.  Distance from {1} to {0} is not within 1/{2} of the distance back to the depot ({3} miles compared to {4} miles).  Additionally, {5} is greater than the maximum route distance of {6} miles", nextLocation.locationName, previousLocation.locationName, localRadiusDivisor, nextLocationDistanceMiles, localRadiusTolerance, potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
                                     compatibleLocations.Remove(nextLocation);
                                     continue;
                                 }
                             }
                         }
+
+
+
 
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
                         vehicle.currentGallons += nextLocation.currentGallonsEstimate;
@@ -255,7 +265,7 @@ namespace RouteNavigation
                     //int greaseLocationsCount = potentialRoute.allLocations.Where(a => a.type == "grease").ToList().Count;
                     //Logger.Log(String.Format("there are {0} oil locations and {1} grease locations.", oilLocationsCount, greaseLocationsCount), "DEBUG");
                     potentialRoute.averageLocationDistance = calculateAverageLocationDistance(potentialRoute);
-                    Logger.Info("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles);
+                    Logger.Trace("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles);
                     routes.Add(potentialRoute);
                 }
 

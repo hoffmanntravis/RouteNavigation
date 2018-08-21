@@ -42,7 +42,6 @@ namespace RouteNavigation
 
         }
 
-
         protected void BtnCalculateRoutes_Click(object sender, EventArgs e)
         {
             try
@@ -92,7 +91,9 @@ namespace RouteNavigation
     protected void BindListView()
     {
         dataTable = DataAccess.GetRouteInformationData();
-        RoutesListView.DataSource = dataTable;
+        activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows
+                          select dr["activity_id"]).FirstOrDefault().ToString();
+            RoutesListView.DataSource = dataTable;
         extensions.RoundDataTable(dataTable, 2);
         RoutesListView.ItemPlaceholderID = "itemPlaceHolder";
         RoutesListView.DataBind();
