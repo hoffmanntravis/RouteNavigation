@@ -427,7 +427,7 @@ namespace RouteNavigation
             ViewState[viewStatePropertySortOrder] = sortAsc.ToString();
             ViewState[viewStatePropertyLocation] = sortProperty;
 
-            BindListView(sortProperty, null, sortAsc);
+            BindListView(null, TxtSearchFilter.Text, sortProperty, sortAsc);
 
         }
 
@@ -499,14 +499,16 @@ namespace RouteNavigation
             BindListView();
         }
 
-        protected void BindListView(string columnName = null, string filterString = null, bool ascending = true)
+        protected void BindListView(string columnFilterName = null, string filterString = null, string columnSortName = null, bool ascending = true)
         {
             //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
-            if (columnName == null)
+            if (columnFilterName == null)
+                columnFilterName = "location_name";
+            if (columnSortName == null)
                 if (ViewState[viewStatePropertyLocation] == null)
-                    columnName = "location_name";
+                    columnSortName = "location_name";
                 else
-                    columnName = ViewState[viewStatePropertyLocation].ToString();
+                    columnSortName = ViewState[viewStatePropertyLocation].ToString();
 
             if (ViewState[viewStatePropertySortOrder] != null)
             {
@@ -520,7 +522,7 @@ namespace RouteNavigation
             }
 
             filterString = TxtSearchFilter.Text;
-            DataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
+            DataAccess.GetLocationData(dataTable, columnFilterName, filterString, columnSortName, ascending);
             extensions.RoundDataTable(dataTable, 2);
             LocationsListView.DataSource = dataTable;
             LocationsListView.ItemPlaceholderID = "itemPlaceHolder";

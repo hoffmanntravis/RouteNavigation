@@ -5,7 +5,7 @@
 -- Dumped from database version 10.1
 -- Dumped by pg_dump version 10.3
 
--- Started on 2018-08-21 03:33:03
+-- Started on 2018-08-21 17:57:09
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -566,11 +566,11 @@ $$;
 ALTER FUNCTION public.select_location_types() OWNER TO postgres;
 
 --
--- TOC entry 234 (class 1255 OID 78721)
--- Name: select_location_with_filter(character varying, character varying, boolean); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 237 (class 1255 OID 79460)
+-- Name: select_location_with_filter(character varying, character varying, character varying, boolean); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.select_location_with_filter(p_column_name character varying DEFAULT 'location_name'::character varying, p_filter_string character varying DEFAULT NULL::character varying, p_ascending boolean DEFAULT NULL::boolean) RETURNS SETOF public.location_with_type
+CREATE FUNCTION public.select_location_with_filter(p_column_filter_string character varying DEFAULT 'location_name'::character varying, p_filter_string character varying DEFAULT NULL::character varying, p_column_sort_string character varying DEFAULT NULL::character varying, p_ascending boolean DEFAULT NULL::boolean) RETURNS SETOF public.location_with_type
     LANGUAGE plpgsql
     AS $_$
 
@@ -579,27 +579,34 @@ BEGIN
 		THEN
 			IF p_filter_string is null
 				THEN
-					RETURN QUERY EXECUTE format ('SELECT * FROM location_with_type order by ' || $1 || ',id');
+					RETURN QUERY EXECUTE format ('SELECT * FROM location_with_type order by ' || $3 || ',id');
+				ELSE IF p_column_filter_string is not null
+					THEN
+						RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $3 || ', id NULLS LAST');
 				ELSE
-					RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $1 || ', id NULLS LAST');
+					RETURN QUERY EXECUTE format ('Select * FROM location_with_type order by ' || $1 || ',id');
 			END IF;
-		
-		ELSE
-			IF p_filter_string is null
+		END IF;
+	ELSE
+		IF p_filter_string is null
+			THEN
+				RETURN QUERY EXECUTE format ('SELECT * FROM location_with_type order by ' || $3 || ' desc, id ');
+			ELSE IF p_column_filter_string is not null
 				THEN
-					RETURN QUERY EXECUTE format ('SELECT * FROM location_with_type order by ' || $1 || ' desc, id ');
+					RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $3 || ' desc, id NULLS LAST');
+
 				ELSE
-					RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $1 || ' desc, id ' || 'NULLS LAST');
-				END IF;
+					RETURN QUERY EXECUTE format ('Select * FROM location_with_type order by ' || $3 || ' desc ,id');
+			END IF;
+		END IF;
 	END IF;
-	
 
 END;
 
 $_$;
 
 
-ALTER FUNCTION public.select_location_with_filter(p_column_name character varying, p_filter_string character varying, p_ascending boolean) OWNER TO postgres;
+ALTER FUNCTION public.select_location_with_filter(p_column_filter_string character varying, p_filter_string character varying, p_column_sort_string character varying, p_ascending boolean) OWNER TO postgres;
 
 --
 -- TOC entry 225 (class 1255 OID 33501)
@@ -634,7 +641,7 @@ $$;
 ALTER FUNCTION public.select_next_route_batch_id() OWNER TO postgres;
 
 --
--- TOC entry 237 (class 1255 OID 33503)
+-- TOC entry 236 (class 1255 OID 33503)
 -- Name: select_next_route_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1284,7 +1291,7 @@ $$;
 ALTER FUNCTION public.upsert_api_metadata(p_call_date date, p_api_call_count integer) OWNER TO postgres;
 
 --
--- TOC entry 235 (class 1255 OID 78760)
+-- TOC entry 234 (class 1255 OID 78760)
 -- Name: upsert_config(integer, integer, double precision, double precision, double precision, double precision, double precision, double precision, integer, time without time zone, time without time zone, interval, interval, character varying, character varying, character[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1495,7 +1502,7 @@ ALTER TABLE ONLY public.location
     ADD CONSTRAINT type FOREIGN KEY (location_type) REFERENCES public.location_type(id);
 
 
--- Completed on 2018-08-21 03:33:04
+-- Completed on 2018-08-21 17:57:09
 
 --
 -- PostgreSQL database dump complete

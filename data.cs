@@ -199,21 +199,29 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static DataTable GetLocationData(DataTable dataTable, string columnName = "location_name", string filterString = null, bool ascending = true)
+        public static DataTable GetLocationData(DataTable dataTable, string columnName = "location_name", string filterString = null, string columnSortString=null, bool ascending = true)
         {
             try
             {
                 NpgsqlCommand cmd = new NpgsqlCommand("select_location_with_filter");
 
-                cmd.Parameters.AddWithValue("p_column_name", NpgsqlTypes.NpgsqlDbType.Text, columnName);
+                cmd.Parameters.AddWithValue("p_column_filter_string", NpgsqlTypes.NpgsqlDbType.Text, columnName);
+
                 if (filterString == null || filterString == "")
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, filterString);
+
                 if (ascending == false)
                     cmd.Parameters.AddWithValue("p_ascending", NpgsqlTypes.NpgsqlDbType.Boolean, false);
                 else
                     cmd.Parameters.AddWithValue("p_ascending", NpgsqlTypes.NpgsqlDbType.Boolean, DBNull.Value);
+
+                if (columnSortString == null || columnSortString == "")
+                    cmd.Parameters.AddWithValue("p_column_sort_string", NpgsqlTypes.NpgsqlDbType.Text, DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("p_column_sort_string", NpgsqlTypes.NpgsqlDbType.Text, columnSortString);
+
                 ReadStoredProcedureIntoDataTable(cmd, dataTable);
             }
             catch (Exception exception)

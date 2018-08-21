@@ -91,7 +91,7 @@ namespace RouteNavigation
         protected void BindListView()
         {
             dataTable = DataAccess.GetRouteInformationData();
-            if (dataTable.Rows != null)
+            if (dataTable.Rows.Count != 0)
             {
                 activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows select dr["activity_id"]).FirstOrDefault().ToString();
             }
