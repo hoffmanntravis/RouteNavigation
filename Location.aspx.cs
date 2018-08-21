@@ -18,6 +18,8 @@ namespace RouteNavigation
 {
     public partial class _Locations : Page
     {
+        private string viewStatePropertyLocation = "locationSortProperty";
+        private string viewStatePropertySortOrder = "locationSortAscending";
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         DataTable dataTable = new DataTable();
         protected void Page_Load(object sender, EventArgs e)
@@ -25,12 +27,25 @@ namespace RouteNavigation
             //initialize objects in page load since they make async calls that fail while the page is still starting up
             if (!Page.IsPostBack)
             {
-                populateddlSearchFilter();
+                populateDdlSearchFilter();
                 BindListView();
             }
         }
 
-        protected void populateddlSearchFilter()
+        private void ResetSortImageUrls(Control ctrl)
+        {
+            foreach (Control subCtrl in ctrl.Controls)
+            {
+                if (subCtrl is Image && subCtrl.ID.StartsWith("imgSort"))
+                {
+                    ((Image)subCtrl).ImageUrl = "~/images/up_arrow.svg";
+                }
+                if (subCtrl.HasControls())
+                    ResetSortImageUrls(subCtrl);
+            }
+        }
+
+        protected void populateDdlSearchFilter()
         {
             ListItem locationName = new ListItem();
             locationName.Value = "location_name";
@@ -194,14 +209,14 @@ namespace RouteNavigation
         protected void LocationsListView_PagePropertiesChanging(object sender, PagePropertiesChangingEventArgs e)
         {
             (LocationsListView.FindControl("locationDataPager") as DataPager).SetPageProperties(e.StartRowIndex, e.MaximumRows, false);
-            BindListView("location_name", TxtSearchFilter.Text);
+            BindListView(null, TxtSearchFilter.Text);
         }
 
         protected void FilterLocationsListView_Click(Object sender, EventArgs e)
         {
             DataPager DataPager = LocationsListView.FindControl("locationDataPager") as DataPager;
             DataPager.SetPageProperties(0, DataPager.PageSize, false);
-            BindListView("location_name", TxtSearchFilter.Text);
+            BindListView(null, TxtSearchFilter.Text);
         }
 
         protected void TdClientPriority_click(object sender, ListViewCancelEventArgs e)
@@ -387,29 +402,33 @@ namespace RouteNavigation
 
         protected void locationSort(object sender, string sortProperty)
         {
-            string viewStatePropertyName = "sortLocation" + sortProperty;
-
             ImageButton image = (ImageButton)sender;
-            if (ViewState[viewStatePropertyName] == null)
-            {
-                ViewState[viewStatePropertyName] = false;
-                BindListView(sortProperty, null, false);
-                image.ImageUrl = "~/images/down_arrow.svg";
-            }
-            else if (ViewState[viewStatePropertyName].ToString() == Boolean.TrueString)
-            {
-                ViewState[viewStatePropertyName] = false;
-                BindListView(sortProperty, null, false);
+            bool sortAsc = true;
+            ResetSortImageUrls(Page);
 
-                image.ImageUrl = "~/images/down_arrow.svg";
-            }
-            else if (ViewState[viewStatePropertyName].ToString() == Boolean.FalseString)
+            if (ViewState[viewStatePropertySortOrder] == null)
             {
-                ViewState[viewStatePropertyName] = true;
-                BindListView(sortProperty, null, true);
-                image.ImageUrl = "~/images/up_arrow.svg";
+                image.ImageUrl = "~/images/down_arrow.svg";
+                sortAsc = false;
             }
-            ViewState["LastSortedType"] = sortProperty;
+            else
+            {
+                if (ViewState[viewStatePropertySortOrder].ToString() == Boolean.TrueString)
+                {
+                    image.ImageUrl = "~/images/down_arrow.svg";
+                    sortAsc = false;
+                }
+                else if (ViewState[viewStatePropertySortOrder].ToString() == Boolean.FalseString)
+                {
+                    image.ImageUrl = "~/images/up_arrow.svg";
+                    sortAsc = true;
+                }
+            }
+            ViewState[viewStatePropertySortOrder] = sortAsc.ToString();
+            ViewState[viewStatePropertyLocation] = sortProperty;
+
+            BindListView(sortProperty, null, sortAsc);
+
         }
 
         protected void BtnImportCsv_Click(object sender, EventArgs e)
@@ -484,10 +503,21 @@ namespace RouteNavigation
         {
             //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
             if (columnName == null)
-                if (ViewState["LastSortedType"] == null)
-                    columnName = lstSearchFilters.SelectedValue;
+                if (ViewState[viewStatePropertyLocation] == null)
+                    columnName = "location_name";
                 else
-                    columnName = ViewState["LastSortedType"].ToString();
+                    columnName = ViewState[viewStatePropertyLocation].ToString();
+
+            if (ViewState[viewStatePropertySortOrder] != null)
+            {
+                {
+                    if (ViewState[viewStatePropertySortOrder].ToString() == Boolean.TrueString)
+                        ascending = true;
+
+                    else if (ViewState[viewStatePropertySortOrder].ToString() == Boolean.FalseString)
+                        ascending = false;
+                }
+            }
 
             filterString = TxtSearchFilter.Text;
             DataAccess.GetLocationData(dataTable, columnName, filterString, ascending);
