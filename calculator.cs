@@ -574,7 +574,8 @@ namespace RouteNavigation
 
         public static double calculateAverageLocationDistance(Route route)
         {
-            double average = route.distanceMiles / route.allLocations.Count;
+            //remove one location, because origin and destination are the same
+            double average = route.distanceMiles / (route.allLocations.Count - 1);
             return average;
         }
 
