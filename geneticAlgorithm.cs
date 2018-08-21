@@ -14,13 +14,13 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 100;
-        static public int populationSize = 200;
+        static protected int iterations = 2000;
+        static public int populationSize = 2000;
         static public int neighborCount = 80;
-        static public int tournamentSize = 10;
-        static public int tournamentWinnerCount = 2;
-        static public int breedersCount = 2;
-        static public int offSpringPoolSize = 1;
+        static public int tournamentSize = 40;
+        static public int tournamentWinnerCount = 8;
+        static public int breedersCount = 6;
+        static public int offSpringPoolSize = 4;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;

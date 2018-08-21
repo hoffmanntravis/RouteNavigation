@@ -125,13 +125,12 @@ namespace RouteNavigation
                     compatibleLocations = GetCompatibleLocations(vehicle, availableLocations.ToList());
                     //Find the highest priority location that the truck can serve
                     //List<Location> highestPriorityLocations = GetHighestPrioritylocations(compatibleLocations, 1);
-                    Location destination = FindNearestLocation(origin, compatibleLocations);
-                    Route potentialRoute = new Route(origin, destination);
+
+                    Route potentialRoute = new Route(origin);
+                    
                     DateTime currentTime = startTime;
                     potentialRoute.allLocations.Add(origin);
-                    potentialRoute.allLocations.Add(destination);
-                    compatibleLocations.Remove(destination);
-                    //Location searchStart = destination;
+
                     Location previousLocation = origin;
                     while (compatibleLocations.Count > 0)
                     {
@@ -166,17 +165,16 @@ namespace RouteNavigation
                             if (potentialTime > nextLocation.pickupWindowEndTime)
                                 compatibleLocations.Remove(nextLocation);
 
-                        if (destination.type == "oil")
+                        if (nextLocation.type == "oil")
                         {
                             potentialTime += TimeSpan.FromMinutes(config.Calculation.oilPickupAverageDurationMinutes);
                         }
-                        if (destination.type == "grease")
+                        if (nextLocation.type == "grease")
                         {
                             potentialTime += TimeSpan.FromMinutes(config.Calculation.greasePickupAverageDurationMinutes);
                         }
 
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
-
 
                         potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations) + nextLocationDistanceMiles;
                         Logger.Trace(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
@@ -215,9 +213,6 @@ namespace RouteNavigation
                             }
                         }
 
-
-
-
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
                         vehicle.currentGallons += nextLocation.currentGallonsEstimate;
 
@@ -230,6 +225,11 @@ namespace RouteNavigation
                         currentTime = potentialTime;
                         previousLocation = nextLocation;
                     }
+
+                    //Add the time to travel back to the depot
+                    double distanceToDepot2 = CalculateDistance(previousLocation, origin);
+                    TimeSpan travelTime2 = CalculateTravelTime(distanceToDepot2);
+                    currentTime.Add(travelTime2);
 
                     potentialRoute.allLocations.Add(origin);
 
@@ -246,13 +246,6 @@ namespace RouteNavigation
                     }
                     */
 
-                    //Add the destination as a waypoint.  This is because the actual destination will really be the warehouse, 
-                    //but we are providing this destination to the api as a temporary destination to build a route since routes require a destination
-                    //If the destination for the potentialroute is already a waypoint due to being the only available location along the route, don't add it again.
-                    if (!(potentialRoute.waypoints.Contains(potentialRoute.destination)))
-                        potentialRoute.waypoints.Add(potentialRoute.destination);
-
-                    availableLocations.Remove(destination);
                     potentialRoute.assignedVehicle = vehicle;
                     potentialRoute.waypoints.ForEach(r => r.assignedVehicle = vehicle);
                     availableVehicles.Remove(vehicle);
@@ -294,7 +287,7 @@ namespace RouteNavigation
                         potentialRoute.distanceMiles += leg.Distance.Value / 1609.34;
                     */
 
-                    //calculate metadata on waypoints since origin and destination are not new nodes that need visiting
+                    //calculate metadata on waypoints since origin does not need visiting
                     metadata.processedLocations.AddRange(route.waypoints);
                     metadata.routesDuration += route.totalTime;
                     metadata.routesLengthMiles += route.distanceMiles;

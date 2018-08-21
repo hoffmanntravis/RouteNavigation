@@ -63,41 +63,43 @@ namespace RouteNavigation
             BtnCalculateRoutes.Text = btnCalculateRoutesInitialText;
         }
 
-    protected void BtnExportCsv_Click(object sender, EventArgs e)
-    {
-        string csvData = "";
-
-        int latestBatchId = DataAccess.GetLatestBatchId();
-
-        try
+        protected void BtnExportCsv_Click(object sender, EventArgs e)
         {
-            csvData = DataAccess.RunPostgreExport("(select * from route_details where batch_id = " + latestBatchId + ")", csvData);
-        }
-        catch (Exception exception)
-        {
-            routeValidation.IsValid = false;
-            routeValidation.ErrorMessage = "Error Exporting CSV" + "<br>" + exception.Message;
-            return;
-        }
-        DateTime dateTime = DateTime.Now;
-        byte[] Content = Encoding.ASCII.GetBytes(csvData);
-        Response.ContentType = "text/csv";
-        Response.AddHeader("content-disposition", "attachment; filename=" + "export_route_location_details_" + dateTime + ".csv");
-        Response.BufferOutput = true;
-        Response.OutputStream.Write(Content, 0, Content.Length);
-        Response.End();
-    }
+            string csvData = "";
 
-    protected void BindListView()
-    {
-        dataTable = DataAccess.GetRouteInformationData();
-        activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows
-                          select dr["activity_id"]).FirstOrDefault().ToString();
+            int latestBatchId = DataAccess.GetLatestBatchId();
+
+            try
+            {
+                csvData = DataAccess.RunPostgreExport("(select * from route_details where batch_id = " + latestBatchId + ")", csvData);
+            }
+            catch (Exception exception)
+            {
+                routeValidation.IsValid = false;
+                routeValidation.ErrorMessage = "Error Exporting CSV" + "<br>" + exception.Message;
+                return;
+            }
+            DateTime dateTime = DateTime.Now;
+            byte[] Content = Encoding.ASCII.GetBytes(csvData);
+            Response.ContentType = "text/csv";
+            Response.AddHeader("content-disposition", "attachment; filename=" + "export_route_location_details_" + dateTime + ".csv");
+            Response.BufferOutput = true;
+            Response.OutputStream.Write(Content, 0, Content.Length);
+            Response.End();
+        }
+
+        protected void BindListView()
+        {
+            dataTable = DataAccess.GetRouteInformationData();
+            if (dataTable.Rows != null)
+            {
+                activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows select dr["activity_id"]).FirstOrDefault().ToString();
+            }
             RoutesListView.DataSource = dataTable;
-        extensions.RoundDataTable(dataTable, 2);
-        RoutesListView.ItemPlaceholderID = "itemPlaceHolder";
-        RoutesListView.DataBind();
+            extensions.RoundDataTable(dataTable, 2);
+            RoutesListView.ItemPlaceholderID = "itemPlaceHolder";
+            RoutesListView.DataBind();
+        }
     }
-}
 
 }

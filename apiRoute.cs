@@ -87,7 +87,7 @@ namespace RouteNavigation
                 foreach (Location waypoint in route.waypoints)
                     directionsApiUrl = directionsApiUrl + waypoint.address + "|";
             }
-            directionsApiUrl = directionsApiUrl + "&destination=" + route.destination.address;
+            directionsApiUrl = directionsApiUrl + "&destination=" + route.origin.address;
             directionsApiUrl = directionsApiUrl + "&key=" + apiKey;
             directionsApiUrl = directionsApiUrl.Replace(" ", "+");
             directionsApiUrl = ReplaceIllegalCharaters(directionsApiUrl);

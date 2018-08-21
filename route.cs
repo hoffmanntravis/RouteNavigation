@@ -12,17 +12,16 @@ namespace RouteNavigation
         public DateTime date;
         public double distanceMiles;
         public Location origin;
-        public Location destination;
+
         public List<Location> waypoints = new List<Location>();
         public string mapsUrl;
         public Vehicle assignedVehicle;
         public List<Location> allLocations = new List<Location>();
         public double averageLocationDistance;
 
-        public Route(Location o, Location d)
+        public Route(Location o)
         {
             origin = o;
-            destination = d;
         }
 
     }

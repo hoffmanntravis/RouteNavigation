@@ -503,19 +503,11 @@ namespace RouteNavigation
                 if (row["origin_location_id"] != DBNull.Value)
                     origin = (GetLocations("id", row["origin_location_id"].ToString())).First();
 
-                Location destination = new Location();
-                if (row["origin_location_id"] != DBNull.Value)
-                    destination = (GetLocations("id", row["destination_location_id"].ToString())).First();
-
-                Route route = new Route(origin, destination);
+                Route route = new Route(origin);
                 if (row["id"] != DBNull.Value)
                     route.id = int.Parse(row["id"].ToString());
                 if (row["total_time"] != DBNull.Value)
                     route.totalTime = TimeSpan.Parse(row["total_time"].ToString());
-                if (row["destination_location_id"] != DBNull.Value)
-                    route.destination.id = int.Parse(row["destination_location_id"].ToString());
-                if (row["destination_location_address"] != DBNull.Value)
-                    route.destination.address = row["destination_location_address"].ToString();
                 if (row["origin_location_address"] != DBNull.Value)
                     route.origin.address = row["origin_location_address"].ToString();
                 if (row["origin_location_id"] != DBNull.Value)
@@ -730,7 +722,6 @@ namespace RouteNavigation
                         cmd.Parameters.AddWithValue("p_batch_id", NpgsqlTypes.NpgsqlDbType.Integer, batchId);
                         cmd.Parameters.AddWithValue("p_total_time", NpgsqlTypes.NpgsqlDbType.Interval, route.totalTime);
                         cmd.Parameters.AddWithValue("p_origin_location_id", NpgsqlTypes.NpgsqlDbType.Integer, route.origin.id);
-                        cmd.Parameters.AddWithValue("p_destination_location_id", NpgsqlTypes.NpgsqlDbType.Integer, route.destination.id);
                         cmd.Parameters.AddWithValue("p_route_date", NpgsqlTypes.NpgsqlDbType.TimestampTZ, route.date);
                         cmd.Parameters.AddWithValue("p_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.distanceMiles);
                         cmd.Parameters.AddWithValue("p_vehicle_id", NpgsqlTypes.NpgsqlDbType.Integer, route.assignedVehicle.id);
