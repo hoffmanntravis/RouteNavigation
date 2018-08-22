@@ -26,7 +26,9 @@ namespace RouteNavigation
                 cmd.Parameters.AddWithValue("p_google_directions_maps_url", NpgsqlTypes.NpgsqlDbType.Varchar, mapsBaseUrl);
                 cmd.Parameters.AddWithValue("p_google_api_key", NpgsqlTypes.NpgsqlDbType.Varchar, apiKey);
                 cmd.Parameters.AddWithValue("p_google_api_illegal_characters", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Char, illegalCharacters);
+                connection.Open();
                 RunStoredProcedure(cmd);
+                connection.Close();
             }
         }
 
@@ -151,16 +153,17 @@ namespace RouteNavigation
 
         public static bool ReadStoredProcedureIntoDataTable(NpgsqlCommand cmd, DataTable dataTable)
         {
-            Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString);
-
+            using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
+            {
             cmd.Connection = connection;
             cmd.CommandType = CommandType.StoredProcedure;
             connection.Open();
 
             NpgsqlDataReader reader = cmd.ExecuteReader();
-            dataTable.Load(reader);
 
+            dataTable.Load(reader);
             connection.Close();
+            }
             return true;
         }
 
@@ -679,7 +682,6 @@ namespace RouteNavigation
                 return;
 
             using (NpgsqlCommand cmd = new NpgsqlCommand("update_location"))
-
             {
                 cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
                 cmd.Parameters.AddWithValue("p_coordinates_latitude", NpgsqlTypes.NpgsqlDbType.Double, location.latitude);
@@ -767,7 +769,7 @@ namespace RouteNavigation
 
         public static int GetLatestBatchId()
         {
-            int id = DataAccess.GetNextRouteBatchId() - 1;
+            int id = GetNextRouteBatchId() - 1;
             return id;
         }
 
