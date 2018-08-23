@@ -23,6 +23,7 @@ namespace RouteNavigation
         public Guid activityId;
         protected Config config;
         protected List<Location> allLocations;
+        protected List<Location> possibleLocations;
         protected List<Vehicle> allVehicles;
         protected double localRadiusDivisor = 50;
 
@@ -34,22 +35,23 @@ namespace RouteNavigation
 
         protected DateTime startDate = (System.DateTime.Now.Date).AddDays(1);
 
-        public RouteCalculator(Config c, List<Location> locations, List<Vehicle> vehicles)
+        public RouteCalculator(Config c, List<Location> allLocations, List<Location> possibleLocations, List<Vehicle> allVehicles)
         {
             config = c;
-            allLocations = new List<Location>(locations);
-            allVehicles = new List<Vehicle>(vehicles);
-            origin = Calculation.origin;
+            this.allLocations = new List<Location>(allLocations);
+            this.possibleLocations = new List<Location>(possibleLocations);
+            this.allVehicles = new List<Vehicle>(allVehicles);
+            origin = Config.Calculation.origin;
             //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
             allLocations.RemoveAll(s => s.address == origin.address);
         }
 
-        public RouteCalculator()
+        /*public RouteCalculator()
         {
             config = DataAccess.GetConfig();
             allLocations = new List<Location>(DataAccess.GetLocations());
             allVehicles = new List<Vehicle>(DataAccess.GetVehicles());
-        }
+        }*/
 
         public void CalculateRoutes(List<Location> locations,List<Vehicle> availableVehicles)
         {
@@ -60,9 +62,8 @@ namespace RouteNavigation
         {
             Trace.CorrelationManager.ActivityId = Guid.NewGuid();
             activityId = Trace.CorrelationManager.ActivityId;
-            DateTime startTime = Calculation.workdayStartTime;
-            DateTime endTime = Calculation.workdayEndTime;
-
+            DateTime startTime = Config.Calculation.workdayStartTime;
+            DateTime endTime = Config.Calculation.workdayEndTime;
 
             try
             {
@@ -75,7 +76,7 @@ namespace RouteNavigation
                     throw exception;
                 }
 
-                metadata.intakeLocations.AddRange(availableLocations);
+                metadata.intakeLocations.AddRange(allLocations);
                 //Attempting to move line below to genetic algorithm
                 //availableLocations.ForEach(a => a.neighbors = FindNeighbors(a, availableLocations, neighborCount));
 
@@ -89,7 +90,6 @@ namespace RouteNavigation
                 //availableLocations.Sort((a, b) => b.distanceFromSource.CompareTo(a.distanceFromSource));
 
                 //build routes until all locations are exhausted
-
 
                 while (availableLocations.Count > 0)
                 {
@@ -129,7 +129,7 @@ namespace RouteNavigation
 
                         nextLocation.currentGallonsEstimate = EstimateLocationGallons(nextLocation);
 
-                        if (config.Features.vehicleFillLevel == true)
+                        if (Config.Features.vehicleFillLevel == true)
                         {
                             if (CheckVehicleCanAcceptMoreLiquid(vehicle, nextLocation))
                             {
@@ -154,11 +154,11 @@ namespace RouteNavigation
 
                         if (nextLocation.type == "oil")
                         {
-                            potentialTime += TimeSpan.FromMinutes(Calculation.oilPickupAverageDurationMinutes);
+                            potentialTime += TimeSpan.FromMinutes(Config.Calculation.oilPickupAverageDurationMinutes);
                         }
                         if (nextLocation.type == "grease")
                         {
-                            potentialTime += TimeSpan.FromMinutes(Calculation.greasePickupAverageDurationMinutes);
+                            potentialTime += TimeSpan.FromMinutes(Config.Calculation.greasePickupAverageDurationMinutes);
                         }
 
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
@@ -257,7 +257,7 @@ namespace RouteNavigation
                     Location nextNearestLocationByDate = laterDateLocations.First();
                     //subtract the last vistited date and minimum days until pickup from the intended start date and convert to an integer days.  
                     //This will make the recursive algorithm efficient and tell it what day to start searching on again to create a future route that is compatible with our minimum pickup interval.
-                    double daysToAdd = (nextNearestLocationByDate.pickupIntervalDays - (startDate - nextNearestLocationByDate.lastVisited).TotalDays) - Calculation.minimDaysUntilPickup;
+                    double daysToAdd = (nextNearestLocationByDate.pickupIntervalDays - (startDate - nextNearestLocationByDate.lastVisited).TotalDays) - Config.Calculation.minimDaysUntilPickup;
                     availableVehicles = allVehicles;
                     startDate = startDate.AddDays(daysToAdd);
                     CalculateRoutes(laterDateLocations, availableVehicles, startDate, origin, metadata);
@@ -583,7 +583,7 @@ namespace RouteNavigation
         protected bool CheckVehicleCanAcceptMoreLiquid(Vehicle vehicle, Location location)
         {
             //Check if the vehicle can accept more gallons.  Also, multiple the total gallons by a percentage.  Finally, check that the vehicle isn't empty, otherwise we're going to visit regadless.
-            if (vehicle.currentGallons + location.currentGallonsEstimate >= vehicle.capacityGallons * ((100 - Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
+            if (vehicle.currentGallons + location.currentGallonsEstimate >= vehicle.capacityGallons * ((100 - Config.Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
             {
                 return false;
             }
@@ -608,7 +608,7 @@ namespace RouteNavigation
             foreach (Location l in availableLocations)
             {
                 double startDateDaysUntilDue = l.pickupIntervalDays - (startDate - l.lastVisited).TotalDays;
-                if (startDateDaysUntilDue > Calculation.minimDaysUntilPickup)
+                if (startDateDaysUntilDue > Config.Calculation.minimDaysUntilPickup)
                 {
                     laterDateLocations.Add(l);
                 }
@@ -670,9 +670,9 @@ namespace RouteNavigation
                     continue;
                 }
 
-                if (location.distanceFromDepot >= Calculation.routeDistanceMaxMiles)
+                if (location.distanceFromDepot >= Config.Calculation.routeDistanceMaxMiles)
                 {
-                    Logger.Warn(String.Format("{0} is being ignored because it's distance from the depot of {1} is farther than the maximimum config distance of {2} miles", location.locationName, location.distanceFromDepot, Calculation.routeDistanceMaxMiles));
+                    Logger.Warn(String.Format("{0} is being ignored because it's distance from the depot of {1} is farther than the maximimum config distance of {2} miles", location.locationName, location.distanceFromDepot, Config.Calculation.routeDistanceMaxMiles));
                     continue;
                 }
                 possibleLocations.Add(location);
@@ -765,19 +765,19 @@ namespace RouteNavigation
             }
         }
 
-        public double CalculateWeight(Location location)
+        public static double CalculateWeight(Location location)
         {
-            double algPriority = config.matrix.priorityMultiplier * location.clientPriority;
-            double algDaysUntilDue = -1 * (Math.Sign(location.daysUntilDue) * (Math.Pow(Math.Abs(location.daysUntilDue), config.matrix.daysUntilDueExponent)));
+            double algPriority = Config.Matrix.priorityMultiplier * location.clientPriority;
+            double algDaysUntilDue = -1 * (Math.Sign(location.daysUntilDue) * (Math.Pow(Math.Abs(location.daysUntilDue), Config.Matrix.daysUntilDueExponent)));
             //If the account is overdue, increase the value
             if (location.daysUntilDue <= 0)
             {
-                algDaysUntilDue = algDaysUntilDue * config.matrix.overDueMultiplier;
+                algDaysUntilDue = algDaysUntilDue * Config.Matrix.overDueMultiplier;
             }
             //Theoretically can prioritize nearby locations.  However, since we have to eventually visit all locations, this doesn't seem very advantageous
             double algDistance;
-            if (config.Features.prioritizeNearestLocation == true)
-                algDistance = (config.matrix.distanceFromSourceMultiplier * location.distanceFromDepot);
+            if (Config.Features.prioritizeNearestLocation == true)
+                algDistance = (Config.Matrix.distanceFromSourceMultiplier * location.distanceFromDepot);
             else
                 algDistance = 0;
 
@@ -799,12 +799,12 @@ namespace RouteNavigation
             //This is a very simple heuristic that assumes distances as the crow flies
             if (distanceMiles < cityRadius)
             {
-                travelTimeMinutes = distanceMiles * (60 / Calculation.averageCityTravelSpeed);
+                travelTimeMinutes = distanceMiles * (60 / Config.Calculation.averageCityTravelSpeed);
             }
             else
             {
-                travelTimeMinutes += cityRadius * (60 / Calculation.averageCityTravelSpeed);
-                travelTimeMinutes += (distanceMiles - cityRadius) * (60 / Calculation.averageHighwayTravelSpeed);
+                travelTimeMinutes += cityRadius * (60 / Config.Calculation.averageCityTravelSpeed);
+                travelTimeMinutes += (distanceMiles - cityRadius) * (60 / Config.Calculation.averageHighwayTravelSpeed);
             }
 
             TimeSpan travelTime = TimeSpan.FromMinutes(travelTimeMinutes);

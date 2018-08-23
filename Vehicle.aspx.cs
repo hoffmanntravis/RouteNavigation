@@ -23,7 +23,7 @@ namespace RouteNavigation
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            calc = new RouteCalculator();
+
             if (!Page.IsPostBack)
             {
                 BindListView();

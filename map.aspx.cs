@@ -44,9 +44,9 @@ namespace RouteNavigation
                 if (jsonCoordinates is null)
                     jsonCoordinates = "\"\"";
 
-                Calculation.origin = DataAccess.GetLocationById(Calculation.origin.id);
-                mapXCoordinate = Calculation.origin.coordinates.lat;
-                mapYCoordinate = Calculation.origin.coordinates.lng;
+                Config.Calculation.origin = DataAccess.GetLocationById(Config.Calculation.origin.id);
+                mapXCoordinate = Config.Calculation.origin.coordinates.lat;
+                mapYCoordinate = Config.Calculation.origin.coordinates.lng;
 
                 ClientScript.RegisterStartupScript(GetType(), "Javascript", "javascript:showMap(); ", true);
                 ClientScript.RegisterStartupScript(GetType(), "Javascript", "javascript:addMarker();", true);

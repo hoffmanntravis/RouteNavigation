@@ -30,7 +30,7 @@ namespace RouteNavigation
         {
             btnCalculateRoutesInitialText = BtnCalculateRoutes.Text;
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            calc = new RouteCalculator();
+
             if (!Page.IsPostBack)
             {
                 DataAccess.UpdateDbConfigWithApiStrings();

@@ -376,8 +376,8 @@ namespace RouteNavigation
 
             foreach (DataRow row in configsDataTable.Rows)
             {
-                Calculation.origin = GetLocationById(id);
-                if (Calculation.origin == null)
+                Config.Calculation.origin = GetLocationById(id);
+                if (Config.Calculation.origin == null)
                 {
                     Exception exception = new Exception(String.Format("Unable to resolve origin Id <{0}> to a location.  Please update the ID to a valid ID.", id));
                     Logger.Error(exception.ToString());
@@ -394,40 +394,40 @@ namespace RouteNavigation
             foreach (DataRow row in configs.Rows)
             {
                 if (row["origin_location_id"] != DBNull.Value)
-                    if (Calculation.origin != null)
-                        Calculation.origin.id = int.Parse(row["origin_location_id"].ToString());
+                    if (Config.Calculation.origin != null)
+                        Config.Calculation.origin.id = int.Parse(row["origin_location_id"].ToString());
                 if (row["minimum_days_until_pickup"] != DBNull.Value)
-                    Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
+                    Config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
                 if (row["oil_pickup_average_duration"] != DBNull.Value)
-                    Calculation.oilPickupAverageDurationMinutes = TimeSpan.Parse(row["oil_pickup_average_duration"].ToString()).TotalMinutes;
+                    Config.Calculation.oilPickupAverageDurationMinutes = TimeSpan.Parse(row["oil_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["grease_pickup_average_duration"] != DBNull.Value)
-                    Calculation.greasePickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
+                    Config.Calculation.greasePickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["matrix_priority_multiplier"] != DBNull.Value)
-                    config.matrix.priorityMultiplier = double.Parse(row["matrix_priority_multiplier"].ToString());
+                    Config.Matrix.priorityMultiplier = double.Parse(row["matrix_priority_multiplier"].ToString());
                 if (row["matrix_days_until_due_exponent"] != DBNull.Value)
-                    config.matrix.daysUntilDueExponent = double.Parse(row["matrix_days_until_due_exponent"].ToString());
+                    Config.Matrix.daysUntilDueExponent = double.Parse(row["matrix_days_until_due_exponent"].ToString());
                 if (row["matrix_overdue_multiplier"] != DBNull.Value)
-                    config.matrix.overDueMultiplier = double.Parse(row["matrix_overdue_multiplier"].ToString());
+                    Config.Matrix.overDueMultiplier = double.Parse(row["matrix_overdue_multiplier"].ToString());
                 if (row["matrix_distance_from_source"] != DBNull.Value)
-                    config.matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
+                    Config.Matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
                 if (row["matrix_distance_from_source"] != DBNull.Value)
-                    config.matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
+                    Config.Matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
                 if (row["maximum_days_overdue"] != DBNull.Value)
-                    Calculation.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
+                    Config.Calculation.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
                 if (row["workday_start_time"] != DBNull.Value)
-                    Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
+                    Config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
                 if (row["workday_end_time"] != DBNull.Value)
-                    Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
+                    Config.Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
                 if (row["route_distance_max_miles"] != DBNull.Value)
-                    Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
+                    Config.Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
             }
 
             foreach (DataRow row in features.Rows)
             {
                 if (row["feature_name"] as string == "vehicle_fill_level")
-                    config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
+                    Config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
                 if (row["feature_name"] as string == "prioritize_nearest_location")
-                    config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
+                    Config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
             }
 
             return config;
@@ -662,8 +662,8 @@ namespace RouteNavigation
                 {
                     NpgsqlCommand cmd = new NpgsqlCommand("update_location");
                     cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.id);
-                    RouteCalculator calculator = new RouteCalculator();
-                    double matrixWeight = calculator.CalculateWeight(location);
+
+                    double matrixWeight = RouteCalculator.CalculateWeight(location);
                     cmd.Parameters.AddWithValue("p_matrix_weight", NpgsqlTypes.NpgsqlDbType.Double, matrixWeight);
                     RunStoredProcedure(cmd);
                 }

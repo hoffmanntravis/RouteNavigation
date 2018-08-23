@@ -36,7 +36,7 @@ namespace RouteNavigation
         protected static List<Vehicle> allVehicles = DataAccess.GetVehicles();
         protected static List<Vehicle> availableVehicles = allVehicles.Where(v => v.operational == true).ToList();
         static object lockObject = new object();
-        RouteCalculator generalCalc = new RouteCalculator();
+
         private Random rng = new Random();
 
         public List<List<Location>> initializePopulation(int populationSize)
@@ -84,7 +84,7 @@ namespace RouteNavigation
 
         public void calculateBestRoutes()
         {
-            if (Calculation.origin == null)
+            if (Config.Calculation.origin == null)
             {
                 string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
                 Logger.Error(errorMessage);
@@ -96,13 +96,13 @@ namespace RouteNavigation
                 Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.",allLocations.Count));
                 //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
                 possibleLocations = allLocations.ToList();
-                possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Calculation.origin, l));
-                List<Location> longOverDueLocations = possibleLocations.Where(a => a.daysUntilDue <= (Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
+                possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
+                List<Location> longOverDueLocations = possibleLocations.Where(a => a.daysUntilDue <= (Config.Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
                 possibleLocations = possibleLocations.Except(longOverDueLocations).ToList();
                 possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
                 possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                 //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
-                possibleLocations.RemoveAll(s => s.address == Calculation.origin.address);
+                possibleLocations.RemoveAll(s => s.address == Config.Calculation.origin.address);
 
                 Logger.Info(String.Format("After filtering locations based on distance, overdue, and populated GPS coordinates, and removing the origin, {0} locations will be processed",possibleLocations.Count));
 
@@ -221,7 +221,7 @@ namespace RouteNavigation
 
         public RouteCalculator runCalculations(List<Location> list)
         {
-            RouteCalculator calc = new RouteCalculator(config, possibleLocations, allVehicles);
+            RouteCalculator calc = new RouteCalculator(config, allLocations, possibleLocations, allVehicles);
             calc.neighborCount = neighborCount;
             calc.CalculateRoutes(list,availableVehicles);
             return calc;
