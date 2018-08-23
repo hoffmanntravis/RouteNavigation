@@ -14,13 +14,13 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 200;
-        static public int populationSize = 400;
-        static public int neighborCount = 80;
-        static public int tournamentSize = 40;
-        static public int tournamentWinnerCount = 8;
-        static public int breedersCount = 6;
-        static public int offSpringPoolSize = 4;
+        static protected int iterations = 2000;
+        static public int populationSize = 4000;
+        static public int neighborCount = 120;
+        static public int tournamentSize = 20;
+        static public int tournamentWinnerCount = 2;
+        static public int breedersCount = 8;
+        static public int offSpringPoolSize = 8;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
@@ -104,7 +104,7 @@ namespace RouteNavigation
                 //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
                 possibleLocations.RemoveAll(s => s.address == Config.Calculation.origin.address);
 
-                Logger.Info(String.Format("After filtering locations based on distance, overdue, and populated GPS coordinates, and removing the origin, {0} locations will be processed",possibleLocations.Count));
+                Logger.Info(String.Format("After filtering locations based on distance, overdue, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed",possibleLocations.Count));
 
                 List<List<Location>> startingPopulation = initializePopulation(populationSize);
                 //create a batch id for identifying a series of routes calculated together
@@ -148,8 +148,8 @@ namespace RouteNavigation
 
                 //fully optimized the GA selected route with 3opt swap
                 RouteCalculator bestCalc = fitnessCalcs.First();
-                //foreach (Route route in bestCalc.routes)
-                //    bestCalc.calculateTSPRouteTwoOpt(route);
+                foreach (Route route in bestCalc.routes)
+                    bestCalc.calculateTSPRouteTwoOpt(route);
                 DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                 Logger.Info(string.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                 DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
@@ -221,9 +221,9 @@ namespace RouteNavigation
 
         public RouteCalculator runCalculations(List<Location> list)
         {
-            RouteCalculator calc = new RouteCalculator(config, allLocations, possibleLocations, allVehicles);
+            RouteCalculator calc = new RouteCalculator(config, allLocations, possibleLocations, availableVehicles);
             calc.neighborCount = neighborCount;
-            calc.CalculateRoutes(list,availableVehicles);
+            calc.CalculateRoutes(list);
             return calc;
         }
 

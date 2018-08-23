@@ -18,13 +18,12 @@ namespace RouteNavigation
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         public Metadata metadata = new Metadata();
         public List<Route> routes = new List<Route>();
-        public Location origin = new Location();
+        public Location origin = Config.Calculation.origin;
         public int neighborCount = 60;
         public Guid activityId;
         protected Config config;
         protected List<Location> allLocations;
-        protected List<Location> possibleLocations;
-        protected List<Vehicle> allVehicles;
+        protected List<Vehicle> availableVehicles;
         protected double localRadiusDivisor = 50;
 
         public List<Location> orphanedLocations = new List<Location>();
@@ -32,34 +31,18 @@ namespace RouteNavigation
         protected int routePosition = 0;
 
         //protected double matrixDistanceFromSourceMultiplier = 1;
+        protected DateTime startDate = advanceDateToNextWeekday(System.DateTime.Now.Date);
 
-        protected DateTime startDate = (System.DateTime.Now.Date).AddDays(1);
-
-        public RouteCalculator(Config c, List<Location> allLocations, List<Location> possibleLocations, List<Vehicle> allVehicles)
+        public RouteCalculator(Config c, List<Location> allLocations, List<Location> possibleLocations, List<Vehicle> availableVehicles)
         {
             config = c;
             this.allLocations = new List<Location>(allLocations);
-            this.possibleLocations = new List<Location>(possibleLocations);
-            this.allVehicles = new List<Vehicle>(allVehicles);
-            origin = Config.Calculation.origin;
-            //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
-            allLocations.RemoveAll(s => s.address == origin.address);
+            this.availableVehicles = new List<Vehicle>(availableVehicles);
         }
 
-        /*public RouteCalculator()
+        public List<Route> CalculateRoutes(List<Location> availableLocations)
         {
-            config = DataAccess.GetConfig();
-            allLocations = new List<Location>(DataAccess.GetLocations());
-            allVehicles = new List<Vehicle>(DataAccess.GetVehicles());
-        }*/
-
-        public void CalculateRoutes(List<Location> locations,List<Vehicle> availableVehicles)
-        {
-            routes = CalculateRoutes(locations, availableVehicles, startDate, origin, metadata);
-        }
-
-        public List<Route> CalculateRoutes(List<Location> availableLocations, List<Vehicle> availableVehicles, DateTime startDate, Location origin, Metadata metadata)
-        {
+            List<Vehicle> currentVehicles = availableVehicles.ToList();
             Trace.CorrelationManager.ActivityId = Guid.NewGuid();
             activityId = Trace.CorrelationManager.ActivityId;
             DateTime startTime = Config.Calculation.workdayStartTime;
@@ -93,21 +76,16 @@ namespace RouteNavigation
 
                 while (availableLocations.Count > 0)
                 {
-                    if (availableVehicles.Count == 0)
+                    if (currentVehicles.Count == 0)
                     {
                         //get some more vehicles and start a new day, with new routes
-                        startDate = startDate.AddDays(1);
-                        //logic to discard weekends for route days
-                        if (startDate.DayOfWeek == DayOfWeek.Saturday)
-                            startDate = startDate.AddDays(2);
-                        if (startDate.DayOfWeek == DayOfWeek.Sunday)
-                            startDate = startDate.AddDays(1);
-                        availableVehicles = allVehicles.Where(a => a.operational == true).ToList();
+                        currentVehicles = availableVehicles.ToList();
+                        startDate = advanceDateToNextWeekday(startDate);
                     }
 
                     //sort vehicles by size descending.  We do this to ensure that large vehicles are handled first since they have a limited location list available to them.
-                    availableVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
-                    Vehicle vehicle = availableVehicles.First();
+                    //currentVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
+                    Vehicle vehicle = currentVehicles.First();
 
                     List<Location> compatibleLocations = new List<Location>();
                     compatibleLocations = GetCompatibleLocations(vehicle, availableLocations.ToList());
@@ -181,7 +159,7 @@ namespace RouteNavigation
                             {
                                 Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.locationName, potentialTime, endTime));
                                 compatibleLocations.Remove(nextLocation);
-                                continue;
+                                break;
                             }
                             /*
                             if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
@@ -236,7 +214,7 @@ namespace RouteNavigation
 
                     potentialRoute.assignedVehicle = vehicle;
                     potentialRoute.waypoints.ForEach(r => r.assignedVehicle = vehicle);
-                    availableVehicles.Remove(vehicle);
+                    currentVehicles.Remove(vehicle);
                     potentialRoute.date = startDate;
                     potentialRoute = calculateTSPRouteNN(potentialRoute);
                     //potentialRoute = calculateTSPRouteTwoOpt(potentialRoute);
@@ -258,9 +236,9 @@ namespace RouteNavigation
                     //subtract the last vistited date and minimum days until pickup from the intended start date and convert to an integer days.  
                     //This will make the recursive algorithm efficient and tell it what day to start searching on again to create a future route that is compatible with our minimum pickup interval.
                     double daysToAdd = (nextNearestLocationByDate.pickupIntervalDays - (startDate - nextNearestLocationByDate.lastVisited).TotalDays) - Config.Calculation.minimDaysUntilPickup;
-                    availableVehicles = allVehicles;
+                    currentVehicles = availableVehicles.ToList();
                     startDate = startDate.AddDays(daysToAdd);
-                    CalculateRoutes(laterDateLocations, availableVehicles, startDate, origin, metadata);
+                    CalculateRoutes(laterDateLocations);
                 }
 
                 foreach (Route route in routes)
@@ -307,6 +285,17 @@ namespace RouteNavigation
             }
 
             return routes;
+        }
+
+        private static DateTime advanceDateToNextWeekday(DateTime date)
+        {
+            date = date.AddDays(1);
+            //logic to discard weekends for route days
+            if (date.DayOfWeek == DayOfWeek.Saturday)
+                date = date.AddDays(2);
+            if (date.DayOfWeek == DayOfWeek.Sunday)
+                date = date.AddDays(1);
+            return date;
         }
 
         public static Location FindFarthestLocation(Location source, List<Location> locations)
@@ -665,14 +654,14 @@ namespace RouteNavigation
             {
                 if (smallestVehicle >= location.vehicleSize)
                 {
-                    Logger.Warn(String.Format("{0} is being ignored because it's size of {1} is smaller than the smallest vehicle size of {2}", location.locationName, location.vehicleSize, smallestVehicle));
+                    Logger.Debug(String.Format("{0} is being ignored because it's size of {1} is smaller than the smallest vehicle size of {2}", location.locationName, location.vehicleSize, smallestVehicle));
                     //if we find a vehicle that works with the location, add the location to the list of possible locations and break out to the next location
                     continue;
                 }
 
                 if (location.distanceFromDepot >= Config.Calculation.routeDistanceMaxMiles)
                 {
-                    Logger.Warn(String.Format("{0} is being ignored because it's distance from the depot of {1} is farther than the maximimum config distance of {2} miles", location.locationName, location.distanceFromDepot, Config.Calculation.routeDistanceMaxMiles));
+                    Logger.Debug(String.Format("{0} is being ignored because it's distance from the depot of {1} is farther than the maximimum config distance of {2} miles", location.locationName, location.distanceFromDepot, Config.Calculation.routeDistanceMaxMiles));
                     continue;
                 }
                 possibleLocations.Add(location);
@@ -760,7 +749,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logger.Error("Unable to append matrixWeight data for the RouteCalculator Class.");
+                Logger.Error("Unable to append matrixWeight data.");
                 Logger.Error(exception.ToString());
             }
         }
@@ -771,9 +760,8 @@ namespace RouteNavigation
             double algDaysUntilDue = -1 * (Math.Sign(location.daysUntilDue) * (Math.Pow(Math.Abs(location.daysUntilDue), Config.Matrix.daysUntilDueExponent)));
             //If the account is overdue, increase the value
             if (location.daysUntilDue <= 0)
-            {
                 algDaysUntilDue = algDaysUntilDue * Config.Matrix.overDueMultiplier;
-            }
+
             //Theoretically can prioritize nearby locations.  However, since we have to eventually visit all locations, this doesn't seem very advantageous
             double algDistance;
             if (Config.Features.prioritizeNearestLocation == true)

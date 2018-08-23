@@ -377,11 +377,16 @@ namespace RouteNavigation
             foreach (DataRow row in configsDataTable.Rows)
             {
                 Config.Calculation.origin = GetLocationById(id);
+
                 if (Config.Calculation.origin == null)
                 {
-                    Exception exception = new Exception(String.Format("Unable to resolve origin Id <{0}> to a location.  Please update the ID to a valid ID.", id));
+                    Exception exception = new Exception(String.Format("Unable to resolve origin Id [{0}] to a location.  Please update the ID to a valid ID.", id));
                     Logger.Error(exception.ToString());
                     throw exception;
+                }
+                else
+                {
+                    Logger.Debug(String.Format("Set origin to id: {0}", Config.Calculation.origin.id));
                 }
             }
 
@@ -394,8 +399,10 @@ namespace RouteNavigation
             foreach (DataRow row in configs.Rows)
             {
                 if (row["origin_location_id"] != DBNull.Value)
-                    if (Config.Calculation.origin != null)
-                        Config.Calculation.origin.id = int.Parse(row["origin_location_id"].ToString());
+                {
+                    SetOrigin(int.Parse(row["origin_location_id"].ToString()));
+                }
+
                 if (row["minimum_days_until_pickup"] != DBNull.Value)
                     Config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
                 if (row["oil_pickup_average_duration"] != DBNull.Value)

@@ -4,6 +4,6 @@
 <script runat="server">
   protected override void OnLoad(EventArgs e)
   {
-      Response.Redirect("Routes.aspx");
+      Response.Redirect("Routes.aspx",false);
   }
 </script>
