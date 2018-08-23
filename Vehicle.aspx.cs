@@ -166,7 +166,7 @@ namespace RouteNavigation
                 StreamReader reader = new StreamReader(stream);
                 string Content = reader.ReadToEnd();
 
-                if (Content == null || Content == "")
+                if (String.IsNullOrEmpty(Content))
                 {
                     dataValidation.IsValid = false;
                     dataValidation.ErrorMessage = "Upload File is blank.  Please select a file to upload before clicking upload.";

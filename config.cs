@@ -11,8 +11,6 @@ namespace RouteNavigation
         public Matrix matrix = new Matrix();
         public Calculation Calculation = new Calculation();
         public Features Features = new Features();
-        static string logLevelString = "INFO";
-        public static string logLevel = logLevelString.ToUpper();
     }
 
     public class Matrix

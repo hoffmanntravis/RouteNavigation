@@ -20,7 +20,7 @@ namespace RouteNavigation
         public double capacityGallons = 0;
         public double daysUntilDue = int.MinValue;
         public double matrixWeight;
-        public double distanceFromSource;
+        public double distanceFromDepot;
         public DateTime pickupWindowStartTime = DateTime.MinValue;
         public DateTime pickupWindowEndTime = DateTime.MinValue;
         public string type;

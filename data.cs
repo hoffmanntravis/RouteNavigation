@@ -3,6 +3,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Web;
@@ -188,7 +189,7 @@ namespace RouteNavigation
                 NpgsqlCommand cmd = new NpgsqlCommand("select_vehicle_with_filter");
 
                 cmd.Parameters.AddWithValue("p_column_name", NpgsqlTypes.NpgsqlDbType.Text, columnName);
-                if (filterString == null)
+                if (String.IsNullOrEmpty(filterString))
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, filterString);
@@ -202,15 +203,18 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static DataTable GetLocationData(DataTable dataTable, string columnName = "location_name", string filterString = null, string columnSortString=null, bool ascending = true)
+        public static DataTable GetLocationData(DataTable dataTable, string filterColumnName = null, string filterString = null, string columnSortString=null, bool ascending = true)
         {
             try
             {
                 NpgsqlCommand cmd = new NpgsqlCommand("select_location_with_filter");
 
-                cmd.Parameters.AddWithValue("p_column_filter_string", NpgsqlTypes.NpgsqlDbType.Text, columnName);
+                if (String.IsNullOrEmpty(filterColumnName))
+                    cmd.Parameters.AddWithValue("p_column_filter_string", NpgsqlTypes.NpgsqlDbType.Text, DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("p_column_filter_string", NpgsqlTypes.NpgsqlDbType.Text, filterColumnName);
 
-                if (filterString == null || filterString == "")
+                if (String.IsNullOrEmpty(filterString))
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Text, filterString);
@@ -220,7 +224,7 @@ namespace RouteNavigation
                 else
                     cmd.Parameters.AddWithValue("p_ascending", NpgsqlTypes.NpgsqlDbType.Boolean, DBNull.Value);
 
-                if (columnSortString == null || columnSortString == "")
+                if (String.IsNullOrEmpty(columnSortString))
                     cmd.Parameters.AddWithValue("p_column_sort_string", NpgsqlTypes.NpgsqlDbType.Text, DBNull.Value);
                 else
                     cmd.Parameters.AddWithValue("p_column_sort_string", NpgsqlTypes.NpgsqlDbType.Text, columnSortString);
@@ -229,9 +233,18 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
+                Logger.Error(new StackFrame(1).GetMethod().Name);
                 Logger.Error(exception.ToString());
             }
             return dataTable;
+        }
+
+        public static List<Location> GetLocations(string filterColumnName = "location_name", string filterString = null)
+        {
+            DataTable dataTable = new DataTable();
+            GetLocationData(dataTable, filterColumnName, filterString);
+            List<Location> list = ConvertDataTableToLocationsList(dataTable);
+            return list;
         }
 
         public static DataTable GetLocationTypes()
@@ -336,14 +349,6 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static List<Location> GetLocations(string columnName = "location_name", string filterString = null)
-        {
-            DataTable dataTable = new DataTable();
-            GetLocationData(dataTable, columnName, filterString);
-            List<Location> list = ConvertDataTableToLocationsList(dataTable);
-            return list;
-        }
-
         public static Config GetConfig()
         {
             DataTable configsDataTable = GetConfigData();
@@ -436,7 +441,7 @@ namespace RouteNavigation
                 if (row["coordinates_longitude"] != DBNull.Value)
                     location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
                 if (row["distance_from_source"] != DBNull.Value)
-                    location.distanceFromSource = double.Parse(row["distance_from_source"].ToString());
+                    location.distanceFromDepot = double.Parse(row["distance_from_source"].ToString());
                 if (row["pickup_interval_days"] != DBNull.Value)
                     location.pickupIntervalDays = int.Parse(row["pickup_interval_days"].ToString());
                 if (row["pickup_window_start_time"] != DBNull.Value)
@@ -600,7 +605,7 @@ namespace RouteNavigation
                 {
                     NpgsqlCommand cmd = new NpgsqlCommand("update_location");
                     cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.id);
-                    cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.distanceFromSource);
+                    cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.distanceFromDepot);
                     RunStoredProcedure(cmd);
                 }
                 catch (Exception exception)

@@ -14,8 +14,8 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 2000;
-        static public int populationSize = 2000;
+        static protected int iterations = 200;
+        static public int populationSize = 400;
         static public int neighborCount = 80;
         static public int tournamentSize = 40;
         static public int tournamentWinnerCount = 8;
@@ -32,6 +32,7 @@ namespace RouteNavigation
 
         protected Config config = DataAccess.GetConfig();
         protected List<Location> allLocations = DataAccess.GetLocations();
+        protected List<Location> possibleLocations;
         protected List<Vehicle> allVehicles = DataAccess.GetVehicles();
         static object lockObject = new object();
         RouteCalculator generalCalc = new RouteCalculator();
@@ -44,7 +45,7 @@ namespace RouteNavigation
 
             for (int x = 0; x < populationSize; x++)
             {
-                startingPopulation.Add(new List<Location>(allLocations).Shuffle(rng).ToList());
+                startingPopulation.Add(new List<Location>(possibleLocations).Shuffle(rng).ToList());
             }
 
             return startingPopulation;
@@ -80,11 +81,12 @@ namespace RouteNavigation
             Logger.Info("There are " + duplicateCalcs.Count + " Duplicates");
         }
         
-
         public void calculateBestRoutes()
         {
             try
             {
+
+
                 if (generalCalc.origin == null)
                 {
                     string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
@@ -92,6 +94,14 @@ namespace RouteNavigation
                     Exception e = new Exception(errorMessage);
                     throw e;
                 }
+                //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
+                possibleLocations = allLocations.ToList();
+                possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(generalCalc.origin, l));
+                List<Location> longOverDueLocations = possibleLocations.Where(a => a.daysUntilDue <= (config.Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
+                possibleLocations = possibleLocations.Except(longOverDueLocations).ToList();
+                possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
+
+
                 List<List<Location>> startingPopulation = initializePopulation(populationSize);
                 //create a batch id for identifying a series of routes calculated together
                 int batchId = DataAccess.GetNextRouteBatchId();
@@ -207,7 +217,7 @@ namespace RouteNavigation
 
         public RouteCalculator runCalculations(List<Location> list)
         {
-            RouteCalculator calc = new RouteCalculator(config, allLocations, allVehicles);
+            RouteCalculator calc = new RouteCalculator(config, possibleLocations, allVehicles);
             calc.neighborCount = neighborCount;
             calc.CalculateRoutes(list);
             return calc;

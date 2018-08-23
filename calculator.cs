@@ -72,13 +72,12 @@ namespace RouteNavigation
             activityId = Trace.CorrelationManager.ActivityId;
             DateTime startTime = config.Calculation.workdayStartTime;
             DateTime endTime = config.Calculation.workdayEndTime;
+
+
             try
             {
+                //This should get moved to the genetic algorithm as it is a static answer and recalculating is wasteful
                 availableLocations = GetPossibleLocations(availableVehicles, availableLocations);
-
-                List<Location> longOverDueLocations = availableLocations.Where(a => a.daysUntilDue <= (config.Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
-                availableLocations = availableLocations.Except(longOverDueLocations).ToList();
-                availableLocations = availableLocations.Except(availableLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
 
                 if (origin == null)
                 {
@@ -127,7 +126,7 @@ namespace RouteNavigation
                     //List<Location> highestPriorityLocations = GetHighestPrioritylocations(compatibleLocations, 1);
 
                     Route potentialRoute = new Route(origin);
-                    
+
                     DateTime currentTime = startTime;
                     potentialRoute.allLocations.Add(origin);
 
@@ -150,10 +149,9 @@ namespace RouteNavigation
                             }
                         }
                         double nextLocationDistanceMiles = CalculateDistance(previousLocation, nextLocation);
-                        double distanceToDepot = CalculateDistance(nextLocation, origin);
+
                         TimeSpan travelTime = CalculateTravelTime(nextLocationDistanceMiles);
                         potentialTime += travelTime;
-
 
                         //If the location is not allowed before or after a certain time and the potential time has been exceeded, remove it.  Calc will advance a day and deal with it at that point if it's not compatible currently.
 
@@ -177,7 +175,7 @@ namespace RouteNavigation
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
 
                         potentialRoute.distanceMiles = calculateTotalDistance(potentialRoute.allLocations) + nextLocationDistanceMiles;
-                        Logger.Trace(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
+                        //Logger.Trace(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
 
                         if (potentialRoute.distanceMiles is Double.NaN)
                         {
@@ -185,18 +183,18 @@ namespace RouteNavigation
                             Logger.Error("potentialRoute.distanceMiles is Double.NaN");
                         }
 
-                        double localRadiusTolerance = distanceToDepot / localRadiusDivisor;
+                        //double localRadiusTolerance = nextLocation.distanceFromDepot / localRadiusDivisor;
                         //This is only relevent if we have a location in the route.  Otherwise, we may end up with no valid locations.  
                         if (potentialRoute.allLocations.Count > 0)
                         {
                             //if the location is within a certain radius, even if it means the day length being exceeded
                             if (potentialTime > endTime)
                             {
-                                    Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.locationName, potentialTime, endTime));
-                                    compatibleLocations.Remove(nextLocation);
-                                    continue;
+                                Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.locationName, potentialTime, endTime));
+                                compatibleLocations.Remove(nextLocation);
+                                continue;
                             }
-
+                            /*
                             if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
                             {
                                 //if the location is within a certain radius, visit anyway even if it exceeds the total mileage
@@ -211,6 +209,7 @@ namespace RouteNavigation
                                     continue;
                                 }
                             }
+                            */
                         }
 
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
@@ -670,17 +669,30 @@ namespace RouteNavigation
         protected List<Location> GetPossibleLocations(List<Vehicle> vehicles, List<Location> locations)
         {
             List<Location> possibleLocations = new List<Location>();
+
+            double smallestVehicle = vehicles.Min(v => v.physicalSize);
+
             foreach (Location location in locations)
             {
-                foreach (Vehicle vehicle in vehicles)
+
+                if (smallestVehicle <= location.vehicleSize)
                 {
-                    if (vehicle.physicalSize <= location.vehicleSize)
-                    {
-                        //if we find a vehicle that works with the location, add the location to the list of possible locations and break out to the next location
-                        possibleLocations.Add(location);
-                        break;
-                    }
+                    Logger.Trace(String.Format("{0} is being added because it's size of {1} is larger than the smallest vehicle size of {2}", location.locationName, location.vehicleSize, smallestVehicle));
+                    //if we find a vehicle that works with the location, add the location to the list of possible locations and break out to the next location
+                    possibleLocations.Add(location);
                 }
+                else
+                    Logger.Trace(String.Format("{0} is being orphaned because it's size of {1} is smaller than the smallest vehicle size of {2}", location.locationName, location.vehicleSize, smallestVehicle));
+
+
+
+                if (location.distanceFromDepot <= config.Calculation.routeDistanceMaxMiles)
+                {
+                    Logger.Trace(String.Format("{0} is being added because it's distance from the depot of {1} is closer than the maximimum config distance of {2}", location.locationName, location.distanceFromDepot, config.Calculation.routeDistanceMaxMiles));
+                    possibleLocations.Add(location);
+                }
+                else
+                    Logger.Trace(String.Format("{0} is being orphaned because it's distance from the depot of {1} is farther than the maximimum config distance of {2}", location.locationName, location.distanceFromDepot, config.Calculation.routeDistanceMaxMiles));
 
             }
             return possibleLocations;
@@ -783,7 +795,7 @@ namespace RouteNavigation
             //Theoretically can prioritize nearby locations.  However, since we have to eventually visit all locations, this doesn't seem very advantageous
             double algDistance;
             if (config.Features.prioritizeNearestLocation == true)
-                algDistance = (config.matrix.distanceFromSourceMultiplier * location.distanceFromSource);
+                algDistance = (config.matrix.distanceFromSourceMultiplier * location.distanceFromDepot);
             else
                 algDistance = 0;
 
@@ -817,7 +829,7 @@ namespace RouteNavigation
             return travelTime;
         }
 
-        protected static double CalculateDistance(Location p1, Location p2)
+        public static double CalculateDistance(Location p1, Location p2)
         {
             var R = 3963.190592; // Earth’s mean radius in miles
             var dLat = Radians(p2.coordinates.lat - p1.coordinates.lat);

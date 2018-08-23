@@ -216,7 +216,7 @@ namespace RouteNavigation
         {
             DataPager DataPager = LocationsListView.FindControl("locationDataPager") as DataPager;
             DataPager.SetPageProperties(0, DataPager.PageSize, false);
-            BindListView(null, TxtSearchFilter.Text);
+            BindListView(lstSearchFilters.SelectedValue, TxtSearchFilter.Text);
         }
 
         protected void TdClientPriority_click(object sender, ListViewCancelEventArgs e)
@@ -441,7 +441,7 @@ namespace RouteNavigation
 
                 string Content = reader.ReadToEnd();
 
-                if (Content == null || Content == "")
+                if (String.IsNullOrEmpty(Content))
                 {
                     dataValidation.IsValid = false;
                     dataValidation.ErrorMessage = "Upload File is blank.  Please select a file to upload before clicking upload.";
@@ -502,9 +502,9 @@ namespace RouteNavigation
         protected void BindListView(string columnFilterName = null, string filterString = null, string columnSortName = null, bool ascending = true)
         {
             //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
-            if (columnFilterName == null)
+            if (String.IsNullOrEmpty(columnFilterName))
                 columnFilterName = "location_name";
-            if (columnSortName == null)
+            if (String.IsNullOrEmpty(columnSortName))
                 if (ViewState[viewStatePropertyLocation] == null)
                     columnSortName = "location_name";
                 else
