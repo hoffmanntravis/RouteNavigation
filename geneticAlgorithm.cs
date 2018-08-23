@@ -33,7 +33,8 @@ namespace RouteNavigation
         protected Config config = DataAccess.GetConfig();
         protected List<Location> allLocations = DataAccess.GetLocations();
         protected List<Location> possibleLocations;
-        protected List<Vehicle> allVehicles = DataAccess.GetVehicles();
+        protected static List<Vehicle> allVehicles = DataAccess.GetVehicles();
+        protected static List<Vehicle> availableVehicles = allVehicles.Where(v => v.operational == true).ToList();
         static object lockObject = new object();
         RouteCalculator generalCalc = new RouteCalculator();
         private Random rng = new Random();
@@ -51,7 +52,7 @@ namespace RouteNavigation
             return startingPopulation;
         }
 
-        public bool testInitializePopulation ()
+        public bool testInitializePopulation()
         {
             int unitPopulation = 5;
             List<List<Location>> testPopulation = initializePopulation(unitPopulation);
@@ -73,34 +74,37 @@ namespace RouteNavigation
             return true;
         }
 
-        public void detectDuplicates (List<RouteCalculator> calcs)
+        public void detectDuplicates(List<RouteCalculator> calcs)
         {
             List<RouteCalculator> duplicateCalcs = calcs.GroupBy(c => c.GetHashCode()).Where(g => g.Skip(1).Any()).SelectMany(c => c).ToList();
             int duplicatesCount = duplicateCalcs.Count;
 
             Logger.Info("There are " + duplicateCalcs.Count + " Duplicates");
         }
-        
+
         public void calculateBestRoutes()
         {
+            if (Calculation.origin == null)
+            {
+                string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
+                Logger.Error(errorMessage);
+                Exception e = new Exception(errorMessage);
+                throw e;
+            }
             try
             {
-
-
-                if (generalCalc.origin == null)
-                {
-                    string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
-                    Logger.Error(errorMessage);
-                    Exception e = new Exception(errorMessage);
-                    throw e;
-                }
+                Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.",allLocations.Count));
                 //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
                 possibleLocations = allLocations.ToList();
-                possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(generalCalc.origin, l));
-                List<Location> longOverDueLocations = possibleLocations.Where(a => a.daysUntilDue <= (config.Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
+                possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Calculation.origin, l));
+                List<Location> longOverDueLocations = possibleLocations.Where(a => a.daysUntilDue <= (Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
                 possibleLocations = possibleLocations.Except(longOverDueLocations).ToList();
                 possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
+                possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
+                //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
+                possibleLocations.RemoveAll(s => s.address == Calculation.origin.address);
 
+                Logger.Info(String.Format("After filtering locations based on distance, overdue, and populated GPS coordinates, and removing the origin, {0} locations will be processed",possibleLocations.Count));
 
                 List<List<Location>> startingPopulation = initializePopulation(populationSize);
                 //create a batch id for identifying a series of routes calculated together
@@ -219,7 +223,7 @@ namespace RouteNavigation
         {
             RouteCalculator calc = new RouteCalculator(config, possibleLocations, allVehicles);
             calc.neighborCount = neighborCount;
-            calc.CalculateRoutes(list);
+            calc.CalculateRoutes(list,availableVehicles);
             return calc;
         }
 
@@ -233,7 +237,7 @@ namespace RouteNavigation
                 {
                     RouteCalculator c = runCalculations(locations);
                     lock (lockObject)
-                    calcs.Add(c);
+                        calcs.Add(c);
                 });
 
                 thread.Priority = ThreadPriority.Normal;
@@ -326,9 +330,7 @@ namespace RouteNavigation
         {
 
             Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
-
-
-            
+      
             int routeHashParentA = generateRouteHash(parentALocations);
             int routeHashParentB = generateRouteHash(parentBLocations);
 
@@ -499,7 +501,7 @@ namespace RouteNavigation
                     //next couple lines effectively ensure a mutation gene count of at least 1
                     int upperBound = Convert.ToInt32(Math.Round(decayFunction() * mutationAlleleMax));
 
-                    int mutationGeneQuantity = rng.Next(1, Math.Max(1,upperBound));
+                    int mutationGeneQuantity = rng.Next(1, Math.Max(1, upperBound));
                     Logger.Trace(String.Format("mutation gene quantity is {0}", mutationGeneQuantity));
                     for (int y = 0; y < mutationGeneQuantity; y++)
                     {
@@ -534,7 +536,7 @@ namespace RouteNavigation
 
 
             contestants.SortByDistanceAsc();
-            List<RouteCalculator>winners = contestants.Take(tournamentWinnerCount).ToList();
+            List<RouteCalculator> winners = contestants.Take(tournamentWinnerCount).ToList();
 
             Logger.Trace(string.Format("Tournament produced {0} winners", contestants.Count));
             foreach (RouteCalculator contestant in contestants)

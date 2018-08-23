@@ -24,43 +24,17 @@ namespace RouteNavigation
     public class Calculation
     {
         public static Location origin;
-
-        private int _originLocationId;
-        public int OriginLocationId
-        {
-            get { return _originLocationId; }
-            set
-            {
-                if (OriginLocationId != value)
-                {
-                    _originLocationId = value;
-                    SetOriginLocation(_originLocationId);
-                }
-
-            }
-        }
-
-        public double currentFillLevelErrorMarginPercent = 0;
-        public DateTime workdayStartTime = DateTime.MinValue;
-        public DateTime workdayEndTime = DateTime.MinValue;
-        public double oilPickupAverageDurationMinutes = 30;
-        public double greasePickupAverageDurationMinutes = 30;
-        public int minimDaysUntilPickup = 0;
-        public int maximumDaysOverdue = 60;
-        public double routeDistanceMaxMiles = 50;
-        public double nearbyLocationDistance = 20;
-        public double averageCityTravelSpeed = 30;
-        public double averageHighwayTravelSpeed = 70;
-
-        protected static void SetOriginLocation(int id)
-        {
-            //only set origin once since it is a static variable, and we don't want to call the DB every time origin is requested
-            if (origin == null)
-            {
-                Location o = DataAccess.GetLocationById(id);
-                origin = o;
-            }
-        }
+        public static double currentFillLevelErrorMarginPercent = 0;
+        public static DateTime workdayStartTime = DateTime.MinValue;
+        public static DateTime workdayEndTime = DateTime.MinValue;
+        public static double oilPickupAverageDurationMinutes = 30;
+        public static double greasePickupAverageDurationMinutes = 30;
+        public static int minimDaysUntilPickup = 0;
+        public static int maximumDaysOverdue = 60;
+        public static double routeDistanceMaxMiles = 50;
+        public static double nearbyLocationDistance = 20;
+        public static double averageCityTravelSpeed = 30;
+        public static double averageHighwayTravelSpeed = 70;
     }
 
     public class Features

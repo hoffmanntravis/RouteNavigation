@@ -29,19 +29,20 @@ namespace RouteNavigation
                 txtChkPrioritizeNearestLocation.Checked = true;
             if (Config.Features.vehicleFillLevel)
                 txtChkVehicleFillLevel.Checked = true;
-            txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
-            txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
-            txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
-            txtMinimumDaysUntilPickup.Text = Config.Calculation.minimDaysUntilPickup.ToString();
-            txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
+            txtCurrentFillLevelErrorMargin.Text = Calculation.currentFillLevelErrorMarginPercent.ToString();
+            txtOilPickupAverageDuration.Text = Calculation.oilPickupAverageDurationMinutes.ToString();
+            txtGreasePickupAverageDuration.Text = Calculation.greasePickupAverageDurationMinutes.ToString();
+            txtMinimumDaysUntilPickup.Text = Calculation.minimDaysUntilPickup.ToString();
+            txtMaximumDaysOverdue.Text = Calculation.maximumDaysOverdue.ToString();
 
-            if (Config.Calculation.workdayStartTime != DateTime.MinValue)
-                txtWorkDayStart.Text = Config.Calculation.workdayStartTime.TimeOfDay.ToString();
-            if (Config.Calculation.workdayEndTime != DateTime.MinValue)
-                txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
+            if (Calculation.workdayStartTime != DateTime.MinValue)
+                txtWorkDayStart.Text = Calculation.workdayStartTime.TimeOfDay.ToString();
+            if (Calculation.workdayEndTime != DateTime.MinValue)
+                txtWorkDayEnd.Text = Calculation.workdayEndTime.TimeOfDay.ToString();
 
-            txtRouteDistanceMaxMiles.Text = Config.Calculation.routeDistanceMaxMiles.ToString();
-            txtOriginLocationId.Text = Config.Calculation.OriginLocationId.ToString();
+            txtRouteDistanceMaxMiles.Text = Calculation.routeDistanceMaxMiles.ToString();
+            if (Calculation.origin != null)
+                txtOriginLocationId.Text = Calculation.origin.id.ToString();
             txtMatrixOverDueMultiplier.Text = Config.matrix.overDueMultiplier.ToString();
             txtMatrixDaysUntilDueExponent.Text = Config.matrix.daysUntilDueExponent.ToString();
             txtMatrixDistanceFromSource.Text = Config.matrix.distanceFromSourceMultiplier.ToString();
@@ -58,15 +59,16 @@ namespace RouteNavigation
         {
             try
             {
-                Config.Calculation.OriginLocationId = (int.Parse(txtOriginLocationId.Text));
-                Location newOrigin = DataAccess.GetLocationById(Config.Calculation.OriginLocationId);
-                if (newOrigin == null)
+                if (!(String.IsNullOrEmpty(txtOriginLocationId.Text)))
                 {
-                    Exception exception = new Exception("Unable to resolve origin id: <" + txtOriginLocationId.Text + "> to a Location in the location table.  Please update this to a corresponding location, creating one if necessary.");
+                    int textId = int.Parse(txtOriginLocationId.Text);
+                    DataAccess.SetOrigin(textId);
+                }
+                else
+                {
+                    Exception exception = new Exception("Origin field is null.  Please set the depot to an id in the Locations table / page, or calculation will fail.  Aborting config update.");
                     throw exception;
                 }
-
-                Calculation.origin = newOrigin;
 
                 //This section / data structure could use a rework to be less explicitly mapped to the db keys
                 if (txtChkPrioritizeNearestLocation.Checked == true)

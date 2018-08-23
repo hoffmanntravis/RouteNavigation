@@ -44,7 +44,7 @@ namespace RouteNavigation
                 if (jsonCoordinates is null)
                     jsonCoordinates = "\"\"";
 
-                Calculation.origin = DataAccess.GetLocationById(config.Calculation.OriginLocationId);
+                Calculation.origin = DataAccess.GetLocationById(Calculation.origin.id);
                 mapXCoordinate = Calculation.origin.coordinates.lat;
                 mapYCoordinate = Calculation.origin.coordinates.lng;
 

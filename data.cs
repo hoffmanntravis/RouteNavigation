@@ -156,14 +156,14 @@ namespace RouteNavigation
         {
             using (Npgsql.NpgsqlConnection connection = new Npgsql.NpgsqlConnection(conString))
             {
-            cmd.Connection = connection;
-            cmd.CommandType = CommandType.StoredProcedure;
-            connection.Open();
+                cmd.Connection = connection;
+                cmd.CommandType = CommandType.StoredProcedure;
+                connection.Open();
 
-            NpgsqlDataReader reader = cmd.ExecuteReader();
+                NpgsqlDataReader reader = cmd.ExecuteReader();
 
-            dataTable.Load(reader);
-            connection.Close();
+                dataTable.Load(reader);
+                connection.Close();
             }
             return true;
         }
@@ -203,7 +203,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static DataTable GetLocationData(DataTable dataTable, string filterColumnName = null, string filterString = null, string columnSortString=null, bool ascending = true)
+        public static DataTable GetLocationData(DataTable dataTable, string filterColumnName = null, string filterString = null, string columnSortString = null, bool ascending = true)
         {
             try
             {
@@ -263,7 +263,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-            public static DataTable GetLocationData(int id)
+        public static DataTable GetLocationData(int id)
         {
             UpdateDaysUntilDue();
             DataTable dataTable = new DataTable();
@@ -370,19 +370,38 @@ namespace RouteNavigation
                 return null;
         }
 
+        public static void SetOrigin(int id)
+        {
+            DataTable configsDataTable = GetConfigData();
+
+            foreach (DataRow row in configsDataTable.Rows)
+            {
+                Calculation.origin = GetLocationById(id);
+                if (Calculation.origin == null)
+                {
+                    Exception exception = new Exception(String.Format("Unable to resolve origin Id <{0}> to a location.  Please update the ID to a valid ID.", id));
+                    Logger.Error(exception.ToString());
+                    throw exception;
+                }
+            }
+
+        }
+
+
         public static Config ConvertDataTablesToConfig(DataTable configs, DataTable features)
         {
             Config config = new Config();
             foreach (DataRow row in configs.Rows)
             {
                 if (row["origin_location_id"] != DBNull.Value)
-                    config.Calculation.OriginLocationId = int.Parse(row["origin_location_id"].ToString());
+                    if (Calculation.origin != null)
+                        Calculation.origin.id = int.Parse(row["origin_location_id"].ToString());
                 if (row["minimum_days_until_pickup"] != DBNull.Value)
-                    config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
+                    Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
                 if (row["oil_pickup_average_duration"] != DBNull.Value)
-                    config.Calculation.oilPickupAverageDurationMinutes = TimeSpan.Parse(row["oil_pickup_average_duration"].ToString()).TotalMinutes;
+                    Calculation.oilPickupAverageDurationMinutes = TimeSpan.Parse(row["oil_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["grease_pickup_average_duration"] != DBNull.Value)
-                    config.Calculation.greasePickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
+                    Calculation.greasePickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["matrix_priority_multiplier"] != DBNull.Value)
                     config.matrix.priorityMultiplier = double.Parse(row["matrix_priority_multiplier"].ToString());
                 if (row["matrix_days_until_due_exponent"] != DBNull.Value)
@@ -394,13 +413,13 @@ namespace RouteNavigation
                 if (row["matrix_distance_from_source"] != DBNull.Value)
                     config.matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
                 if (row["maximum_days_overdue"] != DBNull.Value)
-                    config.Calculation.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
+                    Calculation.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
                 if (row["workday_start_time"] != DBNull.Value)
-                    config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
+                    Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
                 if (row["workday_end_time"] != DBNull.Value)
-                    config.Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
+                    Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
                 if (row["route_distance_max_miles"] != DBNull.Value)
-                    config.Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
+                    Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
             }
 
             foreach (DataRow row in features.Rows)
@@ -567,7 +586,7 @@ namespace RouteNavigation
                 catch (Exception exception)
                 {
 
-                     Logger.Error("Unable to retreive address from coordinates" + lat + "," + lng);
+                    Logger.Error("Unable to retreive address from coordinates" + lat + "," + lng);
                     Logger.Error(exception.ToString());
                 }
             }
