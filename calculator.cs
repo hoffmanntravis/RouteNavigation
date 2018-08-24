@@ -573,9 +573,7 @@ namespace RouteNavigation
         {
             //Check if the vehicle can accept more gallons.  Also, multiple the total gallons by a percentage.  Finally, check that the vehicle isn't empty, otherwise we're going to visit regadless.
             if (vehicle.currentGallons + location.currentGallonsEstimate >= vehicle.capacityGallons * ((100 - Config.Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
-            {
                 return false;
-            }
             return true;
         }
 
@@ -656,6 +654,12 @@ namespace RouteNavigation
                 {
                     Logger.Debug(String.Format("{0} is being ignored because it's size of {1} is smaller than the smallest vehicle size of {2}", location.locationName, location.vehicleSize, smallestVehicle));
                     //if we find a vehicle that works with the location, add the location to the list of possible locations and break out to the next location
+                    continue;
+                }
+
+                if (location.daysUntilDue <= (Config.Calculation.maximumDaysOverdue * -1) && location.lastVisited != default(DateTime))
+                {
+                    Logger.Debug(String.Format("{0} is being ignored because it's last visited date of {1} is more than {2} days overdue", location.locationName, location.lastVisited, Config.Calculation.maximumDaysOverdue));
                     continue;
                 }
 

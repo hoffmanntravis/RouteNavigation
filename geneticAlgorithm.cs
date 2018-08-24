@@ -14,13 +14,13 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 2000;
-        static public int populationSize = 4000;
+        static protected int iterations = 10;
+        static public int populationSize = 20;
         static public int neighborCount = 120;
-        static public int tournamentSize = 20;
-        static public int tournamentWinnerCount = 2;
-        static public int breedersCount = 8;
-        static public int offSpringPoolSize = 8;
+        static public int tournamentSize = 10;
+        static public int tournamentWinnerCount = 1;
+        static public int breedersCount = 5;
+        static public int offSpringPoolSize = 2;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
@@ -97,14 +97,12 @@ namespace RouteNavigation
                 //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
                 possibleLocations = allLocations.ToList();
                 possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
-                List<Location> longOverDueLocations = possibleLocations.Where(a => a.daysUntilDue <= (Config.Calculation.maximumDaysOverdue * -1) && a.lastVisited != default(DateTime)).ToList();
-                possibleLocations = possibleLocations.Except(longOverDueLocations).ToList();
                 possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
                 possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                 //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
                 possibleLocations.RemoveAll(s => s.address == Config.Calculation.origin.address);
 
-                Logger.Info(String.Format("After filtering locations based on distance, overdue, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed",possibleLocations.Count));
+                Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed",possibleLocations.Count));
 
                 List<List<Location>> startingPopulation = initializePopulation(populationSize);
                 //create a batch id for identifying a series of routes calculated together
@@ -240,7 +238,7 @@ namespace RouteNavigation
                         calcs.Add(c);
                 });
 
-                thread.Priority = ThreadPriority.Normal;
+                thread.Priority = ThreadPriority.BelowNormal;
                 threads.Add(thread);
                 thread.Start();
             }
