@@ -393,6 +393,7 @@ namespace RouteNavigation
         }
 
 
+
         public static Config ConvertDataTablesToConfig(DataTable configs, DataTable features)
         {
             Config config = new Config();
@@ -659,6 +660,23 @@ namespace RouteNavigation
             }
         }
 
+        public static bool getCalcStatus()
+        {
+            bool status = false;
+            try
+            {
+                NpgsqlCommand cmd = new NpgsqlCommand("get_calc_status");
+                string statusString = ReadStoredProcedureAsString(cmd);
+                status = Boolean.Parse(statusString);
+                return status;
+            }
+            catch (Exception exception)
+            {
+                Logger.Error("Unable to get calc status.");
+                Logger.Error(exception);
+            }
+            return status;
+        }
 
 
         public static void UpdateMatrixWeight(List<Location> locations)

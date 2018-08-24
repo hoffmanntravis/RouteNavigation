@@ -14,13 +14,13 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 2000;
-        static public int populationSize = 4000;
+        static protected int iterations = 10;
+        static public int populationSize = 50;
         static public int neighborCount = 120;
-        static public int tournamentSize = 80;
+        static public int tournamentSize = 10;
         static public int tournamentWinnerCount = 1;
-        static public int breedersCount = 4;
-        static public int offSpringPoolSize = 1;
+        static public int breedersCount = 8;
+        static public int offSpringPoolSize = 4;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
@@ -123,7 +123,7 @@ namespace RouteNavigation
             //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
 
             //generalCalc.UpdateDistanceFromSource(allLocations);
-            //generalCalc.UpdateMatrixWeight(allLocations);
+            RouteCalculator.UpdateMatrixWeight(allLocations);
             DataAccess.UpdateDaysUntilDue();
 
             List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();

@@ -627,13 +627,13 @@ namespace RouteNavigation
             public List<Location> processedLocations = new List<Location>();
         }
 
-        protected List<Location> GetCompatibleLocations(Vehicle vehicle, List<Location> locations)
+        protected static List<Location> GetCompatibleLocations(Vehicle vehicle, List<Location> locations)
         {
             List<Location> compatibleLocations = locations.Where(l => vehicle.physicalSize <= l.vehicleSize).ToList();
             return compatibleLocations;
         }
 
-        public bool checkVehicleLocationCompatibility(Vehicle vehicle, Location location)
+        public static bool checkVehicleLocationCompatibility(Vehicle vehicle, Location location)
         {
             if (vehicle.physicalSize <= location.vehicleSize)
                 return true;
@@ -726,7 +726,7 @@ namespace RouteNavigation
             return highestPrioritylocations;
         }
 
-        public void UpdateDistanceFromSource(List<Location> locations)
+        public static void UpdateDistanceFromSource(List<Location> locations)
         {
             try
             {
@@ -739,7 +739,7 @@ namespace RouteNavigation
             }
         }
 
-        public void UpdateMatrixWeight(List<Location> locations)
+        public static void UpdateMatrixWeight(List<Location> locations)
         {
             try
             {

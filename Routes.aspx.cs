@@ -25,7 +25,7 @@ namespace RouteNavigation
         protected DataTable dataTable;
         protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
         protected string btnCalculateRoutesInitialText;
-
+        static Object calcLock = new Object();
         protected void Page_Load(object sender, EventArgs e)
         {
             btnCalculateRoutesInitialText = BtnCalculateRoutes.Text;
@@ -47,10 +47,23 @@ namespace RouteNavigation
             try
             {
                 DataAccess.RefreshApiCache();
-
-                //If calculateBestRoutes already has the lock, discard the request
-                ga.calculateBestRoutes();
-
+                if (!Monitor.TryEnter(calcLock))
+                {
+                    try
+                    {
+                        //If calculateBestRoutes already has the lock, discard the request
+                        ga.calculateBestRoutes();
+                    }
+                    finally
+                    {
+                        Monitor.Exit(calcLock);
+                    }
+                }
+                else
+                {
+                    Exception exception = new Exception("Calculations are being done by another user.  Please check the batch table and wait until it is completed, and then recalcualte");
+                    throw exception;
+                }
             }
             catch (Exception exception)
             {
