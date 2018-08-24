@@ -47,11 +47,11 @@ namespace RouteNavigation
             try
             {
                 DataAccess.RefreshApiCache();
-                if (!Monitor.TryEnter(calcLock))
+                if (Monitor.TryEnter(calcLock))
                 {
                     try
                     {
-                        //If calculateBestRoutes already has the lock, discard the request
+
                         ga.calculateBestRoutes();
                     }
                     finally
@@ -61,7 +61,7 @@ namespace RouteNavigation
                 }
                 else
                 {
-                    Exception exception = new Exception("Calculations are being done by another user.  Please check the batch table and wait until it is completed, and then recalcualte");
+                    Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalcualte");
                     throw exception;
                 }
             }

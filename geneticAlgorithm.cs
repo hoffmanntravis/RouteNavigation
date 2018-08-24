@@ -14,13 +14,13 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 10;
-        static public int populationSize = 50;
-        static public int neighborCount = 120;
-        static public int tournamentSize = 10;
+        static protected int iterations = 200;
+        static public int populationSize = 100;
+        static public int neighborCount = 200;
+        static public int tournamentSize = 4;
         static public int tournamentWinnerCount = 1;
-        static public int breedersCount = 8;
-        static public int offSpringPoolSize = 4;
+        static public int breedersCount = 4;
+        static public int offSpringPoolSize = 2;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
@@ -35,8 +35,8 @@ namespace RouteNavigation
         static protected List<Location> possibleLocations;
         static protected List<Vehicle> allVehicles = DataAccess.GetVehicles();
         List<Vehicle> availableVehicles;
-        static private object lockObject = new object();
-
+        static private object newCalcLock = new object();
+        static private object calcLock = new object();
         static private Random rng = new Random();
 
         public List<List<Location>> initializePopulation(int populationSize)
@@ -94,77 +94,91 @@ namespace RouteNavigation
 
         public void calculateBestRoutes()
         {
-            config = DataAccess.GetConfig();
-            if (Config.Calculation.origin == null)
+            if (Monitor.TryEnter(calcLock))
             {
-                string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
-                Logger.Error(errorMessage);
-                Exception e = new Exception(errorMessage);
-                throw e;
+                try
+                {
+                    config = DataAccess.GetConfig();
+                    if (Config.Calculation.origin == null)
+                    {
+                        string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
+                        Logger.Error(errorMessage);
+                        Exception e = new Exception(errorMessage);
+                        throw e;
+                    }
+
+                    Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.", allLocations.Count));
+                    //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
+                    availableVehicles = DataAccess.GetVehicles().Where(v => v.operational == true).ToList();
+                    possibleLocations = allLocations.ToList();
+                    possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
+                    possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
+                    possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
+                    //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
+                    possibleLocations.RemoveAll(s => s.address == Config.Calculation.origin.address);
+
+                    Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));
+
+                    List<List<Location>> startingPopulation = initializePopulation(populationSize);
+                    //create a batch id for identifying a series of routes calculated together
+                    int batchId = DataAccess.GetNextRouteBatchId();
+                    DataAccess.InsertRouteBatch();
+
+                    //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
+
+                    //generalCalc.UpdateDistanceFromSource(allLocations);
+                    RouteCalculator.UpdateMatrixWeight(allLocations);
+                    DataAccess.UpdateDaysUntilDue();
+
+                    List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
+
+                    Logger.Info("Threading intialized locations pool into calculation class instances");
+
+                    fitnessCalcs = threadCalculations(startingPopulation, fitnessCalcs);
+
+                    Logger.Info("Created random locations pool");
+
+                    fitnessCalcs.SortByDistanceAsc();
+                    double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
+
+                    int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
+                    Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
+
+                    Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
+
+                    for (int i = 0; i < iterations; i++)
+                    {
+                        Logger.Info(string.Format("Beginning iteration {0}", i + 1));
+                        currentIteration = i;
+                        fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
+
+                        fitnessCalcs.SortByDistanceAsc();
+                        double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
+                        emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
+                        Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
+                        Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
+                    }
+
+                    //fully optimized the GA selected route with 3opt swap
+                    RouteCalculator bestCalc = fitnessCalcs.First();
+                    foreach (Route route in bestCalc.routes)
+                        bestCalc.calculateTSPRouteTwoOpt(route);
+                    DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
+                    Logger.Info(string.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
+                    DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
+
+                    Logger.Info("Finished calculations.");
+                }
+                finally
+                {
+                    Monitor.Exit(calcLock);
+                }
             }
-
-            Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.", allLocations.Count));
-            //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
-            availableVehicles = DataAccess.GetVehicles().Where(v => v.operational == true).ToList();
-            possibleLocations = allLocations.ToList();
-            possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
-            possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
-            possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
-            //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
-            possibleLocations.RemoveAll(s => s.address == Config.Calculation.origin.address);
-
-            Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));
-
-            List<List<Location>> startingPopulation = initializePopulation(populationSize);
-            //create a batch id for identifying a series of routes calculated together
-            int batchId = DataAccess.GetNextRouteBatchId();
-            DataAccess.InsertRouteBatch();
-
-            //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
-
-            //generalCalc.UpdateDistanceFromSource(allLocations);
-            RouteCalculator.UpdateMatrixWeight(allLocations);
-            DataAccess.UpdateDaysUntilDue();
-
-            List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
-
-            Logger.Info("Threading intialized locations pool into calculation class instances");
-
-            fitnessCalcs = threadCalculations(startingPopulation, fitnessCalcs);
-
-            Logger.Info("Created random locations pool");
-
-            fitnessCalcs.SortByDistanceAsc();
-            double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
-
-            int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-            Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
-
-            Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
-
-            for (int i = 0; i < iterations; i++)
+            else
             {
-                Logger.Info(string.Format("Beginning iteration {0}", i));
-                currentIteration = i;
-                fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
-
-                fitnessCalcs.SortByDistanceAsc();
-                double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
-                emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-                Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
-                Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
+                Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalcualte");
+                throw exception;
             }
-
-            //fully optimized the GA selected route with 3opt swap
-            RouteCalculator bestCalc = fitnessCalcs.First();
-            foreach (Route route in bestCalc.routes)
-                bestCalc.calculateTSPRouteTwoOpt(route);
-            DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
-            Logger.Info(string.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
-            DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
-
-            Logger.Info("Finished calculations.");
-
         }
 
         public List<RouteCalculator> GeneticAlgorithmFitness(List<RouteCalculator> calcs)
@@ -204,7 +218,7 @@ namespace RouteNavigation
 
             randomSampleMutate = geneticMutation(randomSampleMutate);
             calcs = threadCalculations(randomSampleMutate, calcs);
-            
+
             Logger.LogMessage(string.Format("running potential mutation of {0} random sample of all calcs", mutationCount), "DEBUG");
             */
             //foreach (RouteCalculator c in calcs)
@@ -241,7 +255,7 @@ namespace RouteNavigation
                 Thread thread = new Thread(Action =>
                 {
                     RouteCalculator c = runCalculations(locations);
-                    lock (lockObject)
+                    lock (newCalcLock)
                         calcs.Add(c);
                 });
 
@@ -335,7 +349,7 @@ namespace RouteNavigation
         {
 
             Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
-      
+
             int routeHashParentA = generateRouteHash(parentALocations);
             int routeHashParentB = generateRouteHash(parentBLocations);
 
@@ -343,7 +357,7 @@ namespace RouteNavigation
             {
                 Logger.LogMessage("routeHashes for ParentA and ParentB do not match");
             }
-            
+
 
             int crossoverCount = Convert.ToInt32(Math.Round(crossoverRatio * parentALocations.Count));
             if (crossoverRatio > 0 && crossoverCount == 0)
