@@ -28,8 +28,9 @@ namespace RouteNavigation
             public static int maximumDaysOverdue = 60;
             public static double routeDistanceMaxMiles = 50;
             public static double nearbyLocationDistance = 20;
-            public static double averageCityTravelSpeed = 30;
-            public static double averageHighwayTravelSpeed = 70;
+            public static double averageCityTravelSpeed = 15;
+            public static double averageHighwayTravelSpeed = 50;
+            public static TimeSpan dropOffTime = TimeSpan.FromMinutes(60);
         }
 
         public static class Features

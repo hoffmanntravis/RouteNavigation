@@ -108,32 +108,33 @@ namespace RouteNavigation
                         {
                             if (!(CheckVehicleCanAcceptMoreLiquid(vehicle, nextLocation)))
                             {
-                                compatibleLocations.Remove(nextLocation);
-                                // if this is the last location, remove the vehicle and reset it's gallons so it can drop them off and be used on a new route.  Otherwise, it will keep trying to service the same location.
-                                if (compatibleLocations.Count == 0)
-                                {
-                                    vehicle.currentGallons = 0;
-                                    currentVehicles.Remove(vehicle);
-                                }
-
-                                continue;
+                                Logger.Trace(String.Format("Performing a dropoff.  This will take {0} minutes.  Resetting current gallons to 0.", Config.Calculation.dropOffTime));
+                                vehicle.currentGallons = 0;
+                                potentialTime.Add(Config.Calculation.dropOffTime);
                             }
                         }
 
                         double nextLocationDistanceMiles = CalculateDistance(previousLocation, nextLocation);
 
                         TimeSpan travelTime = CalculateTravelTime(nextLocationDistanceMiles);
+                        Logger.Trace(String.Format("Travel time from {0} ({1}) to next location {2} ({3}) is {4} minutes", previousLocation.locationName,previousLocation.address, nextLocation.locationName, nextLocation.address, travelTime.TotalMinutes));
                         potentialTime += travelTime;
 
                         //If the location is not allowed before or after a certain time and the potential time has been exceeded, remove it.  Calc will advance a day and deal with it at that point if it's not compatible currently.
 
                         if (nextLocation.pickupWindowStartTime != DateTime.MinValue)
                             if (potentialTime < nextLocation.pickupWindowStartTime)
+                            {
                                 compatibleLocations.Remove(nextLocation);
+                                continue;
+                            }
 
                         if (nextLocation.pickupWindowEndTime != DateTime.MinValue)
                             if (potentialTime > nextLocation.pickupWindowEndTime)
+                            {
                                 compatibleLocations.Remove(nextLocation);
+                                continue;
+                            }
 
                         if (nextLocation.type == "oil")
                         {
@@ -164,7 +165,7 @@ namespace RouteNavigation
                             {
                                 Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.locationName, potentialTime, endTime));
                                 compatibleLocations.Remove(nextLocation);
-                                break;
+                                continue;
                             }
                             /*
                             if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
@@ -200,8 +201,8 @@ namespace RouteNavigation
                     //Add the time to travel back to the depot
                     double distanceToDepot2 = CalculateDistance(previousLocation, origin);
                     TimeSpan travelTime2 = CalculateTravelTime(distanceToDepot2);
+                    Logger.Trace(String.Format("Travel time back from {0} ({1}) to {2} ({3}) is {4} minutes", previousLocation.locationName, previousLocation.address, origin.locationName, origin.address, travelTime2.TotalMinutes));
                     currentTime.Add(travelTime2);
-
                     potentialRoute.allLocations.Add(origin);
 
                     /*//override nearest location with locations along the route if they are within five miles
@@ -628,15 +629,7 @@ namespace RouteNavigation
 
         protected List<Location> GetCompatibleLocations(Vehicle vehicle, List<Location> locations)
         {
-            List<Location> compatibleLocations = new List<Location>();
-            foreach (Location location in locations)
-            {
-                if (vehicle.physicalSize <= location.vehicleSize)
-                {
-                    compatibleLocations.Add(location);
-                    continue;
-                }
-            }
+            List<Location> compatibleLocations = locations.Where(l => vehicle.physicalSize <= l.vehicleSize).ToList();
             return compatibleLocations;
         }
 

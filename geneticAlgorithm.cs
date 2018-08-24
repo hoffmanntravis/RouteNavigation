@@ -14,23 +14,23 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 1;
-        static public int populationSize = 2;
+        static protected int iterations = 2000;
+        static public int populationSize = 4000;
         static public int neighborCount = 120;
-        static public int tournamentSize = 1;
-        static public int tournamentWinnerCount = 2;
-        static public int breedersCount = 2;
+        static public int tournamentSize = 80;
+        static public int tournamentWinnerCount = 1;
+        static public int breedersCount = 4;
         static public int offSpringPoolSize = 1;
         static public double crossoverProbability = .35;
 
         static public double elitismRatio = .005;
-        static public double mutationProbability = .1;
+        static public double mutationProbability = .2;
         static public int mutationAlleleMax = 2;
         static public double growthDecayExponent = 1;
         static public bool toggleIterationsExponent = true;
         static protected int currentIteration = 0;
 
-        protected Config config = DataAccess.GetConfig();
+        protected Config config;
         static protected List<Location> allLocations = DataAccess.GetLocations();
         static protected List<Location> possibleLocations;
         static protected List<Vehicle> allVehicles = DataAccess.GetVehicles();
@@ -94,6 +94,7 @@ namespace RouteNavigation
 
         public void calculateBestRoutes()
         {
+            config = DataAccess.GetConfig();
             if (Config.Calculation.origin == null)
             {
                 string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";

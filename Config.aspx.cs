@@ -14,8 +14,6 @@ namespace RouteNavigation
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            Config = DataAccess.GetConfig();
             if (!Page.IsPostBack)
             {
                 BindData();
@@ -24,34 +22,43 @@ namespace RouteNavigation
 
         protected void BindData()
         {
-            Config = DataAccess.GetConfig();
-            if (Config.Features.prioritizeNearestLocation)
-                txtChkPrioritizeNearestLocation.Checked = true;
-            if (Config.Features.vehicleFillLevel)
-                txtChkVehicleFillLevel.Checked = true;
-            txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
-            txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
-            txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
-            txtMinimumDaysUntilPickup.Text = Config.Calculation.minimDaysUntilPickup.ToString();
-            txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
-
-            if (Config.Calculation.workdayStartTime != DateTime.MinValue)
-                txtWorkDayStart.Text = Config.Calculation.workdayStartTime.TimeOfDay.ToString();
-            if (Config.Calculation.workdayEndTime != DateTime.MinValue)
-                txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
-
-            txtRouteDistanceMaxMiles.Text = Config.Calculation.routeDistanceMaxMiles.ToString();
-            if (Config.Calculation.origin != null)
-                txtOriginLocationId.Text = Config.Calculation.origin.id.ToString();
-            txtMatrixOverDueMultiplier.Text = Config.Matrix.overDueMultiplier.ToString();
-            txtMatrixDaysUntilDueExponent.Text = Config.Matrix.daysUntilDueExponent.ToString();
-            txtMatrixDistanceFromSource.Text = Config.Matrix.distanceFromSourceMultiplier.ToString();
-            txtMatrixPriorityMultiplier.Text = Config.Matrix.priorityMultiplier.ToString();
-
-            if (Config.Calculation.origin != null)
+            try
             {
-                txtOriginName.Text = Config.Calculation.origin.locationName;
-                txtOriginAddress.Text = Config.Calculation.origin.address;
+                Config = DataAccess.GetConfig();
+                if (Config.Features.prioritizeNearestLocation)
+                    txtChkPrioritizeNearestLocation.Checked = true;
+                if (Config.Features.vehicleFillLevel)
+                    txtChkVehicleFillLevel.Checked = true;
+                txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
+                txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
+                txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
+                txtMinimumDaysUntilPickup.Text = Config.Calculation.minimDaysUntilPickup.ToString();
+                txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
+
+                if (Config.Calculation.workdayStartTime != DateTime.MinValue)
+                    txtWorkDayStart.Text = Config.Calculation.workdayStartTime.TimeOfDay.ToString();
+                if (Config.Calculation.workdayEndTime != DateTime.MinValue)
+                    txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
+
+                txtRouteDistanceMaxMiles.Text = Config.Calculation.routeDistanceMaxMiles.ToString();
+                if (Config.Calculation.origin != null)
+                    txtOriginLocationId.Text = Config.Calculation.origin.id.ToString();
+                txtMatrixOverDueMultiplier.Text = Config.Matrix.overDueMultiplier.ToString();
+                txtMatrixDaysUntilDueExponent.Text = Config.Matrix.daysUntilDueExponent.ToString();
+                txtMatrixDistanceFromSource.Text = Config.Matrix.distanceFromSourceMultiplier.ToString();
+                txtMatrixPriorityMultiplier.Text = Config.Matrix.priorityMultiplier.ToString();
+
+                if (Config.Calculation.origin != null)
+                {
+                    txtOriginName.Text = Config.Calculation.origin.locationName;
+                    txtOriginAddress.Text = Config.Calculation.origin.address;
+                }
+            }
+            catch (Exception exception)
+            {
+                dataValidation.IsValid = false;
+                dataValidation.ErrorMessage = exception.Message;
+                Logger.Error(exception);
             }
         }
 
