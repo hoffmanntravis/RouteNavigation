@@ -115,7 +115,7 @@ namespace RouteNavigation
             {
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = exception.Message;
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
             }
         }
     }

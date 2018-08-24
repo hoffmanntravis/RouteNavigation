@@ -21,10 +21,9 @@ namespace RouteNavigation
         public Location origin = Config.Calculation.origin;
         public int neighborCount = 60;
         public Guid activityId;
-        protected Config config;
+        static protected Config config;
         protected List<Location> allLocations;
         protected List<Vehicle> availableVehicles;
-        protected double localRadiusDivisor = 50;
 
         public List<Location> orphanedLocations = new List<Location>();
         static Object calcLock = new Object();
@@ -55,13 +54,11 @@ namespace RouteNavigation
                 if (origin == null)
                 {
                     Exception exception = new Exception("Origin is null.  Please set it in the config page, or calculation will fail.");
-                    Logger.Error(exception.ToString());
+                    Logger.Error(exception);
                     throw exception;
                 }
 
                 metadata.intakeLocations.AddRange(allLocations);
-                //Attempting to move line below to genetic algorithm
-                //availableLocations.ForEach(a => a.neighbors = FindNeighbors(a, availableLocations, neighborCount));
 
                 //Remove any locations that would be picked up too soon to be relevent.  We'll invoke a recursive call at the end to deal with these.
                 List<Location> laterDateLocations = GetLaterDateLocations(availableLocations);
@@ -109,12 +106,20 @@ namespace RouteNavigation
 
                         if (Config.Features.vehicleFillLevel == true)
                         {
-                            if (CheckVehicleCanAcceptMoreLiquid(vehicle, nextLocation))
+                            if (!(CheckVehicleCanAcceptMoreLiquid(vehicle, nextLocation)))
                             {
                                 compatibleLocations.Remove(nextLocation);
+                                // if this is the last location, remove the vehicle and reset it's gallons so it can drop them off and be used on a new route.  Otherwise, it will keep trying to service the same location.
+                                if (compatibleLocations.Count == 0)
+                                {
+                                    vehicle.currentGallons = 0;
+                                    currentVehicles.Remove(vehicle);
+                                }
+
                                 continue;
                             }
                         }
+
                         double nextLocationDistanceMiles = CalculateDistance(previousLocation, nextLocation);
 
                         TimeSpan travelTime = CalculateTravelTime(nextLocationDistanceMiles);
@@ -466,7 +471,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logger.Error(exception.Message);
+                Logger.Error(exception);
             }
             return hash;
         }
@@ -480,7 +485,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logger.Error(exception.Message);
+                Logger.Error(exception);
             }
             return route;
         }
@@ -494,7 +499,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logger.Error(exception.Message);
+                Logger.Error(exception);
             }
             return route;
         }
@@ -508,7 +513,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logger.Error(exception.Message);
+                Logger.Error(exception);
             }
             return route;
         }
@@ -572,7 +577,7 @@ namespace RouteNavigation
         protected bool CheckVehicleCanAcceptMoreLiquid(Vehicle vehicle, Location location)
         {
             //Check if the vehicle can accept more gallons.  Also, multiple the total gallons by a percentage.  Finally, check that the vehicle isn't empty, otherwise we're going to visit regadless.
-            if (vehicle.currentGallons + location.currentGallonsEstimate >= vehicle.capacityGallons * ((100 - Config.Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
+            if (vehicle.currentGallons + location.currentGallonsEstimate > vehicle.capacityGallons * ((100 - Config.Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
                 return false;
             return true;
         }
@@ -639,18 +644,18 @@ namespace RouteNavigation
         {
             if (vehicle.physicalSize <= location.vehicleSize)
                 return true;
-            else return false;
+            else
+                return false;
         }
 
         public static List<Location> GetPossibleLocations(List<Vehicle> vehicles, List<Location> locations)
         {
             List<Location> possibleLocations = new List<Location>();
-
             double smallestVehicle = vehicles.Min(v => v.physicalSize);
 
             foreach (Location location in locations)
             {
-                if (smallestVehicle >= location.vehicleSize)
+                if (location.vehicleSize <= smallestVehicle)
                 {
                     Logger.Debug(String.Format("{0} is being ignored because it's size of {1} is smaller than the smallest vehicle size of {2}", location.locationName, location.vehicleSize, smallestVehicle));
                     //if we find a vehicle that works with the location, add the location to the list of possible locations and break out to the next location
@@ -737,7 +742,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 Logger.Error("Unable to append distanceFromSource data for the RouteCalculator Class.");
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
             }
         }
 
@@ -754,7 +759,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 Logger.Error("Unable to append matrixWeight data.");
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
             }
         }
 

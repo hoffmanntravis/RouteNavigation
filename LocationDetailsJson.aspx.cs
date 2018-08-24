@@ -28,7 +28,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
             }
         }
 

@@ -5,7 +5,7 @@
 -- Dumped from database version 10.1
 -- Dumped by pg_dump version 10.3
 
--- Started on 2018-08-21 17:57:09
+-- Started on 2018-08-24 02:51:52
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -577,28 +577,36 @@ CREATE FUNCTION public.select_location_with_filter(p_column_filter_string charac
 BEGIN
 	IF p_ascending is not false
 		THEN
-			IF p_filter_string is null
+			IF p_filter_string is null and p_column_sort_string is not null
 				THEN
 					RETURN QUERY EXECUTE format ('SELECT * FROM location_with_type order by ' || $3 || ',id');
-				ELSE IF p_column_filter_string is not null
+				ELSE IF p_filter_string is not null and p_column_sort_string is null 
 					THEN
-						RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $3 || ', id NULLS LAST');
+						RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by id');
+				ELSE IF p_filter_string is null and p_column_sort_string is null
+					THEN
+						RETURN QUERY EXECUTE format ('Select * FROM location_with_type order by id');
 				ELSE
-					RETURN QUERY EXECUTE format ('Select * FROM location_with_type order by ' || $1 || ',id');
+					RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $3 || ', id NULLS LAST');
+			END IF;
 			END IF;
 		END IF;
-	ELSE
-		IF p_filter_string is null
-			THEN
-				RETURN QUERY EXECUTE format ('SELECT * FROM location_with_type order by ' || $3 || ' desc, id ');
-			ELSE IF p_column_filter_string is not null
-				THEN
-					RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $3 || ' desc, id NULLS LAST');
 
+	ELSE
+			IF p_filter_string is null and p_column_sort_string is not null
+				THEN
+					RETURN QUERY EXECUTE format ('SELECT * FROM location_with_type order by ' || $3 || ' desc, id ');
+				ELSE IF p_filter_string is not null and p_column_sort_string is null 
+					THEN
+						RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by id desc');
+				ELSE IF p_filter_string is null and p_column_sort_string is null
+					THEN
+						RETURN QUERY EXECUTE format ('Select * FROM location_with_type order by id desc');
 				ELSE
-					RETURN QUERY EXECUTE format ('Select * FROM location_with_type order by ' || $3 || ' desc ,id');
+					RETURN QUERY EXECUTE format ('Select * FROM location_with_type where ' || $1 || ' ILIKE ''%%' || $2 || '%%'' order by ' || $3 || ' desc, id NULLS LAST');
+				END IF;
 			END IF;
-		END IF;
+			END IF;
 	END IF;
 
 END;
@@ -1502,7 +1510,7 @@ ALTER TABLE ONLY public.location
     ADD CONSTRAINT type FOREIGN KEY (location_type) REFERENCES public.location_type(id);
 
 
--- Completed on 2018-08-21 17:57:09
+-- Completed on 2018-08-24 02:51:52
 
 --
 -- PostgreSQL database dump complete

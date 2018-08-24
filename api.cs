@@ -34,7 +34,7 @@ namespace RouteNavigation
             }
             catch (Exception exception)
             {
-               Logger.Error(exception.ToString());
+               Logger.Error(exception);
             }
             try
             {
@@ -43,7 +43,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 Logger.Error("Unable to insert record using upsert_api_metadata stored procedure.");
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
             }
         }
 

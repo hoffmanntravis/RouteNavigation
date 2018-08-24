@@ -38,14 +38,14 @@ namespace RouteNavigation
             if (root.Status == "OVER_QUERY_LIMIT")
             {
                 Exception exception = new Exception("Google API returned Status:" + root.Status + ".  This is considered fatal.  Please check your api usage, or check with an administrator as to why this status is occurring.");
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
                 throw exception;
 
             }
             else if (root.Status != "OK")
             {
                 Exception exception = new Exception("Google API returned Status:" + root.Status + ".  Please check your api usage, or check with an administrator as to why this status is occurring.");
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
             }
 
             if (root.Results.Count > 0)

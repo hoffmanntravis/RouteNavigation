@@ -85,7 +85,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of Update was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
                 VehiclesListView.EditIndex = -1;
@@ -145,7 +145,7 @@ namespace RouteNavigation
             catch (Exception exception)
             {
                 string ErrorDetails = "Input Data of insert was not valid.  Please verify data and try again." + "<br>" + exception.Message;
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = ErrorDetails;
             }
@@ -181,7 +181,7 @@ namespace RouteNavigation
             {
                 dataValidation.IsValid = false;
                 dataValidation.ErrorMessage = "Error Loading CSV" + "<br>" + exception.Message;
-                Logger.Error(exception.ToString());
+                Logger.Error(exception);
             }
         }
 
