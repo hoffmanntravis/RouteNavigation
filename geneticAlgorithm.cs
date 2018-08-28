@@ -303,11 +303,16 @@ namespace RouteNavigation
             Logger.Trace(string.Format("Performing genetic selection from {0} parents", parents.Count));
             Logger.Trace(string.Format("Parent metadata for parent 0 is processed locations: {0}, orphaned locations: {1} ", parents[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count));
 
+            int tournamentSizeCount = (int)Math.Round(((tournamentSize * growthFunction())), 0);
+            if (tournamentSizeCount < 2)
+                tournamentSizeCount = 2;
+            Logger.Info(string.Format("Tournament size is: {0}", tournamentSizeCount));
+
             List<RouteCalculator> breeders = new List<RouteCalculator>();
             while (breeders.Count < breedersCount)
             {
                 List<RouteCalculator> contestants = new List<RouteCalculator>();
-                for (int x = 0; x < tournamentSize; x++)
+                for (int x = 0; x < tournamentSizeCount; x++)
                 {
                     int randomIndex = rng.Next(parents.Count);
                     RouteCalculator contestant = parents[randomIndex];
@@ -341,12 +346,12 @@ namespace RouteNavigation
                 }
 
                 //distribute the next selected index with a growth bias towards lower distance values as sorted above.  That is, put bias of reproduction towards strong breeders.
-                int randomIndex = Convert.ToInt32(Math.Floor((rng.Next(breeders.Count)) * (Math.Pow(rng.NextDouble(), growthFunction()))));
+                int randomIndex = Convert.ToInt32(rng.Next(breeders.Count));
                 //int randomIndex = rng.Next(breeders.Count);
                 RouteCalculator parentA = breeders[randomIndex];
                 breeders.Remove(parentA);
                 //randomIndex = rng.Next(breeders.Count);
-                randomIndex = Convert.ToInt32(Math.Floor((rng.Next(breeders.Count)) * (Math.Pow(rng.NextDouble(), growthFunction()))));
+                randomIndex = Convert.ToInt32(rng.Next(breeders.Count));
                 RouteCalculator parentB = breeders[randomIndex];
                 breeders.Remove(parentB);
 
