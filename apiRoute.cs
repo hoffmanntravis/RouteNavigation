@@ -21,11 +21,11 @@ namespace RouteNavigation
         public TimeSpan duration;
         public Route googleProperties;
 
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
-        protected string directionsApiUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsApiUrl"];
-        protected string apiKey = System.Configuration.ConfigurationManager.AppSettings["googleApiKey"];
-        protected string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
-        protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private string directionsApiUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsApiUrl"];
+        private string apiKey = System.Configuration.ConfigurationManager.AppSettings["googleApiKey"];
+        private string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
+        private string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
 
         public ApiRoute(RouteNavigation.Route route)
         {
@@ -35,7 +35,7 @@ namespace RouteNavigation
             mapsUrl = BuildMapsUrl(route);
         }
 
-        protected void SetGoogleApiObjectProperties(GoogleDirections directions)
+        private void SetGoogleApiObjectProperties(GoogleDirections directions)
         {
             if (directions.Routes.Count > 0)
             {
@@ -74,7 +74,7 @@ namespace RouteNavigation
             return mapsUrl;
         }
 
-        protected GoogleDirections GetRootApiObject(RouteNavigation.Route route)
+        private GoogleDirections GetRootApiObject(RouteNavigation.Route route)
         {
             Api googleApi = new Api();
 

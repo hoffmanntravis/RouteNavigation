@@ -45,7 +45,7 @@ namespace RouteNavigation
             }
         }
 
-        protected void populateDdlSearchFilter()
+        private void populateDdlSearchFilter()
         {
             ListItem locationName = new ListItem();
             locationName.Value = "location_name";
@@ -400,7 +400,7 @@ namespace RouteNavigation
             locationSort(sender, "matrix_weight");
         }
 
-        protected void locationSort(object sender, string sortProperty)
+        private void locationSort(object sender, string sortProperty)
         {
             ImageButton image = (ImageButton)sender;
             bool sortAsc = true;
@@ -499,7 +499,7 @@ namespace RouteNavigation
             BindListView();
         }
 
-        protected void BindListView(string columnFilterName = null, string filterString = null, string columnSortName = null, bool ascending = true)
+        private void BindListView(string columnFilterName = null, string filterString = null, string columnSortName = null, bool ascending = true)
         {
             //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
             if (String.IsNullOrEmpty(columnFilterName))
@@ -529,7 +529,7 @@ namespace RouteNavigation
             LocationsListView.DataBind();
         }
 
-        protected string purifyCsvDataForPostgreImport(string[] expectedHeaders, string Content, char delimiter = ',')
+        private string purifyCsvDataForPostgreImport(string[] expectedHeaders, string Content, char delimiter = ',')
         {
             StringReader strReader = new StringReader(Content);
             string headerLine = strReader.ReadLine();

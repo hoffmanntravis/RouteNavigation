@@ -20,11 +20,10 @@ namespace RouteNavigation
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         private static object syncLock = new object();
-        protected GeneticAlgorithm ga = new GeneticAlgorithm();
-        protected RouteCalculator calc;
-        protected DataTable dataTable;
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
-        protected string btnCalculateRoutesInitialText;
+        private GeneticAlgorithm ga = new GeneticAlgorithm();
+        private DataTable dataTable;
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private string btnCalculateRoutesInitialText;
         static Object calcLock = new Object();
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -61,7 +60,7 @@ namespace RouteNavigation
                 }
                 else
                 {
-                    Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalcualte");
+                    Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalculate");
                     throw exception;
                 }
             }

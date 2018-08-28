@@ -15,8 +15,8 @@ namespace RouteNavigation
     public partial class _LocationDetailsJson : Page
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        protected DataTable table;
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private DataTable table;
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {

@@ -320,7 +320,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static DataTable getRouteBatchData()
+        public static DataTable GetRouteBatchData()
         {
             DataTable dataTable = new DataTable();
             NpgsqlCommand cmd = new NpgsqlCommand("select_route_batch");
@@ -328,12 +328,24 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static DataTable GetRouteDetailsData(int routeId)
+        public static DataTable GetRouteDetailsData(int routeId, bool excludeOrigin = false)
         {
             DataTable dataTable = new DataTable();
 
             NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
             cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
+            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+
+            return dataTable;
+        }
+
+        public static DataTable GetRouteDetailsData(bool excludeOrigin= false)
+        {
+            DataTable dataTable = new DataTable();
+
+            NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
+            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
             ReadStoredProcedureIntoDataTable(cmd, dataTable);
 
             return dataTable;
@@ -428,6 +440,30 @@ namespace RouteNavigation
                     Config.Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
                 if (row["route_distance_max_miles"] != DBNull.Value)
                     Config.Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
+                if (row["genetic_algorithm_iterations"] != DBNull.Value)
+                    Config.GeneticAlgorithm.Iterations = int.Parse(row["genetic_algorithm_iterations"].ToString());
+                if (row["genetic_algorithm_population_size"] != DBNull.Value)
+                    Config.GeneticAlgorithm.PopulationSize = int.Parse(row["genetic_algorithm_population_size"].ToString());
+                if (row["genetic_algorithm_neighbor_count"] != DBNull.Value)
+                    Config.GeneticAlgorithm.NeighborCount = int.Parse(row["genetic_algorithm_neighbor_count"].ToString());
+                if (row["genetic_algorithm_tournament_size"] != DBNull.Value)
+                    Config.GeneticAlgorithm.TournamentSize = int.Parse(row["genetic_algorithm_tournament_size"].ToString());
+                if (row["genetic_algorithm_tournament_winner_count"] != DBNull.Value)
+                    Config.GeneticAlgorithm.TournamentWinnerCount = int.Parse(row["genetic_algorithm_tournament_winner_count"].ToString());
+                if (row["genetic_algorithm_breeder_count"] != DBNull.Value)
+                    Config.GeneticAlgorithm.BreederCount = int.Parse(row["genetic_algorithm_breeder_count"].ToString());
+                if (row["genetic_algorithm_offspring_pool_size"] != DBNull.Value)
+                    Config.GeneticAlgorithm.OffspringPoolSize = int.Parse(row["genetic_algorithm_offspring_pool_size"].ToString());
+                if (row["genetic_algorithm_crossover_probability"] != DBNull.Value)
+                    Config.GeneticAlgorithm.CrossoverProbability = double.Parse(row["genetic_algorithm_crossover_probability"].ToString());
+                if (row["genetic_algorithm_elitism_ratio"] != DBNull.Value)
+                    Config.GeneticAlgorithm.ElitismRatio = double.Parse(row["genetic_algorithm_elitism_ratio"].ToString());
+                if (row["genetic_algorithm_mutation_probability"] != DBNull.Value)
+                    Config.GeneticAlgorithm.MutationProbability = double.Parse(row["genetic_algorithm_mutation_probability"].ToString());
+                if (row["genetic_algorithm_mutation_allele_max"] != DBNull.Value)
+                    Config.GeneticAlgorithm.MutationAlleleMax = int.Parse(row["genetic_algorithm_mutation_allele_max"].ToString());
+                if (row["genetic_algorithm_growth_decay_exponent"] != DBNull.Value)
+                    Config.GeneticAlgorithm.GrowthDecayExponent = double.Parse(row["genetic_algorithm_growth_decay_exponent"].ToString());
             }
 
             foreach (DataRow row in features.Rows)

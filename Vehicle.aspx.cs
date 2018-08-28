@@ -18,7 +18,6 @@ namespace RouteNavigation
 {
     public partial class _Vehicle : Page
     {
-        protected RouteCalculator calc;
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -207,7 +206,7 @@ namespace RouteNavigation
             Response.End();
         }
 
-        protected void BindListView(string columnName = "name", string filterString = null)
+        private void BindListView(string columnName = "name", string filterString = null)
         {
             DataTable table = DataAccess.GetVehicleData(columnName, filterString);
             VehiclesListView.DataSource = table;

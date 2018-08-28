@@ -16,21 +16,28 @@ namespace RouteNavigation
     public partial class _Map : Page
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        protected DataTable table;
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private DataTable table;
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
         public string jsonCoordinates;
         public double mapXCoordinate;
         public double mapYCoordinate;
-        protected Config config = DataAccess.GetConfig();
+        private Config config = DataAccess.GetConfig();
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
 
             try
             {
-                int routeId = int.Parse(Request.QueryString["routeId"]);
-                DataTable dtRoute = DataAccess.GetRouteDetailsData(routeId);
-                
+                DataTable dtRoute;
+                int routeId;
+                if (Request.QueryString["routeId"] == null)
+                    dtRoute = DataAccess.GetRouteDetailsData(true);
+                else
+                {
+                    routeId = int.Parse(Request.QueryString["routeId"]);
+                    dtRoute = DataAccess.GetRouteDetailsData(routeId);
+                }
+
                 if (!(dtRoute is null))
                 {
                     List<Location> locations = DataAccess.ConvertRouteDetailsDataTableToLocationCoordinates(dtRoute);
@@ -65,7 +72,7 @@ namespace RouteNavigation
 
         }
 
-        /*protected void BindListView()
+        /*private void BindListView()
         {
             string queryStringId = Request.QueryString["routeId"];
             if (queryStringId != null && queryStringId != "")

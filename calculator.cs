@@ -21,16 +21,16 @@ namespace RouteNavigation
         public Location origin = Config.Calculation.origin;
         public int neighborCount = 60;
         public Guid activityId;
-        static protected Config config;
-        protected List<Location> allLocations;
-        protected List<Vehicle> availableVehicles;
+        static private Config config;
+        private List<Location> allLocations;
+        private List<Vehicle> availableVehicles;
 
         public List<Location> orphanedLocations = new List<Location>();
         static Object calcLock = new Object();
-        protected int routePosition = 0;
+        private int routePosition = 0;
 
-        //protected double matrixDistanceFromSourceMultiplier = 1;
-        protected DateTime startDate = advanceDateToNextWeekday(System.DateTime.Now.Date);
+        //private double matrixDistanceFromSourceMultiplier = 1;
+        private DateTime startDate = advanceDateToNextWeekday(System.DateTime.Now.Date);
 
         public RouteCalculator(Config c, List<Location> allLocations, List<Location> possibleLocations, List<Vehicle> availableVehicles)
         {
@@ -330,7 +330,7 @@ namespace RouteNavigation
             return totalDistance;
         }
 
-        protected List<Location> ThreeOptSwap(List<Location> route)
+        private List<Location> ThreeOptSwap(List<Location> route)
         {
             double previousBestDistance;
             double bestDistance;
@@ -366,7 +366,7 @@ namespace RouteNavigation
             return route;
         }
 
-        protected List<Location> TwoOptSwap(List<Location> route)
+        private List<Location> TwoOptSwap(List<Location> route)
         {
             double previousBestDistance;
             double bestDistance;
@@ -395,7 +395,7 @@ namespace RouteNavigation
                 iterations++;
             }
             while (bestDistance < previousBestDistance);
-            Logger.Info("Ran " + iterations + " iterations of TwoOpt TSP");
+            Logger.Debug("Ran " + iterations + " iterations of TwoOpt TSP");
             return route;
         }
 
@@ -455,7 +455,7 @@ namespace RouteNavigation
             return newRoute;
         }
 
-        protected static int generateRouteHash(List<Location> locations)
+        private static int generateRouteHash(List<Location> locations)
         {
             int hash = 0;
             try
@@ -519,7 +519,7 @@ namespace RouteNavigation
             return route;
         }
 
-        protected static List<Location> nearestNeighbor(List<Location> route)
+        private static List<Location> nearestNeighbor(List<Location> route)
         {
             //int routeHashStart = generateRouteHash(route);
 
@@ -575,7 +575,7 @@ namespace RouteNavigation
             return Math.Sqrt(values.Average(v => Math.Pow(v - avg, 2)));
         }
 
-        protected bool CheckVehicleCanAcceptMoreLiquid(Vehicle vehicle, Location location)
+        private bool CheckVehicleCanAcceptMoreLiquid(Vehicle vehicle, Location location)
         {
             //Check if the vehicle can accept more gallons.  Also, multiple the total gallons by a percentage.  Finally, check that the vehicle isn't empty, otherwise we're going to visit regadless.
             if (vehicle.currentGallons + location.currentGallonsEstimate > vehicle.capacityGallons * ((100 - Config.Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
@@ -583,7 +583,7 @@ namespace RouteNavigation
             return true;
         }
 
-        protected double EstimateLocationGallons(Location location)
+        private double EstimateLocationGallons(Location location)
         {
             double currentGallonsEstimate;
             if (location.daysUntilDue > 0)
@@ -595,7 +595,7 @@ namespace RouteNavigation
             return currentGallonsEstimate;
         }
 
-        protected List<Location> GetLaterDateLocations(List<Location> availableLocations)
+        private List<Location> GetLaterDateLocations(List<Location> availableLocations)
         {
             List<Location> laterDateLocations = new List<Location>();
             foreach (Location l in availableLocations)
@@ -627,7 +627,7 @@ namespace RouteNavigation
             public List<Location> processedLocations = new List<Location>();
         }
 
-        protected static List<Location> GetCompatibleLocations(Vehicle vehicle, List<Location> locations)
+        private static List<Location> GetCompatibleLocations(Vehicle vehicle, List<Location> locations)
         {
             List<Location> compatibleLocations = locations.Where(l => vehicle.physicalSize <= l.vehicleSize).ToList();
             return compatibleLocations;
@@ -775,12 +775,12 @@ namespace RouteNavigation
             return weight;
         }
 
-        protected static double Radians(double x)
+        private static double Radians(double x)
         {
             return x * Math.PI / 180;
         }
 
-        protected static TimeSpan CalculateTravelTime(double distanceMiles)
+        private static TimeSpan CalculateTravelTime(double distanceMiles)
         {
             double travelTimeMinutes = 0;
             double cityRadius = 5;

@@ -5,7 +5,7 @@
 -- Dumped from database version 10.1
 -- Dumped by pg_dump version 10.3
 
--- Started on 2018-08-24 02:51:52
+-- Started on 2018-08-28 01:46:52
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -26,7 +26,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 2944 (class 0 OID 0)
+-- TOC entry 2960 (class 0 OID 0)
 -- Dependencies: 1
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
@@ -43,7 +43,7 @@ CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA public;
 
 
 --
--- TOC entry 2945 (class 0 OID 0)
+-- TOC entry 2961 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION pg_stat_statements; Type: COMMENT; Schema: -; Owner: 
 --
@@ -52,7 +52,7 @@ COMMENT ON EXTENSION pg_stat_statements IS 'track execution statistics of all SQ
 
 
 --
--- TOC entry 249 (class 1255 OID 33461)
+-- TOC entry 248 (class 1255 OID 33461)
 -- Name: delete_location(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -69,7 +69,7 @@ $$;
 ALTER FUNCTION public.delete_location(p_id integer) OWNER TO postgres;
 
 --
--- TOC entry 268 (class 1255 OID 33462)
+-- TOC entry 270 (class 1255 OID 33462)
 -- Name: delete_vehicle(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -86,7 +86,31 @@ $$;
 ALTER FUNCTION public.delete_vehicle(p_id integer) OWNER TO postgres;
 
 --
--- TOC entry 255 (class 1255 OID 78713)
+-- TOC entry 262 (class 1255 OID 80273)
+-- Name: get_calc_status(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_calc_status() RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+	IF (SELECT date_completed FROM route_batch 
+		order by id desc limit 1) is not null
+		THEN
+		return true;
+		ELSE
+		return false;
+	END IF;
+END;
+
+$$;
+
+
+ALTER FUNCTION public.get_calc_status() OWNER TO postgres;
+
+--
+-- TOC entry 256 (class 1255 OID 78713)
 -- Name: insert_location(integer, timestamp with time zone, integer, time without time zone, time without time zone, character varying, character varying, double precision, double precision, double precision, character varying, character varying, integer, integer, double precision); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -138,7 +162,7 @@ $$;
 ALTER FUNCTION public.insert_location(p_client_priority integer, p_last_visited timestamp with time zone, p_pickup_interval_days integer, p_pickup_window_start_time time without time zone, p_pickup_window_end_time time without time zone, p_address character varying, p_location_name character varying, p_capacity_gallons double precision, p_days_until_due double precision, p_matrix_weight double precision, p_contact_name character varying, p_contact_email character varying, p_vehicle_size integer, p_location_type integer, p_distance_from_source double precision) OWNER TO postgres;
 
 --
--- TOC entry 261 (class 1255 OID 79251)
+-- TOC entry 264 (class 1255 OID 79251)
 -- Name: insert_route(integer, interval, integer, timestamp with time zone, double precision, integer, character varying, double precision, uuid); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -210,7 +234,7 @@ $$;
 ALTER FUNCTION public.insert_route_batch() OWNER TO postgres;
 
 --
--- TOC entry 267 (class 1255 OID 33742)
+-- TOC entry 269 (class 1255 OID 33742)
 -- Name: insert_route_location(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -242,7 +266,7 @@ $$;
 ALTER FUNCTION public.insert_route_location(p_route_id integer, p_location_id integer, p_insert_order integer) OWNER TO postgres;
 
 --
--- TOC entry 254 (class 1255 OID 33467)
+-- TOC entry 253 (class 1255 OID 33467)
 -- Name: insert_vehicle(character varying, character varying, double precision, boolean, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -320,14 +344,26 @@ CREATE TABLE public.config (
     maximum_days_overdue integer,
     route_distance_max_miles double precision,
     workday_start_time time without time zone,
-    workday_end_time time without time zone
+    workday_end_time time without time zone,
+    genetic_algorithm_iterations integer DEFAULT 100,
+    genetic_algorithm_population_size integer DEFAULT 100,
+    genetic_algorithm_neighbor_count integer DEFAULT 100,
+    genetic_algorithm_tournament_size integer DEFAULT 10,
+    genetic_algorithm_tournament_winner_count integer DEFAULT 1,
+    genetic_algorithm_breeder_count integer DEFAULT 4,
+    genetic_algorithm_offspring_pool_size integer DEFAULT 2,
+    genetic_algorithm_crossover_probability double precision DEFAULT 0.25,
+    genetic_algorithm_elitism_ratio double precision DEFAULT 0.001,
+    genetic_algorithm_mutation_probability double precision DEFAULT 0.01,
+    genetic_algorithm_mutation_allele_max integer DEFAULT 1,
+    genetic_algorithm_growth_decay_exponent double precision DEFAULT 1
 );
 
 
 ALTER TABLE public.config OWNER TO postgres;
 
 --
--- TOC entry 260 (class 1255 OID 33473)
+-- TOC entry 263 (class 1255 OID 33473)
 -- Name: select_config(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -343,7 +379,7 @@ $$;
 ALTER FUNCTION public.select_config() OWNER TO postgres;
 
 --
--- TOC entry 247 (class 1255 OID 33474)
+-- TOC entry 246 (class 1255 OID 33474)
 -- Name: select_days_until_due(date, numeric); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -359,12 +395,12 @@ $$;
 ALTER FUNCTION public.select_days_until_due(p_last_visited date, p_pickup_interval_days numeric) OWNER TO postgres;
 
 --
--- TOC entry 198 (class 1259 OID 33475)
+-- TOC entry 214 (class 1259 OID 80625)
 -- Name: features; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.features (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     feature_name character varying NOT NULL,
     enabled boolean NOT NULL
 );
@@ -373,7 +409,7 @@ CREATE TABLE public.features (
 ALTER TABLE public.features OWNER TO postgres;
 
 --
--- TOC entry 264 (class 1255 OID 33481)
+-- TOC entry 254 (class 1255 OID 80639)
 -- Name: select_features(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -403,7 +439,7 @@ $$;
 ALTER FUNCTION public.select_highest_priority_location() OWNER TO postgres;
 
 --
--- TOC entry 199 (class 1259 OID 33483)
+-- TOC entry 198 (class 1259 OID 33483)
 -- Name: location_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -418,7 +454,7 @@ CREATE SEQUENCE public.location_id_seq
 ALTER TABLE public.location_id_seq OWNER TO postgres;
 
 --
--- TOC entry 200 (class 1259 OID 33485)
+-- TOC entry 199 (class 1259 OID 33485)
 -- Name: location; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -467,7 +503,7 @@ $$;
 ALTER FUNCTION public.select_location() OWNER TO postgres;
 
 --
--- TOC entry 242 (class 1255 OID 33498)
+-- TOC entry 241 (class 1255 OID 33498)
 -- Name: select_location_by_address(character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -486,7 +522,7 @@ $_$;
 ALTER FUNCTION public.select_location_by_address(p_address character varying) OWNER TO postgres;
 
 --
--- TOC entry 212 (class 1259 OID 78653)
+-- TOC entry 211 (class 1259 OID 78653)
 -- Name: location_type; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -499,7 +535,7 @@ CREATE TABLE public.location_type (
 ALTER TABLE public.location_type OWNER TO postgres;
 
 --
--- TOC entry 213 (class 1259 OID 78715)
+-- TOC entry 212 (class 1259 OID 78715)
 -- Name: location_with_type; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -531,7 +567,7 @@ CREATE VIEW public.location_with_type AS
 ALTER TABLE public.location_with_type OWNER TO postgres;
 
 --
--- TOC entry 244 (class 1255 OID 78722)
+-- TOC entry 243 (class 1255 OID 78722)
 -- Name: select_location_by_id(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -550,7 +586,7 @@ $_$;
 ALTER FUNCTION public.select_location_by_id(p_id integer) OWNER TO postgres;
 
 --
--- TOC entry 251 (class 1255 OID 78714)
+-- TOC entry 250 (class 1255 OID 78714)
 -- Name: select_location_types(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -566,7 +602,7 @@ $$;
 ALTER FUNCTION public.select_location_types() OWNER TO postgres;
 
 --
--- TOC entry 237 (class 1255 OID 79460)
+-- TOC entry 236 (class 1255 OID 79460)
 -- Name: select_location_with_filter(character varying, character varying, character varying, boolean); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -633,7 +669,7 @@ $$;
 ALTER FUNCTION public.select_next_location_id() OWNER TO postgres;
 
 --
--- TOC entry 243 (class 1255 OID 33502)
+-- TOC entry 242 (class 1255 OID 33502)
 -- Name: select_next_route_batch_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -649,7 +685,7 @@ $$;
 ALTER FUNCTION public.select_next_route_batch_id() OWNER TO postgres;
 
 --
--- TOC entry 236 (class 1255 OID 33503)
+-- TOC entry 235 (class 1255 OID 33503)
 -- Name: select_next_route_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -665,7 +701,7 @@ $$;
 ALTER FUNCTION public.select_next_route_id() OWNER TO postgres;
 
 --
--- TOC entry 201 (class 1259 OID 33504)
+-- TOC entry 200 (class 1259 OID 33504)
 -- Name: route_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -680,7 +716,7 @@ CREATE SEQUENCE public.route_id_seq
 ALTER TABLE public.route_id_seq OWNER TO postgres;
 
 --
--- TOC entry 202 (class 1259 OID 33506)
+-- TOC entry 201 (class 1259 OID 33506)
 -- Name: route; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -718,7 +754,7 @@ $$;
 ALTER FUNCTION public.select_route() OWNER TO postgres;
 
 --
--- TOC entry 204 (class 1259 OID 33525)
+-- TOC entry 203 (class 1259 OID 33525)
 -- Name: route_batch_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -733,7 +769,7 @@ CREATE SEQUENCE public.route_batch_id_seq
 ALTER TABLE public.route_batch_id_seq OWNER TO postgres;
 
 --
--- TOC entry 205 (class 1259 OID 33527)
+-- TOC entry 204 (class 1259 OID 33527)
 -- Name: route_batch; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -755,7 +791,7 @@ CREATE TABLE public.route_batch (
 ALTER TABLE public.route_batch OWNER TO postgres;
 
 --
--- TOC entry 248 (class 1255 OID 78597)
+-- TOC entry 247 (class 1255 OID 78597)
 -- Name: select_route_batch(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -772,7 +808,7 @@ $$;
 ALTER FUNCTION public.select_route_batch() OWNER TO postgres;
 
 --
--- TOC entry 256 (class 1255 OID 33515)
+-- TOC entry 257 (class 1255 OID 33515)
 -- Name: select_route_by_id(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -791,7 +827,7 @@ $_$;
 ALTER FUNCTION public.select_route_by_id(p_id integer) OWNER TO postgres;
 
 --
--- TOC entry 203 (class 1259 OID 33516)
+-- TOC entry 202 (class 1259 OID 33516)
 -- Name: route_location; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -805,7 +841,7 @@ CREATE TABLE public.route_location (
 ALTER TABLE public.route_location OWNER TO postgres;
 
 --
--- TOC entry 211 (class 1259 OID 78601)
+-- TOC entry 210 (class 1259 OID 78601)
 -- Name: route_details; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -832,7 +868,7 @@ CREATE VIEW public.route_details AS
 ALTER TABLE public.route_details OWNER TO postgres;
 
 --
--- TOC entry 241 (class 1255 OID 78606)
+-- TOC entry 240 (class 1255 OID 78606)
 -- Name: select_route_details(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -843,7 +879,7 @@ CREATE FUNCTION public.select_route_details(p_route_id integer DEFAULT NULL::int
 BEGIN
 	IF p_route_id is null
     THEN
-    	RETURN QUERY EXECUTE format ('SELECT * FROM route_details');
+    	RETURN QUERY EXECUTE format ('SELECT * FROM route_details where batch_id = (select_next_route_batch_id() -1) order by route_id,insert_order');
     ELSE
 		RETURN QUERY EXECUTE format ('SELECT * FROM route_details where route_id = ' || p_route_id);
 	END IF;
@@ -855,7 +891,34 @@ $$;
 ALTER FUNCTION public.select_route_details(p_route_id integer) OWNER TO postgres;
 
 --
--- TOC entry 206 (class 1259 OID 33532)
+-- TOC entry 260 (class 1255 OID 80440)
+-- Name: select_route_details(integer, boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.select_route_details(p_route_id integer DEFAULT NULL::integer, p_exclude_origin boolean DEFAULT false) RETURNS SETOF public.route_details
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+	IF p_route_id is null and p_exclude_origin = true
+    THEN
+    	RETURN QUERY EXECUTE format ('SELECT * FROM route_details where batch_id = (select_next_route_batch_id() -1) and location_id != (select origin_location_id from config) order by route_id,insert_order');
+	ELSE IF p_route_id is null
+		THEN
+		RETURN QUERY EXECUTE format ('SELECT * FROM route_details where batch_id = (select_next_route_batch_id() -1) order by route_id,insert_order');
+    ELSE
+		RETURN QUERY EXECUTE format ('SELECT * FROM route_details where route_id = ' || p_route_id);
+	END IF;
+	END IF;
+END;
+
+$$;
+
+
+ALTER FUNCTION public.select_route_details(p_route_id integer, p_exclude_origin boolean) OWNER TO postgres;
+
+--
+-- TOC entry 205 (class 1259 OID 33532)
 -- Name: vehicle_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -870,7 +933,7 @@ CREATE SEQUENCE public.vehicle_id_seq
 ALTER TABLE public.vehicle_id_seq OWNER TO postgres;
 
 --
--- TOC entry 207 (class 1259 OID 33534)
+-- TOC entry 206 (class 1259 OID 33534)
 -- Name: vehicle; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -887,7 +950,7 @@ CREATE TABLE public.vehicle (
 ALTER TABLE public.vehicle OWNER TO postgres;
 
 --
--- TOC entry 214 (class 1259 OID 79241)
+-- TOC entry 213 (class 1259 OID 79241)
 -- Name: route_information; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -915,7 +978,7 @@ CREATE VIEW public.route_information WITH (security_barrier='false') AS
 ALTER TABLE public.route_information OWNER TO postgres;
 
 --
--- TOC entry 259 (class 1255 OID 79246)
+-- TOC entry 261 (class 1255 OID 79246)
 -- Name: select_route_information(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -933,7 +996,7 @@ $$;
 ALTER FUNCTION public.select_route_information() OWNER TO postgres;
 
 --
--- TOC entry 258 (class 1255 OID 33549)
+-- TOC entry 259 (class 1255 OID 33549)
 -- Name: select_route_with_filter(character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -998,7 +1061,7 @@ $_$;
 ALTER FUNCTION public.select_vehicle_with_filter(p_column_name character varying, p_filter_string character varying) OWNER TO postgres;
 
 --
--- TOC entry 240 (class 1255 OID 33757)
+-- TOC entry 239 (class 1255 OID 33757)
 -- Name: update_days_until_due(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1043,7 +1106,7 @@ $$;
 ALTER FUNCTION public.update_features(p_feature_name character varying, p_enabled boolean) OWNER TO postgres;
 
 --
--- TOC entry 265 (class 1255 OID 78712)
+-- TOC entry 267 (class 1255 OID 78712)
 -- Name: update_location(integer, integer, timestamp with time zone, integer, time without time zone, time without time zone, character varying, character varying, integer, double precision, double precision, double precision, double precision, double precision, character varying, character varying, integer, integer, interval); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1107,7 +1170,7 @@ $$;
 ALTER FUNCTION public.update_maps_url(p_address integer) OWNER TO postgres;
 
 --
--- TOC entry 238 (class 1255 OID 33693)
+-- TOC entry 237 (class 1255 OID 33693)
 -- Name: update_maps_url(character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1130,7 +1193,7 @@ $$;
 ALTER FUNCTION public.update_maps_url(p_address character varying) OWNER TO postgres;
 
 --
--- TOC entry 253 (class 1255 OID 33758)
+-- TOC entry 252 (class 1255 OID 33758)
 -- Name: update_maps_urls(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1169,7 +1232,7 @@ $$;
 ALTER FUNCTION public.update_maps_urls() OWNER TO postgres;
 
 --
--- TOC entry 262 (class 1255 OID 33556)
+-- TOC entry 265 (class 1255 OID 33556)
 -- Name: update_route_batch_calculation_time(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1188,7 +1251,7 @@ $$;
 ALTER FUNCTION public.update_route_batch_calculation_time() OWNER TO postgres;
 
 --
--- TOC entry 252 (class 1255 OID 69994)
+-- TOC entry 251 (class 1255 OID 69994)
 -- Name: update_route_batch_metadata(integer, integer, integer, integer, double precision, interval, double precision, double precision); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1241,7 +1304,7 @@ $$;
 ALTER FUNCTION public.update_route_map_url(p_route_id character varying, p_maps_url boolean) OWNER TO postgres;
 
 --
--- TOC entry 245 (class 1255 OID 33558)
+-- TOC entry 244 (class 1255 OID 33558)
 -- Name: update_vehicle(integer, character varying, character varying, double precision, boolean, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1299,11 +1362,11 @@ $$;
 ALTER FUNCTION public.upsert_api_metadata(p_call_date date, p_api_call_count integer) OWNER TO postgres;
 
 --
--- TOC entry 234 (class 1255 OID 78760)
--- Name: upsert_config(integer, integer, double precision, double precision, double precision, double precision, double precision, double precision, integer, time without time zone, time without time zone, interval, interval, character varying, character varying, character[]); Type: FUNCTION; Schema: public; Owner: postgres
+-- TOC entry 255 (class 1255 OID 80605)
+-- Name: upsert_config(integer, integer, double precision, double precision, double precision, double precision, double precision, double precision, integer, time without time zone, time without time zone, interval, interval, character varying, character varying, character[], integer, integer, integer, integer, integer, integer, integer, double precision, double precision, double precision, integer, double precision); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION public.upsert_config(p_origin_location_id integer DEFAULT NULL::integer, p_minimum_days_until_pickup integer DEFAULT NULL::integer, p_matrix_priority_multiplier double precision DEFAULT NULL::double precision, p_matrix_days_until_due_exponent double precision DEFAULT NULL::double precision, p_matrix_distance_from_source double precision DEFAULT NULL::double precision, p_matrix_overdue_multiplier double precision DEFAULT NULL::double precision, p_current_fill_level_error_margin double precision DEFAULT NULL::double precision, p_route_distance_max_miles double precision DEFAULT NULL::double precision, p_maximum_days_overdue integer DEFAULT NULL::integer, p_workday_start_time time without time zone DEFAULT NULL::time without time zone, p_workday_end_time time without time zone DEFAULT NULL::time without time zone, p_oil_pickup_average_duration interval DEFAULT NULL::interval, p_grease_pickup_average_duration interval DEFAULT NULL::interval, p_google_directions_maps_url character varying DEFAULT NULL::character varying, p_google_api_key character varying DEFAULT NULL::character varying, p_google_api_illegal_characters character[] DEFAULT NULL::character(1)[]) RETURNS boolean
+CREATE FUNCTION public.upsert_config(p_origin_location_id integer DEFAULT NULL::integer, p_minimum_days_until_pickup integer DEFAULT NULL::integer, p_matrix_priority_multiplier double precision DEFAULT NULL::double precision, p_matrix_days_until_due_exponent double precision DEFAULT NULL::double precision, p_matrix_distance_from_source double precision DEFAULT NULL::double precision, p_matrix_overdue_multiplier double precision DEFAULT NULL::double precision, p_current_fill_level_error_margin double precision DEFAULT NULL::double precision, p_route_distance_max_miles double precision DEFAULT NULL::double precision, p_maximum_days_overdue integer DEFAULT NULL::integer, p_workday_start_time time without time zone DEFAULT NULL::time without time zone, p_workday_end_time time without time zone DEFAULT NULL::time without time zone, p_oil_pickup_average_duration interval DEFAULT NULL::interval, p_grease_pickup_average_duration interval DEFAULT NULL::interval, p_google_directions_maps_url character varying DEFAULT NULL::character varying, p_google_api_key character varying DEFAULT NULL::character varying, p_google_api_illegal_characters character[] DEFAULT NULL::character(1)[], p_genetic_algorithm_iterations integer DEFAULT NULL::integer, p_genetic_algorithm_population_size integer DEFAULT NULL::integer, p_genetic_algorithm_neighbor_count integer DEFAULT NULL::integer, p_genetic_algorithm_tournament_size integer DEFAULT NULL::integer, p_genetic_algorithm_tournament_winner_count integer DEFAULT NULL::integer, p_genetic_algorithm_breeder_count integer DEFAULT NULL::integer, p_genetic_algorithm_offspring_pool_size integer DEFAULT NULL::integer, p_genetic_algorithm_crossover_probability double precision DEFAULT NULL::double precision, p_genetic_algorithm_elitism_ratio double precision DEFAULT NULL::double precision, p_genetic_algorithm_mutation_probability double precision DEFAULT NULL::double precision, p_genetic_algorithm_mutation_allele_max integer DEFAULT NULL::integer, p_genetic_algorithm_growth_decay_exponent double precision DEFAULT NULL::double precision) RETURNS boolean
     LANGUAGE plpgsql
     AS $$
 
@@ -1327,6 +1390,18 @@ INSERT INTO config
 ,google_directions_maps_url
 ,google_api_key 
 ,google_api_illegal_characters
+,genetic_algorithm_iterations
+,genetic_algorithm_population_size
+,genetic_algorithm_neighbor_count
+,genetic_algorithm_tournament_size
+,genetic_algorithm_tournament_winner_count
+,genetic_algorithm_breeder_count
+,genetic_algorithm_offspring_pool_size
+,genetic_algorithm_crossover_probability
+,genetic_algorithm_elitism_ratio
+,genetic_algorithm_mutation_probability
+,genetic_algorithm_mutation_allele_max
+,genetic_algorithm_growth_decay_exponent
 )
 VALUES
 (
@@ -1346,7 +1421,20 @@ VALUES
 ,p_grease_pickup_average_duration
 ,p_google_directions_maps_url
 ,p_google_api_key
-,p_google_api_illegal_characters)
+,p_google_api_illegal_characters
+,p_genetic_algorithm_iterations
+,p_genetic_algorithm_population_size
+,p_genetic_algorithm_neighbor_count
+,p_genetic_algorithm_tournament_size
+,p_genetic_algorithm_tournament_winner_count
+,p_genetic_algorithm_breeder_count
+,p_genetic_algorithm_offspring_pool_size
+,p_genetic_algorithm_crossover_probability
+,p_genetic_algorithm_elitism_ratio
+,p_genetic_algorithm_mutation_probability
+,p_genetic_algorithm_mutation_allele_max
+,p_genetic_algorithm_growth_decay_exponent
+)
     ON CONFLICT (id)
 DO UPDATE    
            SET 
@@ -1365,7 +1453,21 @@ DO UPDATE
            grease_pickup_average_duration = COALESCE(p_grease_pickup_average_duration, config.grease_pickup_average_duration),
 		   google_directions_maps_url = COALESCE(p_google_directions_maps_url, config.google_directions_maps_url),
 		   google_api_key = COALESCE(p_google_api_key, config.google_api_key),
-		   google_api_illegal_characters = COALESCE(p_google_api_illegal_characters, config.google_api_illegal_characters);
+		   google_api_illegal_characters = COALESCE(p_google_api_illegal_characters, config.google_api_illegal_characters),
+		   genetic_algorithm_iterations = COALESCE(p_genetic_algorithm_iterations, config.genetic_algorithm_iterations),
+		   genetic_algorithm_population_size = COALESCE(p_genetic_algorithm_population_size, config.genetic_algorithm_population_size),
+		   genetic_algorithm_neighbor_count = COALESCE(p_genetic_algorithm_neighbor_count, config.genetic_algorithm_neighbor_count),
+		   genetic_algorithm_tournament_size = COALESCE(p_genetic_algorithm_tournament_size, config.genetic_algorithm_tournament_size),
+		   genetic_algorithm_tournament_winner_count = COALESCE(p_genetic_algorithm_tournament_winner_count, config.genetic_algorithm_tournament_winner_count),
+		   genetic_algorithm_breeder_count = COALESCE(p_genetic_algorithm_breeder_count, config.genetic_algorithm_breeder_count),
+		   genetic_algorithm_offspring_pool_size = COALESCE(p_genetic_algorithm_offspring_pool_size, config.genetic_algorithm_offspring_pool_size),
+		   genetic_algorithm_crossover_probability = COALESCE(p_genetic_algorithm_crossover_probability, config.genetic_algorithm_crossover_probability),
+		   genetic_algorithm_elitism_ratio = COALESCE(p_genetic_algorithm_elitism_ratio, config.genetic_algorithm_elitism_ratio),
+		   genetic_algorithm_mutation_probability = COALESCE(p_genetic_algorithm_mutation_probability, config.genetic_algorithm_mutation_probability),
+		   genetic_algorithm_mutation_allele_max = COALESCE(p_genetic_algorithm_mutation_allele_max, config.genetic_algorithm_mutation_allele_max),
+		   genetic_algorithm_growth_decay_exponent = COALESCE(p_genetic_algorithm_growth_decay_exponent, config.genetic_algorithm_growth_decay_exponent)
+
+		   ;
            return 1;
 
 END;
@@ -1373,10 +1475,10 @@ END;
 $$;
 
 
-ALTER FUNCTION public.upsert_config(p_origin_location_id integer, p_minimum_days_until_pickup integer, p_matrix_priority_multiplier double precision, p_matrix_days_until_due_exponent double precision, p_matrix_distance_from_source double precision, p_matrix_overdue_multiplier double precision, p_current_fill_level_error_margin double precision, p_route_distance_max_miles double precision, p_maximum_days_overdue integer, p_workday_start_time time without time zone, p_workday_end_time time without time zone, p_oil_pickup_average_duration interval, p_grease_pickup_average_duration interval, p_google_directions_maps_url character varying, p_google_api_key character varying, p_google_api_illegal_characters character[]) OWNER TO postgres;
+ALTER FUNCTION public.upsert_config(p_origin_location_id integer, p_minimum_days_until_pickup integer, p_matrix_priority_multiplier double precision, p_matrix_days_until_due_exponent double precision, p_matrix_distance_from_source double precision, p_matrix_overdue_multiplier double precision, p_current_fill_level_error_margin double precision, p_route_distance_max_miles double precision, p_maximum_days_overdue integer, p_workday_start_time time without time zone, p_workday_end_time time without time zone, p_oil_pickup_average_duration interval, p_grease_pickup_average_duration interval, p_google_directions_maps_url character varying, p_google_api_key character varying, p_google_api_illegal_characters character[], p_genetic_algorithm_iterations integer, p_genetic_algorithm_population_size integer, p_genetic_algorithm_neighbor_count integer, p_genetic_algorithm_tournament_size integer, p_genetic_algorithm_tournament_winner_count integer, p_genetic_algorithm_breeder_count integer, p_genetic_algorithm_offspring_pool_size integer, p_genetic_algorithm_crossover_probability double precision, p_genetic_algorithm_elitism_ratio double precision, p_genetic_algorithm_mutation_probability double precision, p_genetic_algorithm_mutation_allele_max integer, p_genetic_algorithm_growth_decay_exponent double precision) OWNER TO postgres;
 
 --
--- TOC entry 208 (class 1259 OID 33560)
+-- TOC entry 207 (class 1259 OID 33560)
 -- Name: api_metadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1391,7 +1493,7 @@ CREATE SEQUENCE public.api_metadata_id_seq
 ALTER TABLE public.api_metadata_id_seq OWNER TO postgres;
 
 --
--- TOC entry 209 (class 1259 OID 33604)
+-- TOC entry 208 (class 1259 OID 33604)
 -- Name: api_metadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1405,7 +1507,7 @@ CREATE TABLE public.api_metadata (
 ALTER TABLE public.api_metadata OWNER TO postgres;
 
 --
--- TOC entry 2800 (class 2606 OID 33630)
+-- TOC entry 2814 (class 2606 OID 33630)
 -- Name: api_metadata call_date_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1414,7 +1516,7 @@ ALTER TABLE ONLY public.api_metadata
 
 
 --
--- TOC entry 2794 (class 2606 OID 33622)
+-- TOC entry 2808 (class 2606 OID 33622)
 -- Name: config config_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1423,7 +1525,16 @@ ALTER TABLE ONLY public.config
 
 
 --
--- TOC entry 2802 (class 2606 OID 78681)
+-- TOC entry 2822 (class 2606 OID 80638)
+-- Name: features features_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.features
+    ADD CONSTRAINT features_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 2816 (class 2606 OID 78681)
 -- Name: location_type id unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1432,7 +1543,7 @@ ALTER TABLE ONLY public.location_type
 
 
 --
--- TOC entry 2796 (class 2606 OID 34793)
+-- TOC entry 2810 (class 2606 OID 34793)
 -- Name: location location_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1441,7 +1552,7 @@ ALTER TABLE ONLY public.location
 
 
 --
--- TOC entry 2804 (class 2606 OID 78683)
+-- TOC entry 2818 (class 2606 OID 78683)
 -- Name: location_type location_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1450,7 +1561,7 @@ ALTER TABLE ONLY public.location_type
 
 
 --
--- TOC entry 2798 (class 2606 OID 34773)
+-- TOC entry 2812 (class 2606 OID 34773)
 -- Name: route route_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1459,7 +1570,7 @@ ALTER TABLE ONLY public.route
 
 
 --
--- TOC entry 2806 (class 2606 OID 78679)
+-- TOC entry 2820 (class 2606 OID 78679)
 -- Name: location_type type unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1468,7 +1579,7 @@ ALTER TABLE ONLY public.location_type
 
 
 --
--- TOC entry 2811 (class 2620 OID 34286)
+-- TOC entry 2827 (class 2620 OID 34286)
 -- Name: route_batch update_batch_route_calculation_time; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1476,7 +1587,7 @@ CREATE TRIGGER update_batch_route_calculation_time AFTER UPDATE OF date_complete
 
 
 --
--- TOC entry 2810 (class 2620 OID 33947)
+-- TOC entry 2826 (class 2620 OID 33947)
 -- Name: location update_maps_urls; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1484,7 +1595,7 @@ CREATE TRIGGER update_maps_urls AFTER UPDATE OF address ON public.location FOR E
 
 
 --
--- TOC entry 2809 (class 2606 OID 34811)
+-- TOC entry 2825 (class 2606 OID 34811)
 -- Name: route_location location_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1493,7 +1604,7 @@ ALTER TABLE ONLY public.route_location
 
 
 --
--- TOC entry 2808 (class 2606 OID 34806)
+-- TOC entry 2824 (class 2606 OID 34806)
 -- Name: route_location route_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1502,7 +1613,7 @@ ALTER TABLE ONLY public.route_location
 
 
 --
--- TOC entry 2807 (class 2606 OID 78684)
+-- TOC entry 2823 (class 2606 OID 78684)
 -- Name: location type; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1510,7 +1621,7 @@ ALTER TABLE ONLY public.location
     ADD CONSTRAINT type FOREIGN KEY (location_type) REFERENCES public.location_type(id);
 
 
--- Completed on 2018-08-24 02:51:52
+-- Completed on 2018-08-28 01:46:52
 
 --
 -- PostgreSQL database dump complete

@@ -15,7 +15,7 @@ namespace RouteNavigation
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         public string response;
-        protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
+        private string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
         
         public async Task CallApi(string url)
         {

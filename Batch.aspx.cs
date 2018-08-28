@@ -14,8 +14,8 @@ namespace RouteNavigation
 {
     public partial class _Batch : Page
     {
-        protected DataTable table;
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private DataTable table;
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -32,9 +32,9 @@ namespace RouteNavigation
         }
 
 
-        protected void BindListView()
+        private void BindListView()
         {
-            table = DataAccess.getRouteBatchData();
+            table = DataAccess.GetRouteBatchData();
             BatchListView.DataSource = table;
             BatchListView.ItemPlaceholderID = "itemPlaceHolder";
             BatchListView.DataBind();

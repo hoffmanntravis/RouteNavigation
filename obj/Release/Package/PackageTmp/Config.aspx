@@ -51,6 +51,32 @@
     <div>Average length in minutes of a grease trap pickup</div>
     <asp:TextBox class="tableInput" ID="txtGreasePickupAverageDuration" runat="server"></asp:TextBox>
 
+    <h3>Genetic Algorithm Parameters</h3>
+    <div></div><asp:label Text="Iterations" runat="server" tooltip="The number of iterations the genetic algorithm should run.  More iterations are more accurate, but take longer and offer diminishing returns."/>
+    <div></div><asp:TextBox class="tableInput" ID="txtIterations" PlaceHolder="200" runat="server"></asp:TextBox>
+    <div></div><asp:label Text="Population Size" runat="server" tooltip="Number of randomized permutations of routes the algorithm should start with.  This can have a medium impact on calculation accuracy.  Larger numbers explore more potential options but take longer." />
+    <div></div><asp:TextBox class="tableInput" ID="txtPopulationSize" PlaceHolder="200"  runat="server"></asp:TextBox>
+    <div></div><asp:label Text="Neighbor Count" runat="server" tooltip="Number of locations that are considered neighbors of another location, sorted by distance ascending.  Larger numbers are more accurate, but take more time."  />
+    <div></div><asp:TextBox class="tableInput" ID="txtNeighborCount" PlaceHolder="400" runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Tournament Size" runat="server" tooltip="Number of route permutations that 'compete' in the algorithm for the right to procreate into new routes.  Larger numbers converge faster but explore less space." />
+    <div></div><asp:TextBox class="tableInput" ID="txtTournamentSize" runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Tournament Winner Count" runat="server" tooltip="Number of tournament winners that have a chance to breed.  If the breeders count is smaller than the tournament winner count, tournament winners will be randomely selected to breed." />
+    <div></div><asp:TextBox class="tableInput" ID="txtTournamentWinnerCount"  runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Breeder Count" runat="server" tooltip="Number of tournament winners that will be selected to breed.  If there are not enough tournament winners, more tournaments will be run until the pool is full." />
+    <div></div><asp:TextBox class="tableInput" ID="txtBreederCount"  runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Offspring Pool Size" runat="server" tooltip="Number of offspring to be produced by breeders, to be selected for potential genetic mutation thereafter." />
+    <div></div><asp:TextBox class="tableInput" ID="txtOffspringPoolSize"  runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Crossover Probability" runat="server" tooltip="Probability that two breeders will perform an edge recombination based genetic composition crossover.  Otherwise, the parent will pass alleles to the offspring directly without variation.  This can have a major impact on convergence, and should be kept fairly high (10 to 50 percent)."/>
+    <div></div><asp:TextBox class="tableInput" ID="txtCrossoverProbability"  runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Elitism Ratio" runat="server" tooltip="The percentage of routes will be selected as an 'elite' and will not be selected for breeding or genetic mutation, and instead preserved as is.  This is useful for ensuring a high quality solution is not lost incidentally.  Chance should typically be smaller than 1 percent." />
+    <div></div><asp:TextBox class="tableInput" ID="txtElitismRatio"  runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Mutation Probability" runat="server" tooltip="The chance that an offspring will mutate by having one of it's alleles moved to another position arbitrarily.  Percentage should typically be small, 1 to 10 percent.  Useful for avoiding local optima / preconvergence." />
+    <div></div><asp:TextBox class="tableInput" ID="txtMutationProbability"  runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Mutation Allele Max" tooltip="When a mutation occurs, this is the number of potential swaps that may occur.  The count is based on a dice roll, so 1 to n where n is max swaps may occur." runat="server" />
+    <div></div><asp:TextBox class="tableInput" ID="TextBox1" runat="server"></asp:TextBox>
+    <div></div><asp:Label Text="Growth / Decay exponent" runat="server" tooltip="Value should be 1 by default, and adjusted positive or negatively by a decimal point (e.g. .8 or 1.2).  This value impacts the rate at which various probabilities increase / decrease as iterations complete.  Certain variables like mutation are less useful as the iterations run and should be reduced, and this value helps accomplish that." />
+    <div></div><asp:TextBox class="tableInput" ID="txtGrowthDecayExponent" runat="server"></asp:TextBox>
+
     <h3>Feature Toggles</h3>
     <div>
         <asp:CheckBox class="checkBox" ID="txtChkVehicleFillLevel" runat="server"></asp:CheckBox>

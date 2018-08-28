@@ -15,8 +15,8 @@ namespace RouteNavigation
     public partial class _RouteDetails : Page
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        protected DataTable table;
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private DataTable table;
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -44,6 +44,12 @@ namespace RouteNavigation
                 int routeId = int.Parse(queryStringId);
 
                 table = DataAccess.GetRouteDetailsData(routeId);
+                RouteDetailsListView.DataSource = table;
+                RouteDetailsListView.DataBind();
+            }
+            else
+            {
+                table = DataAccess.GetRouteDetailsData();
                 RouteDetailsListView.DataSource = table;
                 RouteDetailsListView.DataBind();
             }

@@ -175,22 +175,139 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.TextBox txtGreasePickupAverageDuration;
         
         /// <summary>
-        /// txtChkVehicleFillLevel control.
+        /// txtIterations control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.CheckBox txtChkVehicleFillLevel;
+        protected global::System.Web.UI.WebControls.TextBox txtIterations;
         
         /// <summary>
-        /// txtChkPrioritizeNearestLocation control.
+        /// txtPopulationSize control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.CheckBox txtChkPrioritizeNearestLocation;
+        protected global::System.Web.UI.WebControls.TextBox txtPopulationSize;
+        
+        /// <summary>
+        /// txtNeighborCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtNeighborCount;
+        
+        /// <summary>
+        /// txtTournamentSize control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtTournamentSize;
+        
+        /// <summary>
+        /// txtTournamentWinnerCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtTournamentWinnerCount;
+        
+        /// <summary>
+        /// txtBreederCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtBreederCount;
+        
+        /// <summary>
+        /// txtOffspringPoolSize control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtOffspringPoolSize;
+        
+        /// <summary>
+        /// txtCrossoverProbability control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtCrossoverProbability;
+        
+        /// <summary>
+        /// txtElitismRatio control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtElitismRatio;
+        
+        /// <summary>
+        /// txtMutationProbability control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtMutationProbability;
+        
+        /// <summary>
+        /// txtMutationAlleleMax control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtMutationAlleleMax;
+        
+        /// <summary>
+        /// txtGrowthDecayExponent control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtGrowthDecayExponent;
+        
+        /// <summary>
+        /// chkVehicleFillLevel control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkVehicleFillLevel;
+        
+        /// <summary>
+        /// chkPrioritizeNearestLocation control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkPrioritizeNearestLocation;
+        
+        /// <summary>
+        /// chkGrowthDecayExponent control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkGrowthDecayExponent;
         
         /// <summary>
         /// btnUpdateSettings control.

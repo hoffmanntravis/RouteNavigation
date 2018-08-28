@@ -20,10 +20,10 @@ namespace RouteNavigation
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         public double latitude;
         public double longitude;
-        protected string url = System.Configuration.ConfigurationManager.AppSettings["googleGeocodeApiUrl"];
-        protected string apiKey = System.Configuration.ConfigurationManager.AppSettings["googleApiKey"];
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
-        protected string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
+        private string url = System.Configuration.ConfigurationManager.AppSettings["googleGeocodeApiUrl"];
+        private string apiKey = System.Configuration.ConfigurationManager.AppSettings["googleApiKey"];
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
 
         public ApiLocation(string address)
         {

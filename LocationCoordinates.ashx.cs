@@ -17,8 +17,8 @@ namespace WebApplication1
     public class Handler1 : IHttpHandler
     {
         
-        protected DataTable table;
-        protected string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+        private DataTable table;
+        private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
         public void ProcessRequest(HttpContext context)
         {
@@ -45,7 +45,7 @@ namespace WebApplication1
             }
         }
 
-        protected string DataTableToJSONWithJavaScriptSerializer(DataTable table)
+        private string DataTableToJSONWithJavaScriptSerializer(DataTable table)
         {
             JavaScriptSerializer jsSerializer = new JavaScriptSerializer();
             List<Dictionary<string, object>> parentRow = new List<Dictionary<string, object>>();

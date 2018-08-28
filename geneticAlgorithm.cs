@@ -14,26 +14,26 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        static protected int iterations = 200;
-        static public int populationSize = 100;
-        static public int neighborCount = 200;
-        static public int tournamentSize = 4;
-        static public int tournamentWinnerCount = 1;
-        static public int breedersCount = 4;
-        static public int offSpringPoolSize = 2;
-        static public double crossoverProbability = .35;
+        private Config config = DataAccess.GetConfig();
+        private int iterations;
+        private int populationSize;
+        private int neighborCount;
+        private int tournamentSize;
+        private int tournamentWinnerCount;
+        private int breedersCount;
+        private int offSpringPoolSize;
+        double crossoverProbability;
 
-        static public double elitismRatio = .005;
-        static public double mutationProbability = .2;
-        static public int mutationAlleleMax = 2;
-        static public double growthDecayExponent = 1;
-        static public bool toggleIterationsExponent = true;
-        static protected int currentIteration = 0;
+        double elitismRatio;
+        double mutationProbability;
+        int mutationAlleleMax;
+        double growthDecayExponent;
+        bool toggleIterationsExponent;
+        static private int currentIteration = 0;
 
-        protected Config config;
-        static protected List<Location> allLocations = DataAccess.GetLocations();
-        static protected List<Location> possibleLocations;
-        static protected List<Vehicle> allVehicles = DataAccess.GetVehicles();
+        static private List<Location> allLocations = DataAccess.GetLocations();
+        static private List<Location> possibleLocations;
+        static private List<Vehicle> allVehicles = DataAccess.GetVehicles();
         List<Vehicle> availableVehicles;
         static private object newCalcLock = new object();
         static private object calcLock = new object();
@@ -98,7 +98,35 @@ namespace RouteNavigation
             {
                 try
                 {
-                    config = DataAccess.GetConfig();
+                    iterations = Config.GeneticAlgorithm.Iterations;
+                    populationSize = Config.GeneticAlgorithm.PopulationSize;
+                    neighborCount = Config.GeneticAlgorithm.NeighborCount;
+                    tournamentSize = Config.GeneticAlgorithm.TournamentSize;
+                    tournamentWinnerCount = Config.GeneticAlgorithm.TournamentWinnerCount;
+                    breedersCount = Config.GeneticAlgorithm.BreederCount;
+                    offSpringPoolSize = Config.GeneticAlgorithm.OffspringPoolSize;
+                    crossoverProbability = Config.GeneticAlgorithm.CrossoverProbability;
+
+                    elitismRatio = Config.GeneticAlgorithm.ElitismRatio;
+                    mutationProbability = Config.GeneticAlgorithm.MutationProbability;
+                    mutationAlleleMax = Config.GeneticAlgorithm.MutationAlleleMax;
+                    growthDecayExponent = Config.GeneticAlgorithm.GrowthDecayExponent;
+                    toggleIterationsExponent = Config.Features.geneticAlgorithmGrowthDecayExponent;
+
+                    Logger.Info(String.Format("Iterations: {0}", iterations));
+                    Logger.Info(String.Format("Population Size: {0}", populationSize));
+                    Logger.Info(String.Format("Neighbor Count: {0}", neighborCount));
+                    Logger.Info(String.Format("Torunament Size: {0}", tournamentSize));
+                    Logger.Info(String.Format("Tournament Winner count: {0}", tournamentWinnerCount));
+                    Logger.Info(String.Format("Breeders Count: {0}", breedersCount));
+                    Logger.Info(String.Format("Offspring Pool size: {0}", offSpringPoolSize));
+                    Logger.Info(String.Format("Crossover Probability: {0}", crossoverProbability));
+                    Logger.Info(String.Format("Elitism Ratio: {0}", elitismRatio));
+                    Logger.Info(String.Format("Mutation Probability: {0}", mutationProbability));
+                    Logger.Info(String.Format("Mutation Allele Max: {0}", mutationAlleleMax));
+                    Logger.Info(String.Format("Growth Decay Exponent Enabled: {0}", toggleIterationsExponent));
+                    Logger.Info(String.Format("Growth Decay Exponent: {0}", growthDecayExponent));
+
                     if (Config.Calculation.origin == null)
                     {
                         string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
@@ -176,7 +204,7 @@ namespace RouteNavigation
             }
             else
             {
-                Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalcualte");
+                Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalculate");
                 throw exception;
             }
         }
@@ -568,7 +596,7 @@ namespace RouteNavigation
             return winners;
         }
 
-        protected int generateRouteHash(List<Location> locations)
+        private int generateRouteHash(List<Location> locations)
         {
             int hash = 0;
             try
@@ -590,7 +618,7 @@ namespace RouteNavigation
             return hash;
         }
 
-        protected double decayFunction()
+        private double decayFunction()
         {
             if (toggleIterationsExponent == true)
             {
@@ -602,7 +630,7 @@ namespace RouteNavigation
                 return 1;
         }
 
-        protected double growthFunction()
+        private double growthFunction()
         {
             if (toggleIterationsExponent == true)
             {
