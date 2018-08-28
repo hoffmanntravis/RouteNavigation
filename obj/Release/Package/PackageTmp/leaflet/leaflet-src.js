@@ -4087,7 +4087,7 @@ var Map = Evented.extend({
 	},
 
 
-	// private methods that modify map state
+	// protected methods that modify map state
 
 	// @section Map state change events
 	_resetView: function (center, zoom) {
@@ -4372,7 +4372,7 @@ var Map = Evented.extend({
 	},
 
 
-	// private methods for getting map state
+	// protected methods for getting map state
 
 	_getMapPanePos: function () {
 		return getPosition(this._mapPane) || new Point(0, 0);
@@ -11044,7 +11044,7 @@ var GridLayer = Layer.extend({
 		return new Bounds(pixelCenter.subtract(halfSize), pixelCenter.add(halfSize));
 	},
 
-	// Private method to load tiles in the grid's active zoom level according to map bounds
+	// protected method to load tiles in the grid's active zoom level according to map bounds
 	_update: function (center) {
 		var map = this._map;
 		if (!map) { return; }

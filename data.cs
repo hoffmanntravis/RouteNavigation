@@ -472,6 +472,8 @@ namespace RouteNavigation
                     Config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
                 if (row["feature_name"] as string == "prioritize_nearest_location")
                     Config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
+                if (row["feature_name"] as string == "genetic_algorithm_growth_decay_exponent")
+                    Config.Features.geneticAlgorithmGrowthDecayExponent = bool.Parse(row["enabled"].ToString());
             }
 
             return config;
