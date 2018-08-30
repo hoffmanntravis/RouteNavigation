@@ -340,7 +340,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static void updateRouteLocation (int locationId, int  routeId, int order)
+        public static void updateRouteLocation(int locationId, int routeId, int order)
         {
             NpgsqlCommand cmd = new NpgsqlCommand("update_route_location");
 
@@ -351,7 +351,7 @@ namespace RouteNavigation
             RunStoredProcedure(cmd);
         }
 
-        public static DataTable GetRouteDetailsData(bool excludeOrigin= false)
+        public static DataTable GetRouteDetailsData(bool excludeOrigin = false)
         {
             DataTable dataTable = new DataTable();
 
@@ -372,13 +372,12 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static Config GetConfig()
+        public static void PopulateConfig()
         {
             DataTable configsDataTable = GetConfigData();
             DataTable featuresDataTable = GetFeaturesData();
 
-            Config config = ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
-            return config;
+            ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
         }
 
         public static Location GetLocationById(int id)
@@ -417,9 +416,8 @@ namespace RouteNavigation
 
 
 
-        public static Config ConvertDataTablesToConfig(DataTable configs, DataTable features)
+        public static void ConvertDataTablesToConfig(DataTable configs, DataTable features)
         {
-            Config config = new Config();
             foreach (DataRow row in configs.Rows)
             {
                 if (row["origin_location_id"] != DBNull.Value)
@@ -477,17 +475,15 @@ namespace RouteNavigation
                     Config.GeneticAlgorithm.GrowthDecayExponent = double.Parse(row["genetic_algorithm_growth_decay_exponent"].ToString());
             }
 
-            foreach (DataRow row in features.Rows)
-            {
-                if (row["feature_name"] as string == "vehicle_fill_level")
-                    Config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
-                if (row["feature_name"] as string == "prioritize_nearest_location")
-                    Config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
-                if (row["feature_name"] as string == "genetic_algorithm_growth_decay_exponent")
-                    Config.Features.geneticAlgorithmGrowthDecayExponent = bool.Parse(row["enabled"].ToString());
-            }
-
-            return config;
+                foreach (DataRow row in features.Rows)
+                {
+                    if (row["feature_name"] as string == "vehicle_fill_level")
+                        Config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
+                    if (row["feature_name"] as string == "prioritize_nearest_location")
+                        Config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
+                    if (row["feature_name"] as string == "genetic_algorithm_growth_decay_exponent")
+                        Config.Features.geneticAlgorithmGrowthDecayExponent = bool.Parse(row["enabled"].ToString());
+                }
         }
 
         public static List<Location> ConvertDataTableToLocationsList(DataTable dataTable)

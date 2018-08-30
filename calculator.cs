@@ -27,14 +27,12 @@ namespace RouteNavigation
 
         public List<Location> orphanedLocations = new List<Location>();
         static Object calcLock = new Object();
-        private int routePosition = 0;
 
         //private double matrixDistanceFromSourceMultiplier = 1;
         private DateTime startDate = advanceDateToNextWeekday(System.DateTime.Now.Date);
 
-        public RouteCalculator(Config c, List<Location> allLocations, List<Location> possibleLocations, List<Vehicle> availableVehicles)
+        public RouteCalculator(List<Location> allLocations, List<Location> possibleLocations, List<Vehicle> availableVehicles)
         {
-            config = c;
             this.allLocations = new List<Location>(allLocations);
             this.availableVehicles = new List<Vehicle>(availableVehicles);
         }

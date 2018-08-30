@@ -10,7 +10,7 @@ namespace RouteNavigation
     public partial class _Config : Page
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        private Config Config;
+        
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -24,7 +24,7 @@ namespace RouteNavigation
         {
             try
             {
-                Config = DataAccess.GetConfig();
+                DataAccess.PopulateConfig();
                 if (Config.Features.prioritizeNearestLocation)
                     chkPrioritizeNearestLocation.Checked = true;
                 if (Config.Features.vehicleFillLevel)

@@ -20,6 +20,9 @@ namespace RouteNavigation
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            panelProgress.ViewStateMode = ViewStateMode.Enabled;
+            panelFullRoute.ViewStateMode = ViewStateMode.Disabled;
+            DataAccess.PopulateConfig();
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
             try
             {
@@ -44,13 +47,30 @@ namespace RouteNavigation
 
         protected void RouteDetailsListView_RowUpdating(object sender, ListViewUpdateEventArgs e)
         {
-            //Finding the controls from Gridview for the row which is going to update
-            int locationId = int.Parse(((Label)RouteDetailsListView.EditItem.FindControl("lblLocationId")).Text.Trim());
-            int routeId = int.Parse(((TextBox)RouteDetailsListView.EditItem.FindControl("txtRouteId")).Text.Trim());
-            int order = int.Parse(((TextBox)RouteDetailsListView.EditItem.FindControl("lblOrder")).Text.Trim());
-            DataAccess.updateRouteLocation(locationId, routeId, order);
-            RouteDetailsListView.EditIndex = -1;
-            BindListView();
+            try
+            {
+                //Finding the controls from Gridview for the row which is going to update
+                int locationId = int.Parse(((Label)RouteDetailsListView.EditItem.FindControl("lblLocationId")).Text.Trim());
+                int routeId = int.Parse(((TextBox)RouteDetailsListView.EditItem.FindControl("txtRouteId")).Text.Trim());
+                int order = int.Parse(((TextBox)RouteDetailsListView.EditItem.FindControl("lblOrder")).Text.Trim());
+
+                if (locationId == Config.Calculation.origin.id)
+                {
+                    Exception exception = new Exception(String.Format("Cannot move location with Id of {0}, since it is the depot and must be both the start and end of the route.",locationId));
+                    throw exception;
+                }
+                DataAccess.updateRouteLocation(locationId, routeId, order);
+                RouteDetailsListView.EditIndex = -1;
+
+                BindListView();
+
+            }
+            catch (Exception exception)
+            {
+                routeValidation.IsValid = false;
+                routeValidation.ErrorMessage = exception.Message;
+                Logger.Error(exception);
+            }
         }
 
         protected void RouteDetailsListView_RowEditing(object sender, ListViewEditEventArgs e)
@@ -77,7 +97,11 @@ namespace RouteNavigation
         {
             table = DataAccess.GetRouteDetailsData();
             RouteDetailsListView.DataSource = table;
+            panelProgress.ViewStateMode = ViewStateMode.Enabled;
+            panelFullRoute.ViewStateMode = ViewStateMode.Disabled;
             RouteDetailsListView.DataBind();
+            panelProgress.ViewStateMode = ViewStateMode.Disabled;
+            panelFullRoute.ViewStateMode = ViewStateMode.Enabled;
         }
 
     }

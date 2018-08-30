@@ -40,6 +40,24 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.ValidationSummary routeErrorSummary;
         
         /// <summary>
+        /// panelProgress control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UpdateProgress panelProgress;
+        
+        /// <summary>
+        /// panelFullRoute control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.UpdatePanel panelFullRoute;
+        
+        /// <summary>
         /// RouteDetailsListView control.
         /// </summary>
         /// <remarks>

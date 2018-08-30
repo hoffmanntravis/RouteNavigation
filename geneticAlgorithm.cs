@@ -14,7 +14,6 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        private Config config = DataAccess.GetConfig();
         private int iterations;
         private int populationSize;
         private int neighborCount;
@@ -268,7 +267,7 @@ namespace RouteNavigation
 
         public RouteCalculator runCalculations(List<Location> list)
         {
-            RouteCalculator calc = new RouteCalculator(config, allLocations, possibleLocations, availableVehicles);
+            RouteCalculator calc = new RouteCalculator(allLocations, possibleLocations, availableVehicles);
             calc.neighborCount = neighborCount;
             calc.CalculateRoutes(list);
             return calc;

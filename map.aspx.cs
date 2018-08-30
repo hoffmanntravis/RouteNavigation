@@ -16,16 +16,14 @@ namespace RouteNavigation
     public partial class _Map : Page
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        private DataTable table;
         private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
         public string jsonCoordinates;
         public double mapXCoordinate;
         public double mapYCoordinate;
-        private Config config = DataAccess.GetConfig();
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-
+            DataAccess.PopulateConfig();
             try
             {
                 DataTable dtRoute;
