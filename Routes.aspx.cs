@@ -83,7 +83,7 @@ namespace RouteNavigation
 
             try
             {
-                csvData = DataAccess.RunPostgreExport("(select * from route_details where batch_id = " + latestBatchId + ")", csvData);
+                csvData = DataAccess.RunPostgreExport("(select * from route_details where batch_id = " + latestBatchId + " order by route_id,insert_order)", csvData);
             }
             catch (Exception exception)
             {

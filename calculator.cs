@@ -287,7 +287,7 @@ namespace RouteNavigation
             }
             catch (Exception e)
             {
-                Logger.Error(e.ToString());
+                Logger.Error(e);
             }
 
             return routes;
@@ -743,10 +743,7 @@ namespace RouteNavigation
         {
             try
             {
-                foreach (Location location in locations)
-                {
-                    location.matrixWeight = CalculateWeight(location);
-                }
+                locations.ForEach(l => l.matrixWeight = CalculateWeight(l));
                 DataAccess.UpdateMatrixWeight(locations);
             }
             catch (Exception exception)
@@ -758,6 +755,8 @@ namespace RouteNavigation
 
         public static double CalculateWeight(Location location)
         {
+            if (location.daysUntilDue is double.NaN)
+                return double.NaN;
             double algPriority = Config.Matrix.priorityMultiplier * location.clientPriority;
             double algDaysUntilDue = -1 * (Math.Sign(location.daysUntilDue) * (Math.Pow(Math.Abs(location.daysUntilDue), Config.Matrix.daysUntilDueExponent)));
             //If the account is overdue, increase the value

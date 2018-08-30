@@ -18,7 +18,7 @@ namespace RouteNavigation
         public string contactName;
         public string contactEmail;
         public double capacityGallons = 0;
-        public double daysUntilDue = int.MinValue;
+        public double daysUntilDue = double.NaN;
         public double matrixWeight;
         public double distanceFromDepot;
         public DateTime pickupWindowStartTime = DateTime.MinValue;

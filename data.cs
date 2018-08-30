@@ -340,6 +340,17 @@ namespace RouteNavigation
             return dataTable;
         }
 
+        public static void updateRouteLocation (int locationId, int  routeId, int order)
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand("update_route_location");
+
+            cmd.Parameters.AddWithValue("p_location_id", NpgsqlTypes.NpgsqlDbType.Integer, locationId);
+            cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
+            cmd.Parameters.AddWithValue("p_order", NpgsqlTypes.NpgsqlDbType.Integer, order);
+
+            RunStoredProcedure(cmd);
+        }
+
         public static DataTable GetRouteDetailsData(bool excludeOrigin= false)
         {
             DataTable dataTable = new DataTable();
@@ -727,7 +738,12 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.id);
 
                     double matrixWeight = RouteCalculator.CalculateWeight(location);
-                    cmd.Parameters.AddWithValue("p_matrix_weight", NpgsqlTypes.NpgsqlDbType.Double, matrixWeight);
+                    Logger.Info("Updating {0} with matrix weight of {1}", location.locationName, matrixWeight);
+
+                    if (matrixWeight is double.NaN)
+                        cmd.Parameters.AddWithValue("p_matrix_weight", NpgsqlTypes.NpgsqlDbType.Double, DBNull.Value);
+                    else
+                        cmd.Parameters.AddWithValue("p_matrix_weight", NpgsqlTypes.NpgsqlDbType.Double, matrixWeight);
                     RunStoredProcedure(cmd);
                 }
                 catch (Exception exception)
@@ -801,7 +817,26 @@ namespace RouteNavigation
             {
                 Logger.Error(string.Format("Failed to delete route dependencies for route id {0}", id));
 
-                Logger.Error(e.ToString());
+                Logger.Error(e);
+            }
+        }
+
+        public static void DeleteLocationFromRouteLocation(int routeId, int locationId)
+        {
+            try
+            {
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete_location_from_route_location;"))
+                {
+                    cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
+                    cmd.Parameters.AddWithValue("p_location_id", NpgsqlTypes.NpgsqlDbType.Integer, locationId);
+                    RunStoredProcedure(cmd);
+                }
+            }
+
+            catch (Exception e)
+            {
+                Logger.Error(string.Format("Failed to delete location from for route id {0}", routeId));
+                Logger.Error(e);
             }
         }
 
@@ -837,9 +872,8 @@ namespace RouteNavigation
 
                 try
                 {
-
                     int insertOrder = 0;
-                    InsertRouteLocation(route.origin.id, insertOrder, route.id);
+                    InsertRouteLocation(route.origin.id, insertOrder += 1, route.id);
 
                     foreach (Location waypoint in route.waypoints)
                         InsertRouteLocation(waypoint.id, insertOrder += 1, route.id);

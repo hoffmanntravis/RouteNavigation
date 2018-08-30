@@ -221,6 +221,7 @@
     <Content Include="olmaps\ol.js" />
     <Content Include="map.aspx" />
     <Content Include="LocationDetailsJson.aspx" />
+    <Content Include="FullRoute.aspx" />
     <Content Include="RouteDetails.aspx" />
     <Content Include="Batch.aspx" />
     <Content Include="Routes.aspx" />
@@ -324,6 +325,13 @@
     </Compile>
     <Compile Include="LocationDetailsJson.aspx.designer.cs">
       <DependentUpon>LocationDetailsJson.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="FullRoute.aspx.cs">
+      <DependentUpon>FullRoute.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FullRoute.aspx.designer.cs">
+      <DependentUpon>FullRoute.aspx</DependentUpon>
     </Compile>
     <Compile Include="RouteDetails.aspx.cs">
       <DependentUpon>RouteDetails.aspx</DependentUpon>

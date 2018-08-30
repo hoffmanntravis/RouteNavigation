@@ -174,7 +174,7 @@
                     </td>
                     <td>
                         <asp:LinkButton ID="btnEdit" Text="Edit" runat="server" CommandName="Edit" />
-                        <asp:LinkButton ID="Button1" Text="Delete" runat="server" OnClientClick="return disp_confirm();" CommandName="Delete" />
+                        <asp:LinkButton ID="btnDelete" Text="Delete" runat="server" OnClientClick="return disp_confirm();" CommandName="Delete" />
                     </td>
                 </tr>
             </div>
@@ -361,7 +361,7 @@
 
     <script>
         function disp_confirm() {
-            var r = confirm("This will delete the record permanently.  Are you sure?");
+            var r = confirm("This will delete the record from this route, but not the locations table itself.  Are you sure?");
             if (r == true) {
             }
             else {

@@ -39,20 +39,10 @@ namespace RouteNavigation
         protected void BindListView()
         {
             string queryStringId = Request.QueryString["routeId"];
-            if (queryStringId != null && queryStringId != "")
-            {
-                int routeId = int.Parse(queryStringId);
-
-                table = DataAccess.GetRouteDetailsData(routeId);
-                RouteDetailsListView.DataSource = table;
-                RouteDetailsListView.DataBind();
-            }
-            else
-            {
-                table = DataAccess.GetRouteDetailsData();
-                RouteDetailsListView.DataSource = table;
-                RouteDetailsListView.DataBind();
-            }
+            int routeId = int.Parse(queryStringId);
+            table = DataAccess.GetRouteDetailsData(routeId);
+            RouteDetailsListView.DataSource = table;
+            RouteDetailsListView.DataBind();
         }
 
     }

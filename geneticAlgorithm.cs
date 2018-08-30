@@ -154,7 +154,7 @@ namespace RouteNavigation
 
                     //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
 
-                    //generalCalc.UpdateDistanceFromSource(allLocations);
+                    RouteCalculator.UpdateDistanceFromSource(allLocations);
                     RouteCalculator.UpdateMatrixWeight(allLocations);
                     DataAccess.UpdateDaysUntilDue();
 
@@ -562,7 +562,13 @@ namespace RouteNavigation
                         mutateLocations.RemoveAt(displacedGeneIndex);
 
                         int insertGeneIndex = rng.Next(mutateLocations.Count);
-                        /*double proximalInsertionChance = .5;
+                        /*
+                        //Insert at a neighbor location
+                        List<Location> displacedGeneNeighbors = RouteCalculator.FindNeighbors(mutateLocations[displacedGeneIndex], mutateLocations, 2).ToList();
+                        Location insertGene = displacedGeneNeighbors[rng.Next(displacedGeneNeighbors.Count)];
+                        int insertGeneIndex = mutateLocations.IndexOf(insertGene);
+
+                        double proximalInsertionChance = .5;
 
                         //Have a percent chance of the mutation occurring at a neighbor location of the displaced gene instead of randomly
                         if (rng.Next(101) <= proximalInsertionChance * 100)
