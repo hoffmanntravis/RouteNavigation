@@ -98,6 +98,9 @@ namespace RouteNavigation
                 try
                 {
                     iterations = Config.GeneticAlgorithm.Iterations;
+
+                    DataAccess.updateIteration(0, iterations);
+
                     populationSize = Config.GeneticAlgorithm.PopulationSize;
                     neighborCount = Config.GeneticAlgorithm.NeighborCount;
                     tournamentSize = Config.GeneticAlgorithm.TournamentSize;
@@ -184,6 +187,7 @@ namespace RouteNavigation
                         emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
                         Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
                         Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
+                        DataAccess.updateIteration(currentIteration, iterations);
                     }
 
                     //fully optimized the GA selected route with 3opt swap
@@ -193,7 +197,7 @@ namespace RouteNavigation
                     DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                     Logger.Info(string.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                     DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
-
+                    DataAccess.updateIteration(0, 0);
                     Logger.Info("Finished calculations.");
                 }
                 finally

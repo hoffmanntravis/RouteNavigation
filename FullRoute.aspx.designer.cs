@@ -40,13 +40,13 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.ValidationSummary routeErrorSummary;
         
         /// <summary>
-        /// panelProgress control.
+        /// loadingPanel control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.UpdateProgress panelProgress;
+        protected global::System.Web.UI.UpdateProgress loadingPanel;
         
         /// <summary>
         /// panelFullRoute control.

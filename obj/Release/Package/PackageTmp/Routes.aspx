@@ -11,11 +11,14 @@
             BackColor="#fe6363" CellPadding="5"></asp:ValidationSummary>
     </asp:Panel>
 
-
     <div class="divHeader">
         <asp:Button CssClass="headerRowRight" ID="BtnExportCsv" runat="server" Text="Export data to .CSV" Style="float: right;" OnClick="BtnExportCsv_Click" />
-        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClientClick="this.disabled = true; this.value = 'Calculating...';" UseSubmitBehavior="false" OnClick="BtnCalculateRoutes_Click" Text="Recalculate Routes" ToolTip="Use this button to recalculate routes based on latest location and vehicle data." runat="server" Style="float: left;" />
+        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes"  OnClientClick="this.disabled = true; this.value = 'Calculating...';checkCalcStatus();" UseSubmitBehavior="false" OnClick="BtnCalculateRoutes_Click" Text="Recalculate Routes" ToolTip="Use this button to recalculate routes based on latest location and vehicle data." runat="server" Style="float: left;" />
     </div>
+    <div></div>
+    <asp:Panel ID="calculatingPanel" UpdateMode="Conditional" runat="server">
+        <asp:Label ID ="lblIterationStatus" runat="server" />
+    </asp:Panel>
 
     <asp:ListView ID="RoutesListView" runat="server"
         DataKeyNames="id"
@@ -137,5 +140,42 @@
     <asp:Label ID="activityId" runat="server" Text='<%# Eval("activity_id") %>'> </asp:Label>
     <asp:HyperLink Text="Route Details" runat="server" NavigateUrl="/RouteDetails" />
     <asp:HyperLink Text="Full Route Map" runat="server" NavigateUrl="/map" />
- </asp:Content>
+    
+    <script>
+        function checkCalcStatus() {
+            var pnl = document.getElementById("<%= calculatingPanel.ClientID %>");
+            var lblIterationStatus = document.getElementById("<%= lblIterationStatus.ClientID %>");
+
+            $.ajax({
+                url: "CalculationStatus.aspx",
+                type: "GET",
+                cache: false,
+                success: function (data) {
+                    if (data == null) {
+                        console.log('no data!');
+                    }
+                    else {
+                        console.log("Calc status is: " + data);
+                        iterationStatus = $.parseJSON(data);
+                        currentIteration = iterationStatus['currentIteration'] + 1;
+                        totalIterations = iterationStatus['totalIterations'];
+                        if (totalIterations > 0) {
+                            lblIterationStatus.textContent = "Calculating:" + currentIteration + "/" + totalIterations;
+                        }
+                        else {
+                            lblIterationStatus.textContent = "Calculating:";
+                        }
+
+                    };
+                },
+                failure: function () {console.log("CalcStatus.aspx returned an error");},
+                timeout: 2000
+            }).then(function () {
+                setTimeout(checkCalcStatus, 1000);
+            });
+        }
+        
+
+    </script>
+</asp:Content>
 

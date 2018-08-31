@@ -20,8 +20,6 @@ namespace RouteNavigation
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            panelProgress.ViewStateMode = ViewStateMode.Enabled;
-            panelFullRoute.ViewStateMode = ViewStateMode.Disabled;
             DataAccess.PopulateConfig();
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
             try
@@ -97,11 +95,10 @@ namespace RouteNavigation
         {
             table = DataAccess.GetRouteDetailsData();
             RouteDetailsListView.DataSource = table;
-            panelProgress.ViewStateMode = ViewStateMode.Enabled;
-            panelFullRoute.ViewStateMode = ViewStateMode.Disabled;
+
+            //panelFullRoute.ViewStateMode = ViewStateMode.Disabled;
             RouteDetailsListView.DataBind();
-            panelProgress.ViewStateMode = ViewStateMode.Disabled;
-            panelFullRoute.ViewStateMode = ViewStateMode.Enabled;
+            //panelFullRoute.ViewStateMode = ViewStateMode.Enabled;
         }
 
     }

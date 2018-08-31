@@ -25,6 +25,7 @@
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <WcfConfigValidationEnabled>True</WcfConfigValidationEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -131,6 +132,7 @@
       <HintPath>..\packages\System.Security.Cryptography.X509Certificates.4.3.2\lib\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
     </Reference>
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
@@ -187,6 +189,7 @@
     <Content Include="Content\table.css" />
     <Content Include="Default.aspx" />
     <Content Include="images\down_arrow.svg" />
+    <Content Include="images\spinner.gif" />
     <Content Include="images\up_arrow.svg" />
     <Content Include="leaflet\images\layers-2x.png" />
     <Content Include="leaflet\images\layers.png" />
@@ -203,6 +206,7 @@
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="CalculationStatus.aspx" />
     <Content Include="olmaps\ol.css.map" />
     <Content Include="olmaps\ol.js.map" />
     <Content Include="leaflet\leaflet-src.js.map" />
@@ -282,6 +286,13 @@
     </Compile>
     <Compile Include="location.cs" />
     <Compile Include="config.cs" />
+    <Compile Include="CalculationStatus.aspx.cs">
+      <DependentUpon>CalculationStatus.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CalculationStatus.aspx.designer.cs">
+      <DependentUpon>CalculationStatus.aspx</DependentUpon>
+    </Compile>
     <Compile Include="route.cs" />
     <Compile Include="calculator.cs" />
     <Compile Include="Default.aspx.cs">

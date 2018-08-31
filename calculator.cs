@@ -21,7 +21,6 @@ namespace RouteNavigation
         public Location origin = Config.Calculation.origin;
         public int neighborCount = 60;
         public Guid activityId;
-        static private Config config;
         private List<Location> allLocations;
         private List<Vehicle> availableVehicles;
 

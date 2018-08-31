@@ -27,8 +27,9 @@ namespace RouteNavigation
         static Object calcLock = new Object();
         protected void Page_Load(object sender, EventArgs e)
         {
+            DataAccess.cleanupNullBatchCalcs();
+            DataAccess.PopulateConfig();
             btnCalculateRoutesInitialText = BtnCalculateRoutes.Text;
-            //initialize objects in page load since they make a sync calls that fail while the page is still starting up
 
             if (!Page.IsPostBack)
             {
@@ -45,12 +46,12 @@ namespace RouteNavigation
         {
             try
             {
+                var uiContext = TaskScheduler.FromCurrentSynchronizationContext();
                 DataAccess.RefreshApiCache();
                 if (Monitor.TryEnter(calcLock))
                 {
                     try
                     {
-
                         ga.calculateBestRoutes();
                     }
                     finally
@@ -70,6 +71,7 @@ namespace RouteNavigation
                 routeValidation.IsValid = false;
                 routeValidation.ErrorMessage = exception.Message;
             }
+
             BindListView();
             BtnCalculateRoutes.Enabled = true;
             BtnCalculateRoutes.Text = btnCalculateRoutesInitialText;

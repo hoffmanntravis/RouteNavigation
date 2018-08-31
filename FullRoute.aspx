@@ -11,11 +11,9 @@
             BackColor="#fe6363" CellPadding="5"></asp:ValidationSummary>
     </asp:Panel>
 
-    <asp:UpdateProgress ID="panelProgress" runat="server" DynamicLayout="false">
-        <ProgressTemplate><b>Loading...</b><br />
-        </ProgressTemplate>
+    <asp:UpdateProgress ID="loadingPanel" runat="server" DynamicLayout="false">
+    <ProgressTemplate><img src="images/spinner.gif" width="40" height="40" alt="Loading" /></ProgressTemplate>
     </asp:UpdateProgress>
-
     <asp:UpdatePanel ID="panelFullRoute" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
             <asp:ListView ID="RouteDetailsListView" runat="server"

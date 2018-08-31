@@ -550,6 +550,31 @@ namespace RouteNavigation
             return locations;
         }
 
+        public class IterationStatus
+        {
+            public int currentIteration;
+            public int totalIterations;
+        }
+
+        public static IterationStatus GetCalcStatus()
+        {
+            DataTable dataTable = new DataTable();
+
+            IterationStatus iterationStatus = new IterationStatus();
+            NpgsqlCommand cmd = new NpgsqlCommand("select_latest_route_batch");
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+            foreach (DataRow row in dataTable.Rows)
+            {
+                Location location = new Location();
+                if (row["iteration_current"] != DBNull.Value)
+                    iterationStatus.currentIteration = int.Parse(row["iteration_current"].ToString());
+                if (row["iteration_total"] != DBNull.Value)
+                    iterationStatus.totalIterations = int.Parse(row["iteration_total"].ToString());
+            }
+            return iterationStatus;
+        }
+
+
         public static List<Vehicle> GetVehicles(string columnName = "name", string filterString = null)
         {
             DataTable dataTable = GetVehicleData(columnName, filterString);
@@ -705,22 +730,35 @@ namespace RouteNavigation
             }
         }
 
-        public static bool getCalcStatus()
+        public static void cleanupNullBatchCalcs()
         {
-            bool status = false;
             try
             {
-                NpgsqlCommand cmd = new NpgsqlCommand("get_calc_status");
+                NpgsqlCommand cmd = new NpgsqlCommand("delete_null_route_batch");
                 string statusString = ReadStoredProcedureAsString(cmd);
-                status = Boolean.Parse(statusString);
-                return status;
+                RunStoredProcedure(cmd);
             }
             catch (Exception exception)
             {
-                Logger.Error("Unable to get calc status.");
+                Logger.Error("Unable to cleanup null batches.");
                 Logger.Error(exception);
             }
-            return status;
+        }
+
+        public static void updateIteration(int currentIteration, int totalIterations)
+        {
+            try
+            {
+                NpgsqlCommand cmd = new NpgsqlCommand("update_iteration");
+                cmd.Parameters.AddWithValue("p_iteration_current", NpgsqlTypes.NpgsqlDbType.Integer, currentIteration);
+                cmd.Parameters.AddWithValue("p_iteration_total", NpgsqlTypes.NpgsqlDbType.Integer, totalIterations);
+                RunStoredProcedure(cmd);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error("Unable to update route iterations.");
+                Logger.Error(exception);
+            }
         }
 
 

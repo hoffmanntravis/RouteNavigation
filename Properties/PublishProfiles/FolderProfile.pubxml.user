@@ -280,16 +280,19 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>02/11/2014 15:26:04</publishTime>
     </File>
     <File Include="bin/WebApplication1.dll">
-      <publishTime>08/30/2018 12:36:10</publishTime>
+      <publishTime>08/31/2018 01:38:20</publishTime>
     </File>
     <File Include="bin/WebApplication1.pdb">
-      <publishTime>08/30/2018 12:36:10</publishTime>
+      <publishTime>08/31/2018 01:38:20</publishTime>
     </File>
     <File Include="bin/WebGrease.dll">
       <publishTime>01/23/2014 13:57:34</publishTime>
     </File>
     <File Include="Bundle.config">
       <publishTime>01/28/2018 14:20:14</publishTime>
+    </File>
+    <File Include="CalculationStatus.aspx">
+      <publishTime>08/30/2018 20:53:14</publishTime>
     </File>
     <File Include="Config.aspx">
       <publishTime>08/28/2018 00:31:19</publishTime>
@@ -328,13 +331,16 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>01/28/2018 14:20:21</publishTime>
     </File>
     <File Include="FullRoute.aspx">
-      <publishTime>08/29/2018 19:04:17</publishTime>
+      <publishTime>08/30/2018 21:08:13</publishTime>
     </File>
     <File Include="Global.asax">
       <publishTime>02/01/2018 12:54:47</publishTime>
     </File>
     <File Include="images/down_arrow.svg">
       <publishTime>06/26/2018 23:38:30</publishTime>
+    </File>
+    <File Include="images/spinner.gif">
+      <publishTime>08/30/2018 16:25:47</publishTime>
     </File>
     <File Include="images/up_arrow.svg">
       <publishTime>06/26/2018 23:38:30</publishTime>
@@ -400,7 +406,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>02/27/2018 17:41:30</publishTime>
     </File>
     <File Include="Routes.aspx">
-      <publishTime>08/27/2018 02:15:48</publishTime>
+      <publishTime>08/31/2018 01:38:08</publishTime>
     </File>
     <File Include="Scripts/bootstrap.js">
       <publishTime>01/28/2018 14:20:21</publishTime>
@@ -505,7 +511,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>02/26/2018 23:14:54</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>08/23/2018 04:06:54</publishTime>
+      <publishTime>08/31/2018 01:38:20</publishTime>
     </File>
   </ItemGroup>
 </Project>
