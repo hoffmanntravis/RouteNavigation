@@ -49,11 +49,11 @@
     <div></div>
     <asp:TextBox class="tableInput" placeholder="100" ID="txtRouteDistanceMaxMiles" runat="server"></asp:TextBox>
     <div></div>
-    <asp:Label Text="Workday End Time" ToolTip="Starting time of a route (workday) when calculating travel time and pickup time, which is compared to the end time to determine if more locations can be added to a route." runat="server" />
+    <asp:Label Text="Workday Start Time" ToolTip="Starting time of a route (workday) when calculating travel time and pickup time, which is compared to the end time to determine if more locations can be added to a route." runat="server" />
     <div></div>
     <asp:TextBox class="tableInput" placeholder="08:00:00" ID="txtWorkDayStart" runat="server"></asp:TextBox>
     <div></div>
-    <asp:Label Text="Workday Start Time" ToolTip="End time of a route (workday). Once waypoints added exceed this time, no more will be added to the route." runat="server" />
+    <asp:Label Text="Workday End Time" ToolTip="End time of a route (workday). Once waypoints added exceed this time, no more will be added to the route." runat="server" />
     <div></div>
     <asp:TextBox class="tableInput" placeholder="20:00:00" ID="txtWorkDayEnd" runat="server"></asp:TextBox>
     <div></div>

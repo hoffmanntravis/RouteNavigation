@@ -138,8 +138,6 @@
         </SelectedItemTemplate>
     </asp:ListView>
     <asp:Label ID="activityId" runat="server" Text='<%# Eval("activity_id") %>'> </asp:Label>
-    <asp:HyperLink Text="Route Details" runat="server" NavigateUrl="/RouteDetails" />
-    <asp:HyperLink Text="Full Route Map" runat="server" NavigateUrl="/map" />
     
     <script>
         function checkCalcStatus() {

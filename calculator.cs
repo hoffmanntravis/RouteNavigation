@@ -30,6 +30,8 @@ namespace RouteNavigation
         //private double matrixDistanceFromSourceMultiplier = 1;
         private DateTime startDate = advanceDateToNextWeekday(System.DateTime.Now.Date);
 
+
+
         public RouteCalculator(List<Location> allLocations, List<Location> possibleLocations, List<Vehicle> availableVehicles)
         {
             this.allLocations = new List<Location>(allLocations);
@@ -95,8 +97,6 @@ namespace RouteNavigation
                     while (compatibleLocations.Count > 0)
                     {
                         DateTime potentialTime = currentTime;
-                        //get the nearest location in the list of compatible locations based on distance algorithm (lat / lng)
-                        //Location nearestLocation = FindNearestLocation(searchStart, compatibleLocations);
                         Location nextLocation = compatibleLocations.First();
 
                         nextLocation.currentGallonsEstimate = EstimateLocationGallons(nextLocation);
@@ -154,8 +154,8 @@ namespace RouteNavigation
                         }
 
                         //double localRadiusTolerance = nextLocation.distanceFromDepot / localRadiusDivisor;
-                        //This is only relevent if we have a location in the route.  Otherwise, we may end up with no valid locations.  
-                        if (potentialRoute.allLocations.Count > 0)
+                        //This is only relevent if we have a waypoint in the route.  Otherwise, we may end up with no valid locations.  
+                        if (potentialRoute.waypoints.Count > 0)
                         {
                             //if the location is within a certain radius, even if it means the day length being exceeded
                             if (potentialTime > endTime)
@@ -164,22 +164,35 @@ namespace RouteNavigation
                                 compatibleLocations.Remove(nextLocation);
                                 continue;
                             }
-                            /*
-                            if (potentialRoute.distanceMiles > config.Calculation.routeDistanceMaxMiles)
+
+                            /*if (potentialRoute.distanceMiles > Config.Calculation.routeDistanceMaxMiles)
                             {
                                 //if the location is within a certain radius, visit anyway even if it exceeds the total mileage
-                                if (nextLocationDistanceMiles < localRadiusTolerance)
+                                if (nextLocationDistanceMiles < Config.Calculation.localRadiusTolerance)
                                 {
-                                    Logger.Trace(String.Format("Distance from {1} to {0} is within 1/{2} of the distance back to the depot ({3} miles compared to {4} miles).  Will not remove from compatible locations.", nextLocation.locationName, previousLocation.locationName, localRadiusDivisor, nextLocationDistanceMiles, localRadiusTolerance));
+                                    Logger.Trace(String.Format("Distance from {1} to {0} is within 1/{2} of the distance back to the depot ({3} miles compared to {4} miles).  Will not remove from compatible locations.", nextLocation.locationName, previousLocation.locationName, nextLocationDistanceMiles, Config.Calculation.localRadiusTolerance));
                                 }
                                 else
                                 {
-                                    Logger.Trace(String.Format("Removing location {0}.  Distance from {1} to {0} is not within 1/{2} of the distance back to the depot ({3} miles compared to {4} miles).  Additionally, {5} is greater than the maximum route distance of {6} miles", nextLocation.locationName, previousLocation.locationName, localRadiusDivisor, nextLocationDistanceMiles, localRadiusTolerance, potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
+                                    Logger.Trace(String.Format("Removing location {0}.  Distance from {1} to {0} is not within 1/{2} of the distance back to the depot ({3} miles compared to {4} miles).  Additionally, {5} is greater than the maximum route distance of {6} miles", nextLocation.locationName, previousLocation.locationName, nextLocationDistanceMiles, Config.Calculation.localRadiusTolerance, potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
                                     compatibleLocations.Remove(nextLocation);
                                     continue;
                                 }
+                            }*/
+
+                            //Only allow the location if it is within n percent distance away of the distance back to the depot (notion of sunk cost of distance already traveled)
+                            double distanceTolerance = nextLocation.distanceFromDepot * Config.Calculation.localRadiusTolerancePercent;
+                            if (nextLocationDistanceMiles <= Math.Max(distanceTolerance, Config.Calculation.minimumSearchDistance))
+                            {
+                                Logger.Trace(String.Format("Distance from {1} to {0} is less than the radius search tolerance of {2} miles.  Will not remove from compatible locations.", nextLocation.locationName, previousLocation.locationName, distanceTolerance));
                             }
-                            */
+                            else
+                            {
+                                Logger.Trace(String.Format("Removing location {1} from compatible locations. Distance from {1} to {0} is greater than the radius search tolerance of {2} miles.", nextLocation.locationName, previousLocation.locationName, distanceTolerance));
+                                compatibleLocations.Remove(nextLocation);
+                                continue;
+                            }
+
                         }
 
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
@@ -261,7 +274,8 @@ namespace RouteNavigation
                     metadata.routesDuration += route.totalTime;
                     metadata.routesLengthMiles += route.distanceMiles;
 
-                    if (metadata.routesLengthMiles is Double.NaN)
+
+                        if (metadata.routesLengthMiles is Double.NaN)
                     {
                         Logger.Error("metadata.routesLengthMiles is Double.NaN");
                     }
@@ -271,7 +285,7 @@ namespace RouteNavigation
                 {
                     metadata.averageRouteDistanceMiles = calculateAverageRouteDistance(routes);
                     metadata.averageRouteDistanceStdDev = calculateRoutesStdDev(routes);
-
+                    metadata.fitnessScore = metadata.calculateFitnessScore();
                     //metadata.locationsHash = (this.metadata.processedLocations).GetHashCode();
                 }
 
@@ -564,11 +578,9 @@ namespace RouteNavigation
             List<double> values = new List<double>();
 
             foreach (Route route in routes)
-            {
                 values.Add(route.distanceMiles);
-            }
 
-            double avg = calculateAverageRouteDistance(routes);
+            double avg = values.Average();
             return Math.Sqrt(values.Average(v => Math.Pow(v - avg, 2)));
         }
 
@@ -613,6 +625,9 @@ namespace RouteNavigation
 
         public class Metadata
         {
+            //public double fitnessDistanceWeight = .5;
+            //public double fitnessAverageDistanceWeight = 1;
+            //public double fitnessDistributionWeight = 1.6;
             public int locationsHash;
             public double routesLengthMiles;
             public double averageRouteDistanceMiles;
@@ -622,6 +637,12 @@ namespace RouteNavigation
             public List<Location> orphanedLocations = new List<Location>();
             public List<Location> invalidApiLocations = new List<Location>();
             public List<Location> processedLocations = new List<Location>();
+            public double fitnessScore;
+
+            public double calculateFitnessScore()
+            {
+                return averageRouteDistanceMiles; 
+            }
         }
 
         private static List<Location> GetCompatibleLocations(Vehicle vehicle, List<Location> locations)

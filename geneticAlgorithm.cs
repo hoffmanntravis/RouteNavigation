@@ -37,7 +37,8 @@ namespace RouteNavigation
         static private object newCalcLock = new object();
         static private object calcLock = new object();
         static private Random rng = new Random();
-
+        private int batchId = DataAccess.GetNextRouteBatchId();
+        private RouteCalculator bestCalc;
         public List<List<Location>> initializePopulation(int populationSize)
         {
             if (populationSize < 2)
@@ -151,7 +152,6 @@ namespace RouteNavigation
 
                     List<List<Location>> startingPopulation = initializePopulation(populationSize);
                     //create a batch id for identifying a series of routes calculated together
-                    int batchId = DataAccess.GetNextRouteBatchId();
                     DataAccess.InsertRouteBatch();
 
                     //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
@@ -168,7 +168,7 @@ namespace RouteNavigation
 
                     Logger.Info("Created random locations pool");
 
-                    fitnessCalcs.SortByDistanceAsc();
+                    fitnessCalcs.SortByFitnessAsc();
                     double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
 
                     int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
@@ -178,11 +178,14 @@ namespace RouteNavigation
 
                     for (int i = 0; i < iterations; i++)
                     {
+                        if (DataAccess.getCancellationStatus() is true)
+                            break;
+
                         Logger.Info(string.Format("Beginning iteration {0}", i + 1));
                         currentIteration = i;
                         fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
 
-                        fitnessCalcs.SortByDistanceAsc();
+                        fitnessCalcs.SortByFitnessAsc();
                         double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
                         emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
                         Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
@@ -191,11 +194,11 @@ namespace RouteNavigation
                     }
 
                     //fully optimized the GA selected route with 3opt swap
-                    RouteCalculator bestCalc = fitnessCalcs.First();
-                    foreach (Route route in bestCalc.routes)
-                        bestCalc.calculateTSPRouteTwoOpt(route);
+                    bestCalc = fitnessCalcs.First();
+                    //foreach (Route route in bestCalc.routes)
+                    //    bestCalc.calculateTSPRouteTwoOpt(route);
                     DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
-                    Logger.Info(string.Format("Final output after 2opt produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
+                    Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                     DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
                     DataAccess.updateIteration(0, 0);
                     Logger.Info("Finished calculations.");
@@ -204,6 +207,7 @@ namespace RouteNavigation
                 {
                     Monitor.Exit(calcLock);
                 }
+
             }
             else
             {
@@ -217,7 +221,7 @@ namespace RouteNavigation
             int eliteCount = Convert.ToInt32(Math.Round(elitismRatio * calcs.Count()));
             if (eliteCount < 1 && elitismRatio > 0)
                 eliteCount = 1;
-            calcs.SortByDistanceAsc();
+            calcs.SortByFitnessAsc();
             List<RouteCalculator> elites = new List<RouteCalculator>();
             elites.AddRange(calcs.Take(eliteCount));
             calcs.RemoveRange(0, eliteCount);
@@ -260,7 +264,8 @@ namespace RouteNavigation
 
             //Logger.Log(String.Format("{0} elites preserved.", elites.Count));
             //remove the worst performers relative to the mutated offspring count and the elite count that was preserved
-            calcs.SortByDistanceDesc();
+            //calcs.SortByFitnessDesc();
+            calcs.SortByFitnessDesc();
             for (int x = 0; x < offspring.Count; x++)
                 calcs.Remove(calcs.First());
 
@@ -337,7 +342,8 @@ namespace RouteNavigation
             Logger.Trace(string.Format("Producing offspring from {0} breeders", breeders.Count));
             List<List<Location>> offspring = new List<List<Location>>();
             //make a copy of the original list.  We'll remove from breeders as we populate offspring, but if we need more breeders and run out, we'll refresh the pool with the oirignals.
-            breeders.SortByDistanceAsc();
+            breeders.SortByFitnessAsc();
+
             List<RouteCalculator> breedersoriginal = new List<RouteCalculator>(breeders);
 
             while (offspring.Count < offSpringPoolSize)
@@ -596,7 +602,7 @@ namespace RouteNavigation
 
 
 
-            contestants.SortByDistanceAsc();
+            contestants.SortByFitnessAsc();
             List<RouteCalculator> winners = contestants.Take(tournamentWinnerCount).ToList();
 
             Logger.Trace(string.Format("Tournament produced {0} winners", contestants.Count));

@@ -23,13 +23,21 @@ namespace RouteNavigation
         private GeneticAlgorithm ga = new GeneticAlgorithm();
         private DataTable dataTable;
         private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
-        private string btnCalculateRoutesInitialText;
-        static Object calcLock = new Object();
+
+        private static Object calcLock = new Object();
+        private static string calculateRoutesText = "Calculate Routes";
+            private static string calculateRoutesCancelText = "Cancel Calculations";
         protected void Page_Load(object sender, EventArgs e)
         {
-            DataAccess.cleanupNullBatchCalcs();
+            if (!(Monitor.TryEnter(calcLock)))
+                BtnCalculateRoutes.Text = calculateRoutesCancelText;
+            else
+            {
+                BtnCalculateRoutes.Text = calculateRoutesText;
+                Monitor.Exit(calcLock);
+            }
+
             DataAccess.PopulateConfig();
-            btnCalculateRoutesInitialText = BtnCalculateRoutes.Text;
 
             if (!Page.IsPostBack)
             {
@@ -42,12 +50,18 @@ namespace RouteNavigation
 
         }
 
+        protected void BtnCancelCalculation_Click(object sender, EventArgs e)
+        {
+            
+        }
+
         protected void BtnCalculateRoutes_Click(object sender, EventArgs e)
         {
             try
             {
                 var uiContext = TaskScheduler.FromCurrentSynchronizationContext();
                 DataAccess.RefreshApiCache();
+
                 if (Monitor.TryEnter(calcLock))
                 {
                     try
@@ -61,8 +75,12 @@ namespace RouteNavigation
                 }
                 else
                 {
-                    Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalculate");
-                    throw exception;
+                    DataAccess.updateCancellationStatus();
+                    while (!(Monitor.TryEnter(calcLock)))
+                    {
+                        Thread.Sleep(100);
+                    }
+                    Monitor.Exit(calcLock);
                 }
             }
             catch (Exception exception)
@@ -71,10 +89,8 @@ namespace RouteNavigation
                 routeValidation.IsValid = false;
                 routeValidation.ErrorMessage = exception.Message;
             }
-
             BindListView();
-            BtnCalculateRoutes.Enabled = true;
-            BtnCalculateRoutes.Text = btnCalculateRoutesInitialText;
+            BtnCalculateRoutes.Text = calculateRoutesText;
         }
 
         protected void BtnExportCsv_Click(object sender, EventArgs e)

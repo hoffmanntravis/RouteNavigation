@@ -38,6 +38,20 @@ namespace RouteNavigation
             return list;
         }
 
+
+        public static List<RouteCalculator> SortByFitnessAsc(this List<RouteCalculator> list)
+        {
+            list.Sort((x, y) => x.metadata.fitnessScore.CompareTo(y.metadata.fitnessScore));
+            return list;
+        }
+
+        public static List<RouteCalculator> SortByFitnessDesc(this List<RouteCalculator> list)
+        {
+            list.Sort((x, y) => y.metadata.fitnessScore.CompareTo(x.metadata.fitnessScore));
+            return list;
+        }
+
+
         public static void RoundDataTable(DataTable dataTable, int roundInt = 2)
         {
             foreach (DataColumn dc in dataTable.Columns)

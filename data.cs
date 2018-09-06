@@ -745,6 +745,18 @@ namespace RouteNavigation
             }
         }
 
+        public static void updateCancellationStatus(bool cancel = true)
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand("update_route_batch_cancellation_status");
+            cmd.Parameters.AddWithValue("p_cancellation_request", NpgsqlTypes.NpgsqlDbType.Boolean, cancel);
+            RunStoredProcedure(cmd);
+        }
+        public static Boolean getCancellationStatus()
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand("get_route_batch_cancellation_status");
+            return Boolean.Parse(ReadStoredProcedureAsString(cmd));
+        }
+
         public static void updateIteration(int currentIteration, int totalIterations)
         {
             try

@@ -5,7 +5,7 @@
 -- Dumped from database version 10.1
 -- Dumped by pg_dump version 10.3
 
--- Started on 2018-08-31 01:40:07
+-- Started on 2018-09-06 12:54:15
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -26,7 +26,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 2967 (class 0 OID 0)
+-- TOC entry 2974 (class 0 OID 0)
 -- Dependencies: 1
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
@@ -43,7 +43,7 @@ CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA public;
 
 
 --
--- TOC entry 2968 (class 0 OID 0)
+-- TOC entry 2975 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION pg_stat_statements; Type: COMMENT; Schema: -; Owner: 
 --
@@ -111,7 +111,7 @@ $$;
 ALTER FUNCTION public.delete_null_route_batch(p_id integer) OWNER TO postgres;
 
 --
--- TOC entry 276 (class 1255 OID 33462)
+-- TOC entry 278 (class 1255 OID 33462)
 -- Name: delete_vehicle(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -128,7 +128,7 @@ $$;
 ALTER FUNCTION public.delete_vehicle(p_id integer) OWNER TO postgres;
 
 --
--- TOC entry 243 (class 1255 OID 81971)
+-- TOC entry 244 (class 1255 OID 81971)
 -- Name: get_calc_status(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -152,7 +152,7 @@ $$;
 ALTER FUNCTION public.get_calc_status() OWNER TO postgres;
 
 --
--- TOC entry 251 (class 1255 OID 81197)
+-- TOC entry 252 (class 1255 OID 81197)
 -- Name: get_latest_completed_batch_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -168,7 +168,26 @@ $$;
 ALTER FUNCTION public.get_latest_completed_batch_id() OWNER TO postgres;
 
 --
--- TOC entry 263 (class 1255 OID 78713)
+-- TOC entry 240 (class 1255 OID 82739)
+-- Name: get_route_batch_cancellation_status(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.get_route_batch_cancellation_status() RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+	RETURN cancellation_request from route_batch where id = (SELECT id FROM route_batch 
+		order by id desc limit 1);
+END;
+
+$$;
+
+
+ALTER FUNCTION public.get_route_batch_cancellation_status() OWNER TO postgres;
+
+--
+-- TOC entry 265 (class 1255 OID 78713)
 -- Name: insert_location(integer, timestamp with time zone, integer, time without time zone, time without time zone, character varying, character varying, double precision, double precision, double precision, character varying, character varying, integer, integer, double precision); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -220,7 +239,7 @@ $$;
 ALTER FUNCTION public.insert_location(p_client_priority integer, p_last_visited timestamp with time zone, p_pickup_interval_days integer, p_pickup_window_start_time time without time zone, p_pickup_window_end_time time without time zone, p_address character varying, p_location_name character varying, p_capacity_gallons double precision, p_days_until_due double precision, p_matrix_weight double precision, p_contact_name character varying, p_contact_email character varying, p_vehicle_size integer, p_location_type integer, p_distance_from_source double precision) OWNER TO postgres;
 
 --
--- TOC entry 270 (class 1255 OID 79251)
+-- TOC entry 272 (class 1255 OID 79251)
 -- Name: insert_route(integer, interval, integer, timestamp with time zone, double precision, integer, character varying, double precision, uuid); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -292,7 +311,7 @@ $$;
 ALTER FUNCTION public.insert_route_batch() OWNER TO postgres;
 
 --
--- TOC entry 275 (class 1255 OID 33742)
+-- TOC entry 277 (class 1255 OID 33742)
 -- Name: insert_route_location(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -324,7 +343,7 @@ $$;
 ALTER FUNCTION public.insert_route_location(p_route_id integer, p_location_id integer, p_insert_order integer) OWNER TO postgres;
 
 --
--- TOC entry 260 (class 1255 OID 33467)
+-- TOC entry 262 (class 1255 OID 33467)
 -- Name: insert_vehicle(character varying, character varying, double precision, boolean, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -421,7 +440,7 @@ CREATE TABLE public.config (
 ALTER TABLE public.config OWNER TO postgres;
 
 --
--- TOC entry 269 (class 1255 OID 33473)
+-- TOC entry 271 (class 1255 OID 33473)
 -- Name: select_config(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -437,7 +456,7 @@ $$;
 ALTER FUNCTION public.select_config() OWNER TO postgres;
 
 --
--- TOC entry 254 (class 1255 OID 33474)
+-- TOC entry 255 (class 1255 OID 33474)
 -- Name: select_days_until_due(date, numeric); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -467,7 +486,7 @@ CREATE TABLE public.features (
 ALTER TABLE public.features OWNER TO postgres;
 
 --
--- TOC entry 261 (class 1255 OID 80639)
+-- TOC entry 263 (class 1255 OID 80639)
 -- Name: select_features(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -529,7 +548,8 @@ CREATE TABLE public.route_batch (
     average_route_distance_miles double precision,
     route_distance_std_dev double precision DEFAULT 0,
     iteration_current integer DEFAULT 0,
-    iteration_total integer
+    iteration_total integer,
+    cancellation_request boolean DEFAULT false
 );
 
 
@@ -618,7 +638,7 @@ $$;
 ALTER FUNCTION public.select_location() OWNER TO postgres;
 
 --
--- TOC entry 248 (class 1255 OID 33498)
+-- TOC entry 249 (class 1255 OID 33498)
 -- Name: select_location_by_address(character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -682,7 +702,7 @@ CREATE VIEW public.location_with_type AS
 ALTER TABLE public.location_with_type OWNER TO postgres;
 
 --
--- TOC entry 250 (class 1255 OID 78722)
+-- TOC entry 251 (class 1255 OID 78722)
 -- Name: select_location_by_id(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -701,7 +721,7 @@ $_$;
 ALTER FUNCTION public.select_location_by_id(p_id integer) OWNER TO postgres;
 
 --
--- TOC entry 257 (class 1255 OID 78714)
+-- TOC entry 259 (class 1255 OID 78714)
 -- Name: select_location_types(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -717,7 +737,7 @@ $$;
 ALTER FUNCTION public.select_location_types() OWNER TO postgres;
 
 --
--- TOC entry 242 (class 1255 OID 79460)
+-- TOC entry 243 (class 1255 OID 79460)
 -- Name: select_location_with_filter(character varying, character varying, character varying, boolean); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -784,7 +804,7 @@ $$;
 ALTER FUNCTION public.select_next_location_id() OWNER TO postgres;
 
 --
--- TOC entry 249 (class 1255 OID 33502)
+-- TOC entry 250 (class 1255 OID 33502)
 -- Name: select_next_route_batch_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -800,7 +820,7 @@ $$;
 ALTER FUNCTION public.select_next_route_batch_id() OWNER TO postgres;
 
 --
--- TOC entry 241 (class 1255 OID 33503)
+-- TOC entry 242 (class 1255 OID 33503)
 -- Name: select_next_route_id(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -869,7 +889,7 @@ $$;
 ALTER FUNCTION public.select_route() OWNER TO postgres;
 
 --
--- TOC entry 255 (class 1255 OID 78597)
+-- TOC entry 256 (class 1255 OID 78597)
 -- Name: select_route_batch(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -886,7 +906,7 @@ $$;
 ALTER FUNCTION public.select_route_batch() OWNER TO postgres;
 
 --
--- TOC entry 264 (class 1255 OID 33515)
+-- TOC entry 266 (class 1255 OID 33515)
 -- Name: select_route_by_id(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -924,7 +944,7 @@ ALTER TABLE public.route_location OWNER TO postgres;
 --
 
 CREATE VIEW public.route_details AS
- SELECT r.id AS route_id,
+ SELECT DISTINCT r.id AS route_id,
     l.id AS location_id,
     l.location_name,
     l.client_priority,
@@ -937,17 +957,17 @@ CREATE VIEW public.route_details AS
     r.route_date,
     r.batch_id,
     rl.insert_order
-   FROM ((public.route_location rl
-     JOIN public.location l ON ((rl.location_id = l.id)))
+   FROM ((public.location l
+     JOIN public.route_location rl ON ((rl.location_id = l.id)))
      JOIN public.route r ON ((rl.route_id = r.id)))
   WHERE (r.batch_id = public.get_latest_completed_batch_id())
-  ORDER BY rl.insert_order;
+  ORDER BY r.id, rl.insert_order;
 
 
 ALTER TABLE public.route_details OWNER TO postgres;
 
 --
--- TOC entry 247 (class 1255 OID 78606)
+-- TOC entry 248 (class 1255 OID 78606)
 -- Name: select_route_details(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -970,7 +990,7 @@ $$;
 ALTER FUNCTION public.select_route_details(p_route_id integer) OWNER TO postgres;
 
 --
--- TOC entry 267 (class 1255 OID 80440)
+-- TOC entry 269 (class 1255 OID 80440)
 -- Name: select_route_details(integer, boolean); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1057,7 +1077,7 @@ CREATE VIEW public.route_information WITH (security_barrier='false') AS
 ALTER TABLE public.route_information OWNER TO postgres;
 
 --
--- TOC entry 268 (class 1255 OID 79246)
+-- TOC entry 270 (class 1255 OID 79246)
 -- Name: select_route_information(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1075,7 +1095,7 @@ $$;
 ALTER FUNCTION public.select_route_information() OWNER TO postgres;
 
 --
--- TOC entry 266 (class 1255 OID 33549)
+-- TOC entry 268 (class 1255 OID 33549)
 -- Name: select_route_with_filter(character varying, character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1140,7 +1160,7 @@ $_$;
 ALTER FUNCTION public.select_vehicle_with_filter(p_column_name character varying, p_filter_string character varying) OWNER TO postgres;
 
 --
--- TOC entry 246 (class 1255 OID 33757)
+-- TOC entry 247 (class 1255 OID 33757)
 -- Name: update_days_until_due(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1206,7 +1226,7 @@ $$;
 ALTER FUNCTION public.update_iteration(p_iteration_current integer, p_iteration_total integer) OWNER TO postgres;
 
 --
--- TOC entry 273 (class 1255 OID 78712)
+-- TOC entry 275 (class 1255 OID 78712)
 -- Name: update_location(integer, integer, timestamp with time zone, integer, time without time zone, time without time zone, character varying, character varying, integer, double precision, double precision, double precision, double precision, double precision, character varying, character varying, integer, integer, interval); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1270,7 +1290,7 @@ $$;
 ALTER FUNCTION public.update_maps_url(p_address integer) OWNER TO postgres;
 
 --
--- TOC entry 244 (class 1255 OID 33693)
+-- TOC entry 245 (class 1255 OID 33693)
 -- Name: update_maps_url(character varying); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1293,7 +1313,7 @@ $$;
 ALTER FUNCTION public.update_maps_url(p_address character varying) OWNER TO postgres;
 
 --
--- TOC entry 259 (class 1255 OID 33758)
+-- TOC entry 261 (class 1255 OID 33758)
 -- Name: update_maps_urls(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1332,7 +1352,7 @@ $$;
 ALTER FUNCTION public.update_maps_urls() OWNER TO postgres;
 
 --
--- TOC entry 271 (class 1255 OID 33556)
+-- TOC entry 273 (class 1255 OID 33556)
 -- Name: update_route_batch_calculation_time(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1351,7 +1371,30 @@ $$;
 ALTER FUNCTION public.update_route_batch_calculation_time() OWNER TO postgres;
 
 --
--- TOC entry 258 (class 1255 OID 69994)
+-- TOC entry 257 (class 1255 OID 82746)
+-- Name: update_route_batch_cancellation_status(boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_route_batch_cancellation_status(p_cancellation_request boolean) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+
+BEGIN
+UPDATE route_batch   
+   SET 
+   cancellation_request = p_cancellation_request
+   WHERE id = (SELECT id FROM route_batch 
+		order by id desc limit 1);
+   return 1;
+END;
+
+$$;
+
+
+ALTER FUNCTION public.update_route_batch_cancellation_status(p_cancellation_request boolean) OWNER TO postgres;
+
+--
+-- TOC entry 260 (class 1255 OID 69994)
 -- Name: update_route_batch_metadata(integer, integer, integer, integer, double precision, interval, double precision, double precision); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1401,7 +1444,8 @@ if (original_route_id = p_route_id and actual_order > original_order)
 THEN
 UPDATE route_location
 	SET insert_order = insert_order - 1
-	WHERE route_id = p_route_id and (insert_order > original_order and insert_order <= actual_order) and location_id != p_location_id and insert_order != origin_start and insert_order != origin_end;
+	FROM route as r
+	WHERE route_id = p_route_id and (insert_order > original_order and insert_order <= actual_order) and location_id != p_location_id and (insert_order != origin_start and insert_order != origin_end) and (r.batch_id = latest_batch_id);
 END IF;
 
 if (original_route_id = p_route_id and actual_order < original_order)
@@ -1409,20 +1453,20 @@ THEN
 UPDATE route_location as rl
 	SET insert_order = insert_order + 1
 	FROM route as r
-	WHERE (route_id = p_route_id and (insert_order >= actual_order and insert_order < original_order) and location_id != p_location_id)  and insert_order != origin_start and insert_order != origin_end;
+	WHERE (route_id = p_route_id and (insert_order >= actual_order and insert_order < original_order) and location_id != p_location_id)  and (insert_order != origin_start and insert_order != origin_end) and (r.batch_id = latest_batch_id);
 END IF;
 
 UPDATE route_location as rl
 SET route_id = p_route_id,insert_order = actual_order
 FROM route as r
-WHERE rl.location_id = p_location_id and r.batch_id = latest_batch_id;
+WHERE rl.location_id = p_location_id and (r.batch_id = latest_batch_id);
 
 if (original_route_id != p_route_id)
 THEN
 UPDATE route_location as rl
 	SET insert_order = insert_order - 1
 	FROM route as r
-	WHERE (route_id = original_route_id and insert_order > original_order) and (location_id != p_location_id and r.batch_id = latest_batch_id);
+	WHERE (route_id = original_route_id and insert_order > original_order) and (location_id != p_location_id) and (r.batch_id = latest_batch_id);
 END IF;
 
 if (original_route_id != p_route_id)
@@ -1430,7 +1474,7 @@ THEN
 UPDATE route_location as rl
 	SET insert_order = insert_order + 1
 	FROM route as r
-	WHERE (route_id = p_route_id and insert_order >= p_order) and insert_order != origin_start and (location_id != p_location_id and r.batch_id = latest_batch_id);
+	WHERE (route_id = p_route_id and insert_order >= p_order) and (insert_order != origin_start) and (location_id != p_location_id) and (r.batch_id = latest_batch_id);
 END IF;
 
 if (original_route_id != p_route_id and p_order > actual_order)
@@ -1438,7 +1482,7 @@ THEN
 UPDATE route_location as rl
 	SET insert_order = insert_order + 1
 	FROM route as r
-	WHERE location_id = p_location_id or insert_order = origin_end;
+	WHERE (location_id = p_location_id or insert_order = origin_end) and (r.batch_id = latest_batch_id);
 END IF;
 
 return 1;
@@ -1475,7 +1519,7 @@ $$;
 ALTER FUNCTION public.update_route_map_url(p_route_id character varying, p_maps_url boolean) OWNER TO postgres;
 
 --
--- TOC entry 252 (class 1255 OID 33558)
+-- TOC entry 253 (class 1255 OID 33558)
 -- Name: update_vehicle(integer, character varying, character varying, double precision, boolean, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1533,7 +1577,7 @@ $$;
 ALTER FUNCTION public.upsert_api_metadata(p_call_date date, p_api_call_count integer) OWNER TO postgres;
 
 --
--- TOC entry 262 (class 1255 OID 80605)
+-- TOC entry 264 (class 1255 OID 80605)
 -- Name: upsert_config(integer, integer, double precision, double precision, double precision, double precision, double precision, double precision, integer, time without time zone, time without time zone, interval, interval, character varying, character varying, character[], integer, integer, integer, integer, integer, integer, integer, double precision, double precision, double precision, integer, double precision); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1678,7 +1722,7 @@ CREATE TABLE public.api_metadata (
 ALTER TABLE public.api_metadata OWNER TO postgres;
 
 --
--- TOC entry 2821 (class 2606 OID 33630)
+-- TOC entry 2828 (class 2606 OID 33630)
 -- Name: api_metadata call_date_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1687,7 +1731,7 @@ ALTER TABLE ONLY public.api_metadata
 
 
 --
--- TOC entry 2815 (class 2606 OID 33622)
+-- TOC entry 2818 (class 2606 OID 33622)
 -- Name: config config_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1696,7 +1740,7 @@ ALTER TABLE ONLY public.config
 
 
 --
--- TOC entry 2829 (class 2606 OID 80638)
+-- TOC entry 2836 (class 2606 OID 80638)
 -- Name: features features_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1705,7 +1749,7 @@ ALTER TABLE ONLY public.features
 
 
 --
--- TOC entry 2823 (class 2606 OID 78681)
+-- TOC entry 2830 (class 2606 OID 78681)
 -- Name: location_type id unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1714,7 +1758,7 @@ ALTER TABLE ONLY public.location_type
 
 
 --
--- TOC entry 2817 (class 2606 OID 34793)
+-- TOC entry 2820 (class 2606 OID 34793)
 -- Name: location location_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1723,7 +1767,7 @@ ALTER TABLE ONLY public.location
 
 
 --
--- TOC entry 2825 (class 2606 OID 78683)
+-- TOC entry 2832 (class 2606 OID 78683)
 -- Name: location_type location_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1732,7 +1776,16 @@ ALTER TABLE ONLY public.location_type
 
 
 --
--- TOC entry 2819 (class 2606 OID 34773)
+-- TOC entry 2824 (class 2606 OID 82193)
+-- Name: route_batch route_batch_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.route_batch
+    ADD CONSTRAINT route_batch_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 2822 (class 2606 OID 34773)
 -- Name: route route_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1741,7 +1794,7 @@ ALTER TABLE ONLY public.route
 
 
 --
--- TOC entry 2827 (class 2606 OID 78679)
+-- TOC entry 2834 (class 2606 OID 78679)
 -- Name: location_type type unique; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1750,7 +1803,16 @@ ALTER TABLE ONLY public.location_type
 
 
 --
--- TOC entry 2834 (class 2620 OID 34286)
+-- TOC entry 2826 (class 2606 OID 82195)
+-- Name: vehicle vehicle_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.vehicle
+    ADD CONSTRAINT vehicle_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 2841 (class 2620 OID 34286)
 -- Name: route_batch update_batch_route_calculation_time; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1758,7 +1820,7 @@ CREATE TRIGGER update_batch_route_calculation_time AFTER UPDATE OF date_complete
 
 
 --
--- TOC entry 2833 (class 2620 OID 33947)
+-- TOC entry 2840 (class 2620 OID 33947)
 -- Name: location update_maps_urls; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -1766,7 +1828,7 @@ CREATE TRIGGER update_maps_urls AFTER UPDATE OF address ON public.location FOR E
 
 
 --
--- TOC entry 2832 (class 2606 OID 34811)
+-- TOC entry 2839 (class 2606 OID 34811)
 -- Name: route_location location_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1775,7 +1837,7 @@ ALTER TABLE ONLY public.route_location
 
 
 --
--- TOC entry 2831 (class 2606 OID 34806)
+-- TOC entry 2838 (class 2606 OID 34806)
 -- Name: route_location route_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1784,7 +1846,7 @@ ALTER TABLE ONLY public.route_location
 
 
 --
--- TOC entry 2830 (class 2606 OID 78684)
+-- TOC entry 2837 (class 2606 OID 78684)
 -- Name: location type; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1792,7 +1854,7 @@ ALTER TABLE ONLY public.location
     ADD CONSTRAINT type FOREIGN KEY (location_type) REFERENCES public.location_type(id);
 
 
--- Completed on 2018-08-31 01:40:07
+-- Completed on 2018-09-06 12:54:15
 
 --
 -- PostgreSQL database dump complete
