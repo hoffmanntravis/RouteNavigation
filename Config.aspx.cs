@@ -32,6 +32,13 @@ namespace RouteNavigation
                 if (Config.Features.geneticAlgorithmGrowthDecayExponent)
                     chkGrowthDecayExponent.Checked = true;
 
+                if (Config.Calculation.origin != null)
+                {
+                    txtOriginLocationId.Text = Config.Calculation.origin.id.ToString();
+                    txtOriginName.Text = Config.Calculation.origin.locationName;
+                    txtOriginAddress.Text = Config.Calculation.origin.address;
+                }
+
                 txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
                 txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
                 txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
@@ -43,20 +50,9 @@ namespace RouteNavigation
                 if (Config.Calculation.workdayEndTime != DateTime.MinValue)
                     txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
 
-                txtRouteDistanceMaxMiles.Text = Config.Calculation.routeDistanceMaxMiles.ToString();
-                if (Config.Calculation.origin != null)
-                    txtOriginLocationId.Text = Config.Calculation.origin.id.ToString();
-                txtMatrixOverDueMultiplier.Text = Config.Matrix.overDueMultiplier.ToString();
-                txtMatrixDaysUntilDueExponent.Text = Config.Matrix.daysUntilDueExponent.ToString();
-                txtMatrixDistanceFromSource.Text = Config.Matrix.distanceFromSourceMultiplier.ToString();
-                txtMatrixPriorityMultiplier.Text = Config.Matrix.priorityMultiplier.ToString();
-
-                if (Config.Calculation.origin != null)
-                {
-                    txtOriginName.Text = Config.Calculation.origin.locationName;
-                    txtOriginAddress.Text = Config.Calculation.origin.address;
-                }
-
+                txtMaxDistanceFromDepot.Text = Config.Calculation.maxDistanceFromDepot.ToString();
+                txtSearchMinimumDistance.Text = Config.Calculation.searchMinimumDistance.ToString();
+                txtSearchRadiusPercent.Text = Config.Calculation.searchRadiusPercent.ToString();
                 txtIterations.Text = Config.GeneticAlgorithm.Iterations.ToString();
                 txtPopulationSize.Text = Config.GeneticAlgorithm.PopulationSize.ToString();
                 txtNeighborCount.Text = Config.GeneticAlgorithm.NeighborCount.ToString();
@@ -113,21 +109,12 @@ namespace RouteNavigation
                 if (!(String.IsNullOrEmpty(txtOriginLocationId.Text)))
                     cmd.Parameters.AddWithValue("p_origin_location_id", NpgsqlTypes.NpgsqlDbType.Integer, txtOriginLocationId.Text);
 
-                if (!(String.IsNullOrEmpty(txtMatrixPriorityMultiplier.Text)))
-                    cmd.Parameters.AddWithValue("p_matrix_priority_multiplier", NpgsqlTypes.NpgsqlDbType.Double, txtMatrixPriorityMultiplier.Text);
-                if (!(String.IsNullOrEmpty(txtMatrixDaysUntilDueExponent.Text)))
-                    cmd.Parameters.AddWithValue("p_matrix_days_until_due_exponent", NpgsqlTypes.NpgsqlDbType.Double, txtMatrixDaysUntilDueExponent.Text);
-                if (!(String.IsNullOrEmpty(txtMatrixDistanceFromSource.Text)))
-                    cmd.Parameters.AddWithValue("p_matrix_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, txtMatrixDistanceFromSource.Text);
-                if (!(String.IsNullOrEmpty(txtMatrixOverDueMultiplier.Text)))
-                    cmd.Parameters.AddWithValue("p_matrix_overdue_multiplier", NpgsqlTypes.NpgsqlDbType.Double, txtMatrixOverDueMultiplier.Text);
-
                 if (!(String.IsNullOrEmpty(txtMinimumDaysUntilPickup.Text)))
                     cmd.Parameters.AddWithValue("p_minimum_days_until_pickup", NpgsqlTypes.NpgsqlDbType.Integer, txtMinimumDaysUntilPickup.Text);
                 if (!(String.IsNullOrEmpty(txtCurrentFillLevelErrorMargin.Text)))
                     cmd.Parameters.AddWithValue("p_current_fill_level_error_margin", NpgsqlTypes.NpgsqlDbType.Double, txtCurrentFillLevelErrorMargin.Text);
-                if (!(String.IsNullOrEmpty(txtRouteDistanceMaxMiles.Text)))
-                    cmd.Parameters.AddWithValue("p_route_distance_max_miles", NpgsqlTypes.NpgsqlDbType.Double, txtRouteDistanceMaxMiles.Text);
+                if (!(String.IsNullOrEmpty(txtMaxDistanceFromDepot.Text)))
+                    cmd.Parameters.AddWithValue("p_max_distance_from_depot", NpgsqlTypes.NpgsqlDbType.Double, txtMaxDistanceFromDepot.Text);
                 if (!(String.IsNullOrEmpty(txtMaximumDaysOverdue.Text)))
                     cmd.Parameters.AddWithValue("p_maximum_days_overdue", NpgsqlTypes.NpgsqlDbType.Integer, txtMaximumDaysOverdue.Text);
                 if (!(String.IsNullOrEmpty(txtWorkDayStart.Text)))
@@ -138,6 +125,11 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_oil_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtOilPickupAverageDuration.Text)));
                 if (!(String.IsNullOrEmpty(txtGreasePickupAverageDuration.Text)))
                     cmd.Parameters.AddWithValue("p_grease_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtGreasePickupAverageDuration.Text)));
+
+                if (!(String.IsNullOrEmpty(txtSearchMinimumDistance.Text)))
+                    cmd.Parameters.AddWithValue("p_search_minimum_distance", NpgsqlTypes.NpgsqlDbType.Double, txtSearchMinimumDistance.Text);
+                if (!(String.IsNullOrEmpty(txtSearchRadiusPercent.Text)))
+                    cmd.Parameters.AddWithValue("p_search_radius_percent", NpgsqlTypes.NpgsqlDbType.Double, txtSearchRadiusPercent.Text);
 
                 if (!(String.IsNullOrEmpty(txtIterations.Text)))
                     cmd.Parameters.AddWithValue("p_genetic_algorithm_iterations", NpgsqlTypes.NpgsqlDbType.Integer, int.Parse(txtIterations.Text));
@@ -163,6 +155,17 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_genetic_algorithm_mutation_allele_max", NpgsqlTypes.NpgsqlDbType.Integer, int.Parse(txtMutationAlleleMax.Text));
                 if (!(String.IsNullOrEmpty(txtGrowthDecayExponent.Text)))
                     cmd.Parameters.AddWithValue("p_genetic_algorithm_growth_decay_exponent", NpgsqlTypes.NpgsqlDbType.Double, double.Parse(txtGrowthDecayExponent.Text));
+
+                if (!String.IsNullOrEmpty(txtPopulationSize.Text) && int.Parse(txtPopulationSize.Text) < 2 )
+                {
+                    Exception exception = new Exception("Population Size must be at least two.  Otherwise, genetic operations and crossover are not possible.  Please increase the value of this parameter.");
+                    throw exception;
+                }
+                if (!String.IsNullOrEmpty(txtBreederCount.Text) && int.Parse(txtBreederCount.Text) < 2  )
+                {
+                    Exception exception = new Exception("Breeders Count must be at least two.  Otherwise, genetic operations and crossover are not possible.  Please increase the value of this parameter.");
+                    throw exception;
+                }
 
                 DataAccess.RunStoredProcedure(cmd);
                 BindData();

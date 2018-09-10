@@ -67,42 +67,6 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.TextBox txtOriginAddress;
         
         /// <summary>
-        /// txtMatrixPriorityMultiplier control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtMatrixPriorityMultiplier;
-        
-        /// <summary>
-        /// txtMatrixDaysUntilDueExponent control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtMatrixDaysUntilDueExponent;
-        
-        /// <summary>
-        /// txtMatrixOverDueMultiplier control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtMatrixOverDueMultiplier;
-        
-        /// <summary>
-        /// txtMatrixDistanceFromSource control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtMatrixDistanceFromSource;
-        
-        /// <summary>
         /// txtMinimumDaysUntilPickup control.
         /// </summary>
         /// <remarks>
@@ -121,13 +85,13 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.TextBox txtMaximumDaysOverdue;
         
         /// <summary>
-        /// txtRouteDistanceMaxMiles control.
+        /// txtMaxDistanceFromDepot control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtRouteDistanceMaxMiles;
+        protected global::System.Web.UI.WebControls.TextBox txtMaxDistanceFromDepot;
         
         /// <summary>
         /// txtWorkDayStart control.
@@ -173,6 +137,24 @@ namespace RouteNavigation {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtGreasePickupAverageDuration;
+        
+        /// <summary>
+        /// txtSearchMinimumDistance control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtSearchMinimumDistance;
+        
+        /// <summary>
+        /// txtSearchRadiusPercent control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtSearchRadiusPercent;
         
         /// <summary>
         /// txtIterations control.

@@ -66,7 +66,7 @@ namespace RouteNavigation
                 {
                     try
                     {
-                        ga.calculateBestRoutes();
+                        ga.CalculateBestRoutes();
                     }
                     finally
                     {

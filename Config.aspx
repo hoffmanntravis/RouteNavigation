@@ -16,24 +16,6 @@
     <asp:TextBox class="tableInput" ID="txtOriginLocationId" runat="server"></asp:TextBox>
     <asp:TextBox class="tableInput" ReadOnly="true" BackColor="lightgray" ID="txtOriginName" runat="server"></asp:TextBox>
     <asp:TextBox class="tableInput" ReadOnly="true" BackColor="lightgray" ID="txtOriginAddress" runat="server"></asp:TextBox>
-    <h3>Matrix Calculation values</h3>
-
-    <div></div>
-    <asp:Label Text="Client Priority Multiplier" ToolTip="Linear multiplier of the client priority used in matrix weight calculations" runat="server" />
-    <div></div>
-    <asp:TextBox class="tableInput" ID="txtMatrixPriorityMultiplier" runat="server"></asp:TextBox>
-    <div></div>
-    <asp:Label Text="Days Until Due Priority Exponent" ToolTip="Absolute value of exponent applied to matrix calculation weight, based on days until due. Can be a decimal point for fine grained control (e.g. 1.2)." runat="server" />
-    <div></div>
-    <asp:TextBox class="tableInput" ID="txtMatrixDaysUntilDueExponent" runat="server"></asp:TextBox>
-    <div></div>
-    <asp:Label Text="Overdue Priority Multiplier" ToolTip="Linear mutliplier of the weight if the date is overdue. Multiplied against the exponent above. Emphasizes past due locations even further." runat="server" />
-    <div></div>
-    <asp:TextBox class="tableInput" ID="txtMatrixOverDueMultiplier" runat="server"></asp:TextBox>
-    <div></div>
-    <asp:Label Text="Distance Priority" ToolTip="If feature 'Prioritize nearest location' is enabled, the distance of a location from the depot will be factored into matrix weight calculations. A closer distance will be prioritized higher than a farther location, due to the cost incurred on the business." runat="server" />
-    <div></div>
-    <asp:TextBox class="tableInput" ID="txtMatrixDistanceFromSource" runat="server"></asp:TextBox>
 
     <h3>Calculation Parameters</h3>
     <div></div>
@@ -45,9 +27,9 @@
     <div></div>
     <asp:TextBox class="tableInput" placeholder="90" ID="txtMaximumDaysOverdue" runat="server"></asp:TextBox>
     <div></div>
-    <asp:Label Text="Maximum Route Distance" ToolTip="Maximum distance from the depot that will be considered before the location is orphaned and expected to be handled by manual route planning or other means." runat="server" />
+    <asp:Label Text="Maximum Distance From Depot" ToolTip="Maximum distance from the depot that will be considered before the location is orphaned and expected to be handled by manual route planning or other means." runat="server" />
     <div></div>
-    <asp:TextBox class="tableInput" placeholder="100" ID="txtRouteDistanceMaxMiles" runat="server"></asp:TextBox>
+    <asp:TextBox class="tableInput" placeholder="100" ID="txtMaxDistanceFromDepot" runat="server"></asp:TextBox>
     <div></div>
     <asp:Label Text="Workday Start Time" ToolTip="Starting time of a route (workday) when calculating travel time and pickup time, which is compared to the end time to determine if more locations can be added to a route." runat="server" />
     <div></div>
@@ -68,6 +50,15 @@
     <asp:Label Text="Average grease trap duration (minutes)" ToolTip="Average length in minutes of a grease trap pickup. Used in time calculations when adding routes." runat="server" />
     <div></div>
     <asp:TextBox class="tableInput" placeholder="30:00:00" ID="txtGreasePickupAverageDuration" runat="server"></asp:TextBox>
+   
+    <div></div>
+    <asp:Label Text="Next Location Minimum Search Distance" ToolTip="The length in miles of a minimum distance to search when location for the next location of a route (beyond the first location)." runat="server" />
+    <div></div>
+    <asp:TextBox class="tableInput" Id="txtSearchMinimumDistance" placeholder="5" runat="server"></asp:TextBox>
+     <div></div>
+    <asp:Label Text="Search Radius Percent (Distance to Depot)" ToolTip="A percentage value multiplied by the distance traveled from the depot, used to calculate the maximum distance to search for an additional location.  This is used to increase route density, by limiting the algorithm from connecting locations that are far apart in order to achieve global optimal route length.  Value increases with distance to avoid efficiency losses if a long distance has already been traveled to get to the current location.  Numbers closer to 1 will result in more net efficiency, but some erratic route creation to handle outlier locations." runat="server" />
+    <div></div>
+    <asp:TextBox class="tableInput" id="txtSearchRadiusPercent" placeholder=".25" runat="server"></asp:TextBox>
 
     <h3>Genetic Algorithm Parameters</h3>
     <div></div>

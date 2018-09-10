@@ -17,9 +17,10 @@ namespace RouteNavigation
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
-        public string jsonCoordinates;
+        public string locationsJson;
         public double mapXCoordinate;
         public double mapYCoordinate;
+
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
@@ -38,23 +39,18 @@ namespace RouteNavigation
 
                 if (!(dtRoute is null))
                 {
-                    List<Location> locations = DataAccess.ConvertRouteDetailsDataTableToLocationCoordinates(dtRoute);
-                    List<Coordinates> coordinates = new List<Coordinates>();
-                    foreach (Location location in locations)
-                        coordinates.Add(location.coordinates);
-
-                    jsonCoordinates += new JavaScriptSerializer().Serialize(coordinates);
+                    List<Location> locations = DataAccess.ConvertRouteDetailsDataTableToLocations(dtRoute);
+                    locationsJson += new JavaScriptSerializer().Serialize(locations);
                 }
 
-                if (jsonCoordinates is null)
-                    jsonCoordinates = "\"\"";
+                if (locationsJson is null)
+                    locationsJson = "\"\"";
 
                 Config.Calculation.origin = DataAccess.GetLocationById(Config.Calculation.origin.id);
                 mapXCoordinate = Config.Calculation.origin.coordinates.lat;
                 mapYCoordinate = Config.Calculation.origin.coordinates.lng;
 
                 ClientScript.RegisterStartupScript(GetType(), "Javascript", "javascript:showMap(); ", true);
-                ClientScript.RegisterStartupScript(GetType(), "Javascript", "javascript:addMarker();", true);
 
                 //if (!Page.IsPostBack)
                 //    BindListView();

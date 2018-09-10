@@ -104,7 +104,6 @@ namespace RouteNavigation
 
             int id = int.Parse(e.Keys["id"].ToString());
             DataAccess.DeleteRouteDependencies(id);
-            //calculator.calculateRoutes();
             BindListView();
         }
 
@@ -120,8 +119,8 @@ namespace RouteNavigation
             try
             {
                 //Finding the controls from Gridview for the row which is going to update  
-                string id = e.Keys["id"].ToString();
-                string clientPriority = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientPriority")).Text;
+                int id = int.Parse(e.Keys["id"].ToString());
+                //string clientPriority = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientPriority")).Text;
                 string locationName = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientName")).Text;
                 string pickupIntervalDays = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupIntervalDays")).Text;
                 string insertPickupWindowStartTime = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupWindowStartTime")).Text;
@@ -136,10 +135,10 @@ namespace RouteNavigation
 
                 NpgsqlCommand cmd = new NpgsqlCommand("update_location");
                 cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
-                if (clientPriority != null && clientPriority != "")
-                {
-                    cmd.Parameters.AddWithValue("p_client_priority", NpgsqlTypes.NpgsqlDbType.Integer, clientPriority.Trim());
-                }
+                //if (clientPriority != null && clientPriority != "")
+                //{
+                //    cmd.Parameters.AddWithValue("p_client_priority", NpgsqlTypes.NpgsqlDbType.Integer, clientPriority.Trim());
+                //}
                 if (lastVisisted != null && lastVisisted != "")
                 {
                     cmd.Parameters.AddWithValue("p_last_visited", NpgsqlTypes.NpgsqlDbType.Date, lastVisisted.Trim());
@@ -159,6 +158,8 @@ namespace RouteNavigation
                 if (address != null && address != "")
                 {
                     cmd.Parameters.AddWithValue("p_address", NpgsqlTypes.NpgsqlDbType.Varchar, address.Trim());
+                    DataAccess.UpdateDistanceFromSource(DataAccess.GetLocationById(id));
+                    DataAccess.UpdateGpsCoordinates(address,id);
                 }
                 if (locationName != null && locationName != "")
                 {
@@ -186,7 +187,6 @@ namespace RouteNavigation
                 }
 
                 DataAccess.RunStoredProcedure(cmd);
-                DataAccess.UpdateMatrixWeight(int.Parse(id));
 
             }
             catch (Exception exception)
@@ -232,7 +232,7 @@ namespace RouteNavigation
             using (NpgsqlCommand cmd = new NpgsqlCommand("select_next_location_id"))
                 id = int.Parse(DataAccess.ReadStoredProcedureAsString(cmd));
 
-            string clientPriority = ((TextBox)e.Item.FindControl("txtInsertClientPriority")).Text;
+            //string clientPriority = ((TextBox)e.Item.FindControl("txtInsertClientPriority")).Text;
             string locationName = ((TextBox)e.Item.FindControl("txtInsertClientName")).Text;
             string pickupIntervalDays = ((TextBox)e.Item.FindControl("txtInsertPickupIntervalDays")).Text;
             string insertPickupWindowStartTime = ((TextBox)e.Item.FindControl("txtInsertPickupWindowStartTime")).Text;
@@ -249,10 +249,10 @@ namespace RouteNavigation
                 using (NpgsqlCommand cmd = new NpgsqlCommand("insert_location"))
                 {
 
-                    if (clientPriority != null && clientPriority != "")
-                    {
-                        cmd.Parameters.AddWithValue("p_client_priority", NpgsqlTypes.NpgsqlDbType.Integer, clientPriority.Trim());
-                    }
+                    //if (clientPriority != null && clientPriority != "")
+                    //{
+                    //    cmd.Parameters.AddWithValue("p_client_priority", NpgsqlTypes.NpgsqlDbType.Integer, clientPriority.Trim());
+                    //}
                     if (lastVisisted != null && lastVisisted != "")
                     {
                         cmd.Parameters.AddWithValue("p_last_visited", NpgsqlTypes.NpgsqlDbType.Date, lastVisisted.Trim());
@@ -272,6 +272,7 @@ namespace RouteNavigation
                     if (address != null && address != "")
                     {
                         cmd.Parameters.AddWithValue("p_address", NpgsqlTypes.NpgsqlDbType.Varchar, address.Trim());
+                        DataAccess.UpdateGpsCoordinates(address, id);
                     }
                     if (locationName != null && locationName != "")
                     {
@@ -311,7 +312,6 @@ namespace RouteNavigation
                     Logger.Error(exception);
                 }
 
-                DataAccess.UpdateMatrixWeight(id);
                 DataAccess.RefreshApiCache();
             }
             catch (Exception exception)
@@ -336,9 +336,9 @@ namespace RouteNavigation
             locationSort(sender, "location_name");
         }
 
-        protected void SortByClientPriority_Click(object sender, ImageClickEventArgs e)
+        protected void SortByDistanceFromDepot_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "client_priority");
+            locationSort(sender, "distance_from_source");
         }
 
         protected void SortByAddress_Click(object sender, ImageClickEventArgs e)

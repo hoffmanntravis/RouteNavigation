@@ -8,13 +8,6 @@ namespace RouteNavigation
 {
     public class Config
     {
-        public static class Matrix
-        {
-            public static double priorityMultiplier = 1;
-            public static double daysUntilDueExponent = 1;
-            public static double distanceFromSourceMultiplier = 1;
-            public static double overDueMultiplier = 1;
-        }
 
         public static class Calculation
         {
@@ -29,10 +22,10 @@ namespace RouteNavigation
             public static double nearbyLocationDistance = 20;
             public static double averageCityTravelSpeed = 15;
             public static double averageHighwayTravelSpeed = 50;
-            public static TimeSpan dropOffTime = TimeSpan.FromMinutes(60);
-            public static double minimumSearchDistance = 5;
-            public static double localRadiusTolerancePercent = .25;
-            public static double routeDistanceMaxMiles = 50;
+            public static TimeSpan dropOffTime = TimeSpan.FromMinutes(10);
+            public static double searchMinimumDistance = 5;
+            public static double searchRadiusPercent = .25;
+            public static double maxDistanceFromDepot = 100;
         }
 
         public static class GeneticAlgorithm

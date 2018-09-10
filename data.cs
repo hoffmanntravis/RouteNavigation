@@ -426,29 +426,25 @@ namespace RouteNavigation
                 }
 
                 if (row["minimum_days_until_pickup"] != DBNull.Value)
+                    Config.Calculation.minimDaysUntilPickup = int.Parse(row["minimum_days_until_pickup"].ToString());
+                if (row["current_fill_level_error_margin"] != DBNull.Value)
                     Config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
                 if (row["oil_pickup_average_duration"] != DBNull.Value)
                     Config.Calculation.oilPickupAverageDurationMinutes = TimeSpan.Parse(row["oil_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["grease_pickup_average_duration"] != DBNull.Value)
                     Config.Calculation.greasePickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
-                if (row["matrix_priority_multiplier"] != DBNull.Value)
-                    Config.Matrix.priorityMultiplier = double.Parse(row["matrix_priority_multiplier"].ToString());
-                if (row["matrix_days_until_due_exponent"] != DBNull.Value)
-                    Config.Matrix.daysUntilDueExponent = double.Parse(row["matrix_days_until_due_exponent"].ToString());
-                if (row["matrix_overdue_multiplier"] != DBNull.Value)
-                    Config.Matrix.overDueMultiplier = double.Parse(row["matrix_overdue_multiplier"].ToString());
-                if (row["matrix_distance_from_source"] != DBNull.Value)
-                    Config.Matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
-                if (row["matrix_distance_from_source"] != DBNull.Value)
-                    Config.Matrix.distanceFromSourceMultiplier = double.Parse(row["matrix_distance_from_source"].ToString());
                 if (row["maximum_days_overdue"] != DBNull.Value)
                     Config.Calculation.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
                 if (row["workday_start_time"] != DBNull.Value)
                     Config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
                 if (row["workday_end_time"] != DBNull.Value)
                     Config.Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
-                if (row["route_distance_max_miles"] != DBNull.Value)
-                    Config.Calculation.routeDistanceMaxMiles = int.Parse(row["route_distance_max_miles"].ToString());
+                if (row["max_distance_from_depot"] != DBNull.Value)
+                    Config.Calculation.maxDistanceFromDepot = double.Parse(row["max_distance_from_depot"].ToString());
+                if (row["search_minimum_distance"] != DBNull.Value)
+                    Config.Calculation.searchMinimumDistance = double.Parse(row["search_minimum_distance"].ToString());
+                if (row["search_radius_percent"] != DBNull.Value)
+                    Config.Calculation.searchRadiusPercent = double.Parse(row["search_radius_percent"].ToString());
                 if (row["genetic_algorithm_iterations"] != DBNull.Value)
                     Config.GeneticAlgorithm.Iterations = int.Parse(row["genetic_algorithm_iterations"].ToString());
                 if (row["genetic_algorithm_population_size"] != DBNull.Value)
@@ -535,16 +531,30 @@ namespace RouteNavigation
             return locations;
         }
 
-        public static List<Location> ConvertRouteDetailsDataTableToLocationCoordinates(DataTable dataTable)
+        public static List<Location> ConvertRouteDetailsDataTableToLocations(DataTable dataTable)
         {
             List<Location> locations = new List<Location>();
             foreach (DataRow row in dataTable.Rows)
             {
                 Location location = new Location();
+                if (row["last_visited"] != DBNull.Value)
+                    location.lastVisited = DateTime.Parse(row["last_visited"].ToString());
+                if (row["client_priority"] != DBNull.Value)
+                    location.clientPriority = int.Parse(row["client_priority"].ToString());
+                if (row["location_name"] != DBNull.Value)
+                    location.locationName = row["location_name"].ToString();
+                if (row["address"] != DBNull.Value)
+                    location.address = row["address"].ToString();
+                if (row["days_until_due"] != DBNull.Value)
+                    location.daysUntilDue = double.Parse(row["days_until_due"].ToString());
                 if (row["coordinates_latitude"] != DBNull.Value)
                     location.coordinates.lat = double.Parse(row["coordinates_latitude"].ToString());
                 if (row["coordinates_longitude"] != DBNull.Value)
                     location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
+                if (row["distance_from_source"] != DBNull.Value)
+                    location.distanceFromDepot = double.Parse(row["distance_from_source"].ToString());
+                if (row["matrix_weight"] != DBNull.Value)
+                    location.matrixWeight = double.Parse(row["matrix_weight"].ToString());
                 locations.Add(location);
             }
             return locations;
@@ -697,24 +707,27 @@ namespace RouteNavigation
         public static void UpdateDistanceFromSource(List<Location> locations)
         {
             foreach (Location location in locations)
+                UpdateDistanceFromSource(location);
+        }
+
+        public static void UpdateDistanceFromSource(Location location)
+        {
+            try
             {
-                try
-                {
-                    NpgsqlCommand cmd = new NpgsqlCommand("update_location");
-                    cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.id);
-                    cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.distanceFromDepot);
-                    RunStoredProcedure(cmd);
-                }
-                catch (Exception exception)
-                {
-                    Logger.Error("Unable to append distance data.");
-                    Logger.Error(exception);
-                }
+                NpgsqlCommand cmd = new NpgsqlCommand("update_location");
+                cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.id);
+                cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.distanceFromDepot);
+                RunStoredProcedure(cmd);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error("Unable to append distance data.");
+                Logger.Error(exception);
             }
         }
 
 
-        public static void UpdateFeature(string name, bool enabled)
+            public static void UpdateFeature(string name, bool enabled)
         {
             try
             {
@@ -773,33 +786,6 @@ namespace RouteNavigation
             }
         }
 
-
-        public static void UpdateMatrixWeight(List<Location> locations)
-        {
-            foreach (Location location in locations)
-            {
-                try
-                {
-                    NpgsqlCommand cmd = new NpgsqlCommand("update_location");
-                    cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.id);
-
-                    double matrixWeight = RouteCalculator.CalculateWeight(location);
-                    Logger.Info("Updating {0} with matrix weight of {1}", location.locationName, matrixWeight);
-
-                    if (matrixWeight is double.NaN)
-                        cmd.Parameters.AddWithValue("p_matrix_weight", NpgsqlTypes.NpgsqlDbType.Double, DBNull.Value);
-                    else
-                        cmd.Parameters.AddWithValue("p_matrix_weight", NpgsqlTypes.NpgsqlDbType.Double, matrixWeight);
-                    RunStoredProcedure(cmd);
-                }
-                catch (Exception exception)
-                {
-                    Logger.Error("Unable to append Matrix Weight data for the RouteCalculator Class.");
-                    Logger.Error(exception);
-                }
-            }
-        }
-
         public static void UpdateDaysUntilDue()
         {
             try
@@ -812,14 +798,6 @@ namespace RouteNavigation
                 Logger.Error("Unable to update days until due for the RouteCalculator Class.");
                 Logger.Error(exception);
             }
-        }
-
-        public static void UpdateMatrixWeight(int id)
-        {
-            Location location = GetLocationById(id);
-            List<Location> locationList = new List<Location>();
-            locationList.Add(location);
-            UpdateMatrixWeight(locationList);
         }
 
         public static void UpdateGpsCoordinates(string address, int id)

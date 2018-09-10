@@ -16,11 +16,11 @@ namespace RouteNavigation
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         private int iterations;
         private int populationSize;
-        private int neighborCount;
         private int tournamentSize;
         private int tournamentWinnerCount;
         private int breedersCount;
         private int offSpringPoolSize;
+        private int neighborCount;
         double crossoverProbability;
 
         double elitismRatio;
@@ -39,7 +39,7 @@ namespace RouteNavigation
         static private Random rng = new Random();
         private int batchId = DataAccess.GetNextRouteBatchId();
         private RouteCalculator bestCalc;
-        public List<List<Location>> initializePopulation(int populationSize)
+        public List<List<Location>> InitializePopulation(int populationSize)
         {
             if (populationSize < 2)
             {
@@ -62,10 +62,10 @@ namespace RouteNavigation
             return startingPopulation;
         }
 
-        public bool testInitializePopulation()
+        public bool TestInitializePopulation()
         {
             int unitPopulation = 5;
-            List<List<Location>> testPopulation = initializePopulation(unitPopulation);
+            List<List<Location>> testPopulation = InitializePopulation(unitPopulation);
             if (testPopulation.Count != unitPopulation)
                 return false;
 
@@ -84,7 +84,7 @@ namespace RouteNavigation
             return true;
         }
 
-        public void detectDuplicates(List<RouteCalculator> calcs)
+        public void DetectDuplicates(List<RouteCalculator> calcs)
         {
             List<RouteCalculator> duplicateCalcs = calcs.GroupBy(c => c.GetHashCode()).Where(g => g.Skip(1).Any()).SelectMany(c => c).ToList();
             int duplicatesCount = duplicateCalcs.Count;
@@ -92,7 +92,7 @@ namespace RouteNavigation
             Logger.Info("There are " + duplicateCalcs.Count + " Duplicates");
         }
 
-        public void calculateBestRoutes()
+        public void CalculateBestRoutes()
         {
             if (Monitor.TryEnter(calcLock))
             {
@@ -150,22 +150,21 @@ namespace RouteNavigation
 
                     Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));
 
-                    List<List<Location>> startingPopulation = initializePopulation(populationSize);
+                    List<List<Location>> startingPopulation = InitializePopulation(populationSize);
                     //create a batch id for identifying a series of routes calculated together
                     DataAccess.InsertRouteBatch();
 
                     //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
 
                     RouteCalculator.UpdateDistanceFromSource(allLocations);
-                    RouteCalculator.UpdateMatrixWeight(allLocations);
                     DataAccess.UpdateDaysUntilDue();
 
                     List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
 
                     Logger.Info("Threading intialized locations pool into calculation class instances");
 
-                    fitnessCalcs = threadCalculations(startingPopulation, fitnessCalcs);
-
+                    fitnessCalcs = ThreadCalculations(startingPopulation, fitnessCalcs);
+                    Logger.Info("location count at after threading is {0}", fitnessCalcs[0].metadata.processedLocations.Count);
                     Logger.Info("Created random locations pool");
 
                     fitnessCalcs.SortByFitnessAsc();
@@ -227,19 +226,19 @@ namespace RouteNavigation
             calcs.RemoveRange(0, eliteCount);
             Logger.Trace(String.Format("Preserving {0} elites", eliteCount));
 
-            List<RouteCalculator> breeders = geneticSelection(calcs);
+            List<RouteCalculator> breeders = GeneticSelection(calcs);
 
             Logger.Trace(string.Format("breeders count is: {0}", breeders.Count));
 
-            List<List<Location>> offspring = produceOffspring(breeders);
+            List<List<Location>> offspring = ProduceOffspring(breeders);
 
             Logger.Trace(string.Format("Offspring count is: {0}", offspring.Count));
 
             //Add in mutated offspring
             Logger.Trace(string.Format("running potential mutation of {0} offspring", offspring.Count));
-            offspring = geneticMutation(offspring);
 
-            calcs = threadCalculations(offspring, calcs);
+            offspring = GeneticMutation(offspring);
+            calcs = ThreadCalculations(offspring, calcs);
 
             /*List<List<Location>> randomSampleMutate = new List<List<Location>>();
             int mutationCount = Convert.ToInt32(Math.Round(mutationProbability * decayFunction() * calcs.Count));
@@ -270,27 +269,25 @@ namespace RouteNavigation
                 calcs.Remove(calcs.First());
 
             Logger.Trace(String.Format("Pool size is: {0}", calcs.Count));
-
             return calcs;
         }
 
-        public RouteCalculator runCalculations(List<Location> list)
+        public RouteCalculator RunCalculations(List<Location> list)
         {
-            RouteCalculator calc = new RouteCalculator(allLocations, possibleLocations, availableVehicles);
+            RouteCalculator calc = new RouteCalculator(allLocations, availableVehicles);
             calc.neighborCount = neighborCount;
             calc.CalculateRoutes(list);
             return calc;
         }
 
-        public List<RouteCalculator> threadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
+        public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
         {
-
             SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
             foreach (List<Location> locations in locationsList)
             {
                 Thread thread = new Thread(Action =>
                 {
-                    RouteCalculator c = runCalculations(locations);
+                    RouteCalculator c = RunCalculations(locations);
                     lock (newCalcLock)
                         calcs.Add(c);
                 });
@@ -306,12 +303,12 @@ namespace RouteNavigation
             return calcs;
         }
 
-        public List<RouteCalculator> geneticSelection(List<RouteCalculator> parents)
+        public List<RouteCalculator> GeneticSelection(List<RouteCalculator> parents)
         {
             Logger.Trace(string.Format("Performing genetic selection from {0} parents", parents.Count));
             Logger.Trace(string.Format("Parent metadata for parent 0 is processed locations: {0}, orphaned locations: {1} ", parents[0].metadata.processedLocations.Count, parents[0].metadata.orphanedLocations.Count));
 
-            int tournamentSizeCount = (int)Math.Round(((tournamentSize * growthFunction())), 0);
+            int tournamentSizeCount = (int)Math.Round(((tournamentSize * GrowthFunction())), 0);
             if (tournamentSizeCount < 2)
                 tournamentSizeCount = 2;
             Logger.Info(string.Format("Tournament size is: {0}", tournamentSizeCount));
@@ -326,7 +323,7 @@ namespace RouteNavigation
                     RouteCalculator contestant = parents[randomIndex];
                     contestants.Add(contestant);
                 }
-                List<RouteCalculator> winners = runTournament(contestants);
+                List<RouteCalculator> winners = RunTournament(contestants);
                 foreach (RouteCalculator winner in winners)
                     breeders.Add(winner);
             }
@@ -336,7 +333,7 @@ namespace RouteNavigation
             return breeders;
         }
 
-        public List<List<Location>> produceOffspring(List<RouteCalculator> breeders)
+        public List<List<Location>> ProduceOffspring(List<RouteCalculator> breeders)
         {
 
             Logger.Trace(string.Format("Producing offspring from {0} breeders", breeders.Count));
@@ -367,11 +364,11 @@ namespace RouteNavigation
                 List<Location> parentALocations = new List<Location>(parentA.metadata.processedLocations);
                 List<Location> parentBLocations = new List<Location>(parentB.metadata.processedLocations);
 
-                double crossoverChance = crossoverProbability * growthFunction();
+                double crossoverChance = crossoverProbability * GrowthFunction();
                 Logger.Trace(String.Format("Crossover chance is {0}", crossoverChance));
-                if (growthFunction() * rng.Next(101) <= crossoverChance * 100)
+                if (GrowthFunction() * rng.Next(101) <= crossoverChance * 100)
                 {
-                    offspring.Add(geneticCrossoverEdgeRecombine(parentALocations, parentBLocations));
+                    offspring.Add(GeneticCrossoverEdgeRecombine(parentALocations, parentBLocations));
                 }
                 else
                 {
@@ -462,7 +459,7 @@ namespace RouteNavigation
         }
         */
 
-        public List<Location> geneticCrossoverEdgeRecombine(List<Location> parentALocations, List<Location> parentBLocations)
+        public List<Location> GeneticCrossoverEdgeRecombine(List<Location> parentALocations, List<Location> parentBLocations)
         {
             //Get Neighbors for the purposes of edge recombination.  Only assign neighbors here since we don't need them elsewhere.
             parentALocations.Where(a => a.neighbors.Count != neighborCount).ToList().ForEach(a => a.neighbors = RouteCalculator.FindNeighbors(a, parentALocations, neighborCount));
@@ -545,14 +542,14 @@ namespace RouteNavigation
 
 
 
-        public List<List<Location>> geneticMutation(List<List<Location>> mutateLocationsList)
+        public List<List<Location>> GeneticMutation(List<List<Location>> mutateLocationsList)
         {
 
             List<int> indexes = new List<int>();
             //if rounding causes the pool size to be 0 with a positive mutationRatio, round up to 1
             Logger.Trace(string.Format("Mutation method received {0} locations", mutateLocationsList.Count));
 
-            double mutationChance = mutationProbability * decayFunction();
+            double mutationChance = mutationProbability * DecayFunction();
             //rng.Next is exclusive, so to have probabilities 0 to 100 we need to extend the range to 101
             Logger.Trace(String.Format("Mutation chance is {0}", mutationChance));
             if (rng.Next(101) <= mutationChance * 100)
@@ -560,7 +557,7 @@ namespace RouteNavigation
                 foreach (List<Location> mutateLocations in mutateLocationsList)
                 {
                     //next couple lines effectively ensure a mutation gene count of at least 1
-                    int upperBound = Convert.ToInt32(Math.Round(decayFunction() * mutationAlleleMax));
+                    int upperBound = Convert.ToInt32(Math.Round(DecayFunction() * mutationAlleleMax));
 
                     int mutationGeneQuantity = rng.Next(1, Math.Max(1, upperBound));
                     Logger.Trace(String.Format("mutation gene quantity is {0}", mutationGeneQuantity));
@@ -596,7 +593,7 @@ namespace RouteNavigation
             return mutateLocationsList;
         }
 
-        public List<RouteCalculator> runTournament(List<RouteCalculator> contestants)
+        public List<RouteCalculator> RunTournament(List<RouteCalculator> contestants)
         {
             Logger.Trace(string.Format("Running tournament with {0} contestants", contestants.Count));
 
@@ -616,7 +613,7 @@ namespace RouteNavigation
             return winners;
         }
 
-        private int generateRouteHash(List<Location> locations)
+        private int GenerateRouteHash(List<Location> locations)
         {
             int hash = 0;
             try
@@ -638,7 +635,7 @@ namespace RouteNavigation
             return hash;
         }
 
-        private double decayFunction()
+        private double DecayFunction()
         {
             if (toggleIterationsExponent == true)
             {
@@ -650,7 +647,7 @@ namespace RouteNavigation
                 return 1;
         }
 
-        private double growthFunction()
+        private double GrowthFunction()
         {
             if (toggleIterationsExponent == true)
             {
