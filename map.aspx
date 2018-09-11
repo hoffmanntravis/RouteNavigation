@@ -21,9 +21,34 @@
             var routeCount = <%=routeCount %>;
             var locationNames = locationNames;
             var locationMarkers = [];
+
+            var iconImage = L.icon({
+                iconUrl: '/leaflet/images/marker-icon.png',
+                //shadowUrl: '/leaflet/images/marker-shadow.png',
+
+                iconSize: [18.75, 30], // size of the icon
+                //shadowSize: [21, 21], // size of the shadow
+                iconAnchor: [9.375, 30], // point of the icon which will correspond to marker's location
+                //shadowAnchor: [0, 0],  // the same for the shadow
+                //popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
+            });
+
+
+
             for (i = 0; i < routes.length; i++) {
                 for (j = 0; j < routes[i].allLocations.length; j++) {
-                    var marker = L.marker([routes[i].allLocations[j].coordinates.lat, routes[i].allLocations[j].coordinates.lng]).bindTooltip(routes[i].allLocations[j].locationName);
+                    var location = routes[i].allLocations[j];
+                    var locationNameText = "Name: " + location.locationName
+                    var locationAddressText = "Address: " + location.address
+                    var locationCoordinates = "Coordinates: " + "(Lat: " + location.coordinates.lat + ",Lng: " + location.coordinates.lng + ")";
+                    var locationLastVisited = "Last Visited: " + parseJsonDate(location.lastVisited);
+                    var locationDaysUntilDue = "Days Until Due: " + location.daysUntilDue;
+                    var locationDistanceFromDepot = "Distance From Depot: " + location.distanceFromDepot + " miles";
+                    var popup = L.popup().setContent(locationNameText + "<br>" + locationAddressText + "<br>" + locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot + "<br>" + locationLastVisited);
+
+                    var marker = L.marker([routes[i].allLocations[j].coordinates.lat, routes[i].allLocations[j].coordinates.lng], { icon: iconImage })
+                    marker.bindTooltip(routes[i].allLocations[j].locationName);
+                    marker.bindPopup(popup);
                     locationMarkers.push(marker);
                 }
             };
@@ -58,6 +83,7 @@
             var previousRouteId = null;
             var currentRouteId = null;
             var polyLines = [];
+            var routeUrls = [];
             for (i = 0; i < routes.length; i++) {
                 var points = [[]];
                 for (j = 0; j < routes[i].allLocations.length - 1; j++) {
@@ -66,13 +92,20 @@
                     points.push([pointA, pointB]);
                 }
                 var color = "rgb(" + routes[i].color.R + " ," + routes[i].color.G + "," + routes[i].color.B + ")";
+                var routeUrl = "/routeDetails?routeId=" + routes[i].id;
                 var multiPolyLine = new L.polygon(points, {
                     color: color,
                     weight: 4,
                     opacity: 1,
-                    smoothFactor: 50
+                    smoothFactor: 50,
+                    url: routeUrl
                 });
 
+                var toolTip = L.tooltip({ sticky: true }).setContent("Route ID: " + routes[i].id);
+                multiPolyLine.bindTooltip(toolTip);
+
+
+                multiPolyLine.on("click", function (event) { window.open(event.target.options.url); });
                 var overlayName = routes[i].id;
                 var overlayRoutes = {
                 };
@@ -85,7 +118,9 @@
 
         };
 
-
+        function parseJsonDate(jsonDateString) {
+            return new Date(parseInt(jsonDateString.replace('/Date(', '')));
+        }
 
         function connectDots(data) {
             var features = data.features,

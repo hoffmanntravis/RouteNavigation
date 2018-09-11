@@ -22,7 +22,7 @@ namespace RouteNavigation
         public double mapXCoordinate;
         public double mapYCoordinate;
         public int routeCount;
-
+        private Random random = new Random();
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up
@@ -43,7 +43,7 @@ namespace RouteNavigation
                 {
                     List<Location> locations = DataAccess.ConvertRouteDetailsDataTableToLocations(dtRoute);
                     routeCount = locations.GroupBy(l => l.routeId).Count();
-                    int colorIndex = 0;
+
                     List<Color> colors = new List<Color>();
                     if (routeCount == 1)
                     {
@@ -51,12 +51,15 @@ namespace RouteNavigation
                     }
                     else
                     {
-                        for (double i = 0; i < 1; i += (double)((double)1 / (double)routeCount))
+                        for (double i = 0; i < 1; i += (double)((double) 1 / (double)routeCount))
                             colors.Add(HSL2RGB(i, 0.5, 0.5));
                     }
 
                     List<Route> routes = new List<Route>();
                     var locationsGroup = locations.GroupBy(l => l.routeId);
+
+                    int colorIndex = 0;
+                    colors.Shuffle(random);
                     foreach (var location in locationsGroup)
                     {
                         Route r = new Route();
