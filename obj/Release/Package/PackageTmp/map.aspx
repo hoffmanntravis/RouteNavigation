@@ -15,17 +15,19 @@
             var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
             var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
 
-            var coordinates = <%=jsonCoordinates %>;
+            var locations = <%=locationsJson %>;
             var mapX = <%=mapXCoordinate %>;
             var mapY = <%=mapYCoordinate %>;
-
-            var locations = [];
-            for (index = 0; index < coordinates.length; index++) {
-                var marker = L.marker([coordinates[index].lat, coordinates[index].lng]);
-                locations.push(marker);
+            var locationNames = locationNames;
+            var locationMarkers = [];
+            for (index = 0; index < locations.length; index++) {
+                var marker = L.marker([locations[index].coordinates.lat, locations[index].coordinates.lng]).bindTooltip(locations[index].locationName);
+                locationMarkers.push(marker);
             };
 
-            var locationsLayerGroup = L.layerGroup(locations);
+            //http://www.liedman.net/leaflet-routing-machine/api/
+
+            var locationsLayerGroup = L.layerGroup(locationMarkers);
 
             map = new L.Map('map',
                 {
@@ -51,9 +53,9 @@
             $("#map").height($(window).height() * .9);
             map.invalidateSize();
 
-            for (index = 0; index < coordinates.length - 1; index++) {
-                var pointA = new L.LatLng(coordinates[index].lat, coordinates[index].lng);
-                var pointB = new L.LatLng(coordinates[index + 1].lat, coordinates[index + 1].lng);
+            for (index = 0; index < locations.length - 1; index++) {
+                var pointA = new L.LatLng(locations[index].coordinates.lat, locations[index].coordinates.lng);
+                var pointB = new L.LatLng(locations[index + 1].coordinates.lat, locations[index + 1].coordinates.lng);
                 var pointList = [pointA, pointB];
 
                 var firstpolyline = new L.Polyline(pointList, {
@@ -62,7 +64,7 @@
                     opacity: 1,
                     smoothFactor: 50
                 });
-                
+
                 firstpolyline.addTo(map);
 
 
@@ -84,12 +86,6 @@
                 }
                 return c;
             }
-
-
-        }
-
-        function addMarker(x, y) {
-            L.marker([x,y]).addTo(map);
         }
 
     </script>

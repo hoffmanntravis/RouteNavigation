@@ -19,7 +19,7 @@ namespace RouteNavigation
         public Metadata metadata = new Metadata();
         public List<Route> routes = new List<Route>();
         public Location origin = Config.Calculation.origin;
-        public int neighborCount = 60;
+        public uint neighborCount = 60;
         public Guid activityId;
         private List<Location> allLocations;
         private List<Vehicle> availableVehicles;
@@ -70,22 +70,45 @@ namespace RouteNavigation
                         currentVehicles = availableVehicles.ToList();
                         startDate = AdvanceDateToNextWeekday(startDate);
                     }
-
+                    Logger.Trace("startdate is {0}", startDate);
                     //Remove any locations that would be picked up too soon to be relevent.  We'll invoke a recursive call at the end to deal with these.
-                    List<Location> laterDateLocations = GetLaterDateLocations(availableLocations);
-                    laterDateLocations.ForEach(l => availableLocations.Remove(l));
+                    List<Location> availableLocationsWithPostponedLocations = availableLocations.ToList();
+                    List<Location> postPonedLocations = GetLaterDateLocations(availableLocations);
+                    availableLocations = availableLocations.Except(postPonedLocations).ToList();
 
                     //If all that is left are locations that need to be processed later, advance the date accordingly
-                    if (laterDateLocations.Count > 0 && availableLocations.Count == 0)
+                    if (postPonedLocations.Count > 0 && availableLocations.Count == 0)
                     {
-                        Location firstDueLocation = laterDateLocations.OrderBy(a => a.daysUntilDue).First();
+                        Location firstDueLocation = postPonedLocations.OrderBy(a => a.daysUntilDue).First();
                         double daysElapsed = (startDate - firstDueLocation.lastVisited).TotalDays;
                         double daysToAdd = Config.Calculation.minimDaysUntilPickup - daysElapsed;
                         currentVehicles = availableVehicles.ToList();
-                        startDate = startDate.AddDays(daysToAdd);
-                        availableLocations = laterDateLocations.ToList();
+
+                        startDate = startDate.AddDays((uint)daysToAdd);
+                        availableLocations = postPonedLocations.ToList();
+                        if (startDate.DayOfWeek == DayOfWeek.Saturday || startDate.DayOfWeek == DayOfWeek.Sunday)
+                            startDate = AdvanceDateToNextWeekday(startDate);
                         continue;
                     }
+
+                    //Reorganize the list of locations so that locations which require service now due to being overdue or would be overdue relative to the schedule will be get priority.  
+                    //Preserve the overall order that the genetic algorithm set by simply moving them from original position in the list to the front in the same order otherwise.
+
+                    List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations);
+                    int serviceNowLocationsCount = (int)Math.Floor((double)(serviceNowLocations.Count / currentVehicles.Count));
+                    serviceNowLocations = serviceNowLocations.Take(serviceNowLocationsCount).ToList();
+
+                    //If every location is overdue, proceed as normal.  There is no point in attempting to rearrange routes.
+                    if (availableLocations.Count == serviceNowLocations.Count)
+                        serviceNowLocations.Clear();
+
+                    availableLocations = availableLocations.Except(serviceNowLocations).ToList();
+
+                    Logger.Trace("There are {0} locations that will be moved to the front of the list and receive priority on projected date {1}", serviceNowLocations.Count, startDate);
+
+
+                    //serviceNowLocations.ForEach(l => availableLocations.Remove(l));
+                    //availableLocations.InsertRange(0, serviceNowLocations);
 
                     //sort vehicles by size descending.  We do this to ensure that large vehicles are handled first since they have a limited location list available to them.
                     //currentVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
@@ -95,7 +118,7 @@ namespace RouteNavigation
                     //Find the highest priority location that the truck can serve
                     //List<Location> highestPriorityLocations = GetHighestPrioritylocations(compatibleLocations, 1);
 
-                    Route potentialRoute = new Route(origin);
+                    Route potentialRoute = new Route();
 
                     DateTime currentTime = startTime;
                     double currentDistance = 0;
@@ -196,8 +219,6 @@ namespace RouteNavigation
                         //searchStart = nextLocation;
                         currentTime = potentialTime;
                         previousLocation = nextLocation;
-                        //Add later date locations back in, so once an eligible date becomes applicable they will be processed.
-                        availableLocations.AddRange(laterDateLocations);
                     }
 
                     //Add the time to travel back to the depot
@@ -220,6 +241,17 @@ namespace RouteNavigation
                     }
                     */
 
+                    for (int x = 0; x < Math.Min(serviceNowLocations.Count, potentialRoute.waypoints.Count); x++)
+                    {
+                        Location locationToReplace = FindNearestLocation(serviceNowLocations[x], potentialRoute.waypoints.Except(serviceNowLocations).ToList());
+                        int replacementLocationIndex = potentialRoute.waypoints.IndexOf(locationToReplace);
+                        Logger.Trace("{0} needs service now or it will become overdue.  Swapping with {1} to fulfill this requirement.", serviceNowLocations[x], locationToReplace.locationName);
+                        potentialRoute.waypoints[replacementLocationIndex] = serviceNowLocations[x];
+                    }
+
+                    if (potentialRoute.waypoints.Count == 0)
+                        throw new Exception("Route waypoints count is 0.  Something went wrong.");
+
                     potentialRoute.assignedVehicle = vehicle;
                     potentialRoute.waypoints.ForEach(r => r.assignedVehicle = vehicle);
                     currentVehicles.Remove(vehicle);
@@ -234,6 +266,9 @@ namespace RouteNavigation
                     potentialRoute.averageLocationDistance = CalculateAverageLocationDistance(potentialRoute);
                     Logger.Trace("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles);
                     routes.Add(potentialRoute);
+
+                    //Add later date locations back in, so once an eligible date becomes applicable they will be processed.  A copy is used to preserve the original order as much as possible minus locations that were assigned to a route.
+                    availableLocations = availableLocationsWithPostponedLocations.Except(potentialRoute.waypoints).ToList();
                 }
 
                 /*
@@ -614,6 +649,19 @@ namespace RouteNavigation
             return laterDateLocations;
         }
 
+        private List<Location> GetRequireServiceNowLocations(List<Location> availableLocations)
+        {
+            List<Location> serviceNowLocations = new List<Location>();
+            foreach (Location l in availableLocations)
+            {
+                double daysElapsed = (startDate - l.lastVisited).TotalDays;
+                //Set interval days to interval days -1 so we can be 'on time' instead of late
+                if (daysElapsed >= l.pickupIntervalDays - 1)
+                    serviceNowLocations.Add(l);
+            }
+            return serviceNowLocations;
+        }
+
         public class Metadata
         {
             //public double fitnessDistanceWeight = .5;
@@ -695,7 +743,7 @@ namespace RouteNavigation
             public double distance;
         }
 
-        public static List<Location> FindNeighbors(Location source, List<Location> locations, int neighborCount = 50)
+        public static List<Location> FindNeighbors(Location source, List<Location> locations, uint neighborCount = 50)
         {
             List<NeighborsDistance> neighborsDistance = new List<NeighborsDistance>();
 
@@ -718,7 +766,7 @@ namespace RouteNavigation
             //neighborCount = neighborsDistance.Count;
 
             // take the first 'neighborCount' (n) of just the neighbors, not the distance, and convert to list for return
-            List<Location> neighbors = neighborsDistance.Select(a => a.neighbor).Take(neighborCount).ToList();
+            List<Location> neighbors = neighborsDistance.Select(a => a.neighbor).Take((int)neighborCount).ToList();
             return neighbors;
         }
 

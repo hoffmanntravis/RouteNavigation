@@ -51,9 +51,9 @@
                             <b>Location Name</b>
                             <asp:ImageButton ID="imgSortLocationName" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationName_Click" />
                         </td>
-                        <td id="tdClientPriority" onclick="tdClientPriority_click" runat="server">
-                            <b>Client Priority</b>
-                            <asp:ImageButton ID="imgSortClientPriority" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByClientPriority_Click" />
+                        <td id="tdDistanceFromDepot" onclick="tdDistanceFromDepot_click" runat="server">
+                            <b>Distance from Depot</b>
+                            <asp:ImageButton ID="imgSortDistanceFromDepot" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByDistanceFromDepot_Click" />
                         </td>
                         <td id="tdAddress" width="400" runat="server">
                             <b>Address</b>
@@ -134,7 +134,7 @@
                         <asp:Label ID="label1" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label2" runat="server" Text='<%# Eval("client_priority") %>'></asp:Label>
+                        <asp:Label ID="label2" runat="server" Text='<%# Eval("distance_from_source") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label3" runat="server" Text='<%# Eval("address") %>'></asp:Label>
@@ -188,7 +188,7 @@
                     <asp:Label ID="label1" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label2" runat="server" Text='<%# Eval("client_priority") %>'></asp:Label>
+                    <asp:Label ID="label2" runat="server" Text='<%# Eval("distance_from_source") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label3" runat="server" Text='<%# Eval("address") %>'></asp:Label>
@@ -241,7 +241,7 @@
                     <asp:TextBox class="tableInput" ID="txtEditClientName" runat="server" Text='<%# Bind("location_name") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditClientPriority" runat="server" Text='<%# Bind("client_priority") %>'></asp:TextBox>
+                    <asp:label class="tableInput" ID="lblDistanceFromDepot" runat="server" Text='<%# Bind("distance_from_source") %>'></asp:label>
                 </td>
                 <td>
                     <asp:TextBox class="tableInput" ID="txtEditAddress" runat="server" Text='<%# Bind("address") %>'></asp:TextBox>
@@ -295,9 +295,6 @@
                     </asp:Panel>
                 </td>
                 <td>
-                    <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertClientPriority" placeholder="1" runat="server" Text='<%# Bind("client_priority") %>'></asp:TextBox>
-                    </asp:Panel>
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">

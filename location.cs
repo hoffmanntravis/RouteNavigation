@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Web;
 
@@ -10,6 +11,7 @@ namespace RouteNavigation
         public Coordinates coordinates = new Coordinates();
         public Vehicle assignedVehicle;
         public int clientPriority;
+        public int routeId;
         public int id;
         public int pickupIntervalDays;
         public int vehicleSize = int.MaxValue;
@@ -21,9 +23,10 @@ namespace RouteNavigation
         public double daysUntilDue = double.NaN;
         public double matrixWeight;
         public double distanceFromDepot;
-        public DateTime pickupWindowStartTime = DateTime.MinValue;
-        public DateTime pickupWindowEndTime = DateTime.MinValue;
+        public DateTime pickupWindowStartTime = default(DateTime);
+        public DateTime pickupWindowEndTime = default(DateTime);
         public string type;
+        
 
         public DateTime lastVisited = default(DateTime);
         public double currentGallonsEstimate;

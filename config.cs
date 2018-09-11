@@ -17,8 +17,8 @@ namespace RouteNavigation
             public static DateTime workdayEndTime = DateTime.MinValue;
             public static double oilPickupAverageDurationMinutes = 30;
             public static double greasePickupAverageDurationMinutes = 30;
-            public static int minimDaysUntilPickup = 0;
-            public static int maximumDaysOverdue = 60;
+            public static uint minimDaysUntilPickup = 0;
+            public static uint maximumDaysOverdue = 60;
             public static double nearbyLocationDistance = 20;
             public static double averageCityTravelSpeed = 15;
             public static double averageHighwayTravelSpeed = 50;
@@ -30,17 +30,17 @@ namespace RouteNavigation
 
         public static class GeneticAlgorithm
         {
-            public static int Iterations = 50;
-            public static int PopulationSize = 100;
-            public static int NeighborCount = 200;
-            public static int TournamentSize = 10;
-            public static int TournamentWinnerCount = 1;
-            public static int BreederCount = 4;
-            public static int OffspringPoolSize = 2;
+            public static uint Iterations = 50;
+            public static uint PopulationSize = 100;
+            public static uint NeighborCount = 200;
+            public static uint TournamentSize = 10;
+            public static uint TournamentWinnerCount = 1;
+            public static uint BreederCount = 4;
+            public static uint OffspringPoolSize = 2;
             public static double CrossoverProbability = .25;
             public static double ElitismRatio = .001;
             public static double MutationProbability = .05;
-            public static int MutationAlleleMax = 1;
+            public static uint MutationAlleleMax = 1;
             public static double GrowthDecayExponent = 1;
         }
 

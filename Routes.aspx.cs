@@ -26,25 +26,34 @@ namespace RouteNavigation
 
         private static Object calcLock = new Object();
         private static string calculateRoutesText = "Calculate Routes";
-            private static string calculateRoutesCancelText = "Cancel Calculations";
+        private static string calculateRoutesCancelText = "Cancel Calculations";
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (!(Monitor.TryEnter(calcLock)))
-                BtnCalculateRoutes.Text = calculateRoutesCancelText;
-            else
+            try
             {
-                BtnCalculateRoutes.Text = calculateRoutesText;
-                Monitor.Exit(calcLock);
+                if (!(Monitor.TryEnter(calcLock)))
+                    BtnCalculateRoutes.Text = calculateRoutesCancelText;
+                else
+                {
+                    BtnCalculateRoutes.Text = calculateRoutesText;
+                    Monitor.Exit(calcLock);
+                }
+
+                DataAccess.PopulateConfig();
+
+                if (!Page.IsPostBack)
+                {
+                    DataAccess.UpdateDbConfigWithApiStrings();
+                    BindListView();
+                }
             }
-
-            DataAccess.PopulateConfig();
-
-            if (!Page.IsPostBack)
+            catch (Exception exception)
             {
-                DataAccess.UpdateDbConfigWithApiStrings();
-                BindListView();
+                Logger.Error(exception);
+                routeValidation.IsValid = false;
+                routeValidation.ErrorMessage = exception.Message;
             }
-        }
+}
         protected void RoutesListView_PagePropertiesChanging(object sender, EventArgs e)
         {
 
@@ -52,7 +61,7 @@ namespace RouteNavigation
 
         protected void BtnCancelCalculation_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         protected void BtnCalculateRoutes_Click(object sender, EventArgs e)
@@ -120,16 +129,26 @@ namespace RouteNavigation
 
         protected void BindListView()
         {
-            dataTable = DataAccess.GetRouteInformationData();
-            if (dataTable.Rows.Count != 0)
+            try
             {
-                activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows select dr["activity_id"]).FirstOrDefault().ToString();
+                dataTable = DataAccess.GetRouteInformationData();
+                if (dataTable.Rows.Count != 0)
+                {
+                    activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows select dr["activity_id"]).FirstOrDefault().ToString();
+                }
+                RoutesListView.DataSource = dataTable;
+                extensions.RoundDataTable(dataTable, 2);
+                RoutesListView.ItemPlaceholderID = "itemPlaceHolder";
+                RoutesListView.DataBind();
             }
-            RoutesListView.DataSource = dataTable;
-            extensions.RoundDataTable(dataTable, 2);
-            RoutesListView.ItemPlaceholderID = "itemPlaceHolder";
-            RoutesListView.DataBind();
+            catch (Exception exception)
+            {
+                Logger.Error(exception);
+                routeValidation.IsValid = false;
+                routeValidation.ErrorMessage = exception.Message;
+            }
+
         }
     }
-
 }
+

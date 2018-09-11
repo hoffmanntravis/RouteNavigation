@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Web;
 
@@ -12,17 +13,17 @@ namespace RouteNavigation
         public DateTime date;
         public double distanceMiles;
         public Location origin;
-
+        public Color color = new Color();
         public List<Location> waypoints = new List<Location>();
         public string mapsUrl;
         public Vehicle assignedVehicle;
         public List<Location> allLocations = new List<Location>();
         public double averageLocationDistance;
-
+        /*
         public Route(Location o)
         {
             origin = o;
         }
-
+        */
     }
 }

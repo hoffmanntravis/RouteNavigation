@@ -13,7 +13,7 @@
 
     <div class="divHeader">
         <asp:Button CssClass="headerRowRight" ID="BtnExportCsv" runat="server" Text="Export data to .CSV" Style="float: right;" OnClick="BtnExportCsv_Click" />
-        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes"  OnClientClick="this.disabled = true; this.value = 'Calculating...';checkCalcStatus();" UseSubmitBehavior="false" OnClick="BtnCalculateRoutes_Click" Text="Recalculate Routes" ToolTip="Use this button to recalculate routes based on latest location and vehicle data." runat="server" Style="float: left;" />
+        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes"  OnClientClick="this.value = 'Cancel Calculations';checkCalcStatus();" UseSubmitBehavior="false" OnClick="BtnCalculateRoutes_Click" Text="Recalculate Routes" ToolTip="Use this button to recalculate routes based on latest location and vehicle data." runat="server" Style="float: left;" />
     </div>
     <div></div>
     <asp:Panel ID="calculatingPanel" UpdateMode="Conditional" runat="server">

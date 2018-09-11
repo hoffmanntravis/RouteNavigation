@@ -426,7 +426,7 @@ namespace RouteNavigation
                 }
 
                 if (row["minimum_days_until_pickup"] != DBNull.Value)
-                    Config.Calculation.minimDaysUntilPickup = int.Parse(row["minimum_days_until_pickup"].ToString());
+                    Config.Calculation.minimDaysUntilPickup = uint.Parse(row["minimum_days_until_pickup"].ToString());
                 if (row["current_fill_level_error_margin"] != DBNull.Value)
                     Config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
                 if (row["oil_pickup_average_duration"] != DBNull.Value)
@@ -434,7 +434,7 @@ namespace RouteNavigation
                 if (row["grease_pickup_average_duration"] != DBNull.Value)
                     Config.Calculation.greasePickupAverageDurationMinutes = TimeSpan.Parse(row["grease_pickup_average_duration"].ToString()).TotalMinutes;
                 if (row["maximum_days_overdue"] != DBNull.Value)
-                    Config.Calculation.maximumDaysOverdue = int.Parse(row["maximum_days_overdue"].ToString());
+                    Config.Calculation.maximumDaysOverdue = uint.Parse(row["maximum_days_overdue"].ToString());
                 if (row["workday_start_time"] != DBNull.Value)
                     Config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
                 if (row["workday_end_time"] != DBNull.Value)
@@ -446,19 +446,19 @@ namespace RouteNavigation
                 if (row["search_radius_percent"] != DBNull.Value)
                     Config.Calculation.searchRadiusPercent = double.Parse(row["search_radius_percent"].ToString());
                 if (row["genetic_algorithm_iterations"] != DBNull.Value)
-                    Config.GeneticAlgorithm.Iterations = int.Parse(row["genetic_algorithm_iterations"].ToString());
+                    Config.GeneticAlgorithm.Iterations = uint.Parse(row["genetic_algorithm_iterations"].ToString());
                 if (row["genetic_algorithm_population_size"] != DBNull.Value)
-                    Config.GeneticAlgorithm.PopulationSize = int.Parse(row["genetic_algorithm_population_size"].ToString());
+                    Config.GeneticAlgorithm.PopulationSize = uint.Parse(row["genetic_algorithm_population_size"].ToString());
                 if (row["genetic_algorithm_neighbor_count"] != DBNull.Value)
-                    Config.GeneticAlgorithm.NeighborCount = int.Parse(row["genetic_algorithm_neighbor_count"].ToString());
+                    Config.GeneticAlgorithm.NeighborCount = uint.Parse(row["genetic_algorithm_neighbor_count"].ToString());
                 if (row["genetic_algorithm_tournament_size"] != DBNull.Value)
-                    Config.GeneticAlgorithm.TournamentSize = int.Parse(row["genetic_algorithm_tournament_size"].ToString());
+                    Config.GeneticAlgorithm.TournamentSize = uint.Parse(row["genetic_algorithm_tournament_size"].ToString());
                 if (row["genetic_algorithm_tournament_winner_count"] != DBNull.Value)
-                    Config.GeneticAlgorithm.TournamentWinnerCount = int.Parse(row["genetic_algorithm_tournament_winner_count"].ToString());
+                    Config.GeneticAlgorithm.TournamentWinnerCount = uint.Parse(row["genetic_algorithm_tournament_winner_count"].ToString());
                 if (row["genetic_algorithm_breeder_count"] != DBNull.Value)
-                    Config.GeneticAlgorithm.BreederCount = int.Parse(row["genetic_algorithm_breeder_count"].ToString());
+                    Config.GeneticAlgorithm.BreederCount = uint.Parse(row["genetic_algorithm_breeder_count"].ToString());
                 if (row["genetic_algorithm_offspring_pool_size"] != DBNull.Value)
-                    Config.GeneticAlgorithm.OffspringPoolSize = int.Parse(row["genetic_algorithm_offspring_pool_size"].ToString());
+                    Config.GeneticAlgorithm.OffspringPoolSize = uint.Parse(row["genetic_algorithm_offspring_pool_size"].ToString());
                 if (row["genetic_algorithm_crossover_probability"] != DBNull.Value)
                     Config.GeneticAlgorithm.CrossoverProbability = double.Parse(row["genetic_algorithm_crossover_probability"].ToString());
                 if (row["genetic_algorithm_elitism_ratio"] != DBNull.Value)
@@ -466,7 +466,7 @@ namespace RouteNavigation
                 if (row["genetic_algorithm_mutation_probability"] != DBNull.Value)
                     Config.GeneticAlgorithm.MutationProbability = double.Parse(row["genetic_algorithm_mutation_probability"].ToString());
                 if (row["genetic_algorithm_mutation_allele_max"] != DBNull.Value)
-                    Config.GeneticAlgorithm.MutationAlleleMax = int.Parse(row["genetic_algorithm_mutation_allele_max"].ToString());
+                    Config.GeneticAlgorithm.MutationAlleleMax = uint.Parse(row["genetic_algorithm_mutation_allele_max"].ToString());
                 if (row["genetic_algorithm_growth_decay_exponent"] != DBNull.Value)
                     Config.GeneticAlgorithm.GrowthDecayExponent = double.Parse(row["genetic_algorithm_growth_decay_exponent"].ToString());
             }
@@ -537,6 +537,8 @@ namespace RouteNavigation
             foreach (DataRow row in dataTable.Rows)
             {
                 Location location = new Location();
+                if (row["route_id"] != DBNull.Value)
+                    location.routeId = int.Parse(row["route_id"].ToString());
                 if (row["last_visited"] != DBNull.Value)
                     location.lastVisited = DateTime.Parse(row["last_visited"].ToString());
                 if (row["client_priority"] != DBNull.Value)
@@ -626,7 +628,7 @@ namespace RouteNavigation
                 if (row["origin_location_id"] != DBNull.Value)
                     origin = (GetLocations("id", row["origin_location_id"].ToString())).First();
 
-                Route route = new Route(origin);
+                Route route = new Route();
                 if (row["id"] != DBNull.Value)
                     route.id = int.Parse(row["id"].ToString());
                 if (row["total_time"] != DBNull.Value)
@@ -770,7 +772,7 @@ namespace RouteNavigation
             return Boolean.Parse(ReadStoredProcedureAsString(cmd));
         }
 
-        public static void updateIteration(int currentIteration, int totalIterations)
+        public static void updateIteration(uint currentIteration, uint totalIterations)
         {
             try
             {
@@ -877,7 +879,7 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_batch_id", NpgsqlTypes.NpgsqlDbType.Integer, batchId);
                         cmd.Parameters.AddWithValue("p_total_time", NpgsqlTypes.NpgsqlDbType.Interval, route.totalTime);
-                        cmd.Parameters.AddWithValue("p_origin_location_id", NpgsqlTypes.NpgsqlDbType.Integer, route.origin.id);
+                        cmd.Parameters.AddWithValue("p_origin_location_id", NpgsqlTypes.NpgsqlDbType.Integer, Config.Calculation.origin.id);
                         cmd.Parameters.AddWithValue("p_route_date", NpgsqlTypes.NpgsqlDbType.TimestampTZ, route.date);
                         cmd.Parameters.AddWithValue("p_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.distanceMiles);
                         cmd.Parameters.AddWithValue("p_vehicle_id", NpgsqlTypes.NpgsqlDbType.Integer, route.assignedVehicle.id);
@@ -897,13 +899,13 @@ namespace RouteNavigation
                 try
                 {
                     int insertOrder = 0;
-                    InsertRouteLocation(route.origin.id, insertOrder += 1, route.id);
+                    InsertRouteLocation(Config.Calculation.origin.id, insertOrder += 1, route.id);
 
                     foreach (Location waypoint in route.waypoints)
                         InsertRouteLocation(waypoint.id, insertOrder += 1, route.id);
 
                     //insert the route origin since every route returns to HQ
-                    InsertRouteLocation(route.origin.id, insertOrder += 1, route.id);
+                    InsertRouteLocation(Config.Calculation.origin.id, insertOrder += 1, route.id);
                 }
                 catch (Exception exception)
                 {

@@ -14,21 +14,21 @@ namespace RouteNavigation
     public class GeneticAlgorithm
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        private int iterations;
-        private int populationSize;
-        private int tournamentSize;
-        private int tournamentWinnerCount;
-        private int breedersCount;
-        private int offSpringPoolSize;
-        private int neighborCount;
+        private uint iterations;
+        private uint populationSize;
+        private uint tournamentSize;
+        private uint tournamentWinnerCount;
+        private uint breedersCount;
+        private uint offSpringPoolSize;
+        private uint neighborCount;
         double crossoverProbability;
 
         double elitismRatio;
         double mutationProbability;
-        int mutationAlleleMax;
+        uint mutationAlleleMax;
         double growthDecayExponent;
         bool toggleIterationsExponent;
-        static private int currentIteration = 0;
+        static private uint currentIteration = 0;
 
         static private List<Location> allLocations = DataAccess.GetLocations();
         static private List<Location> possibleLocations;
@@ -39,7 +39,7 @@ namespace RouteNavigation
         static private Random rng = new Random();
         private int batchId = DataAccess.GetNextRouteBatchId();
         private RouteCalculator bestCalc;
-        public List<List<Location>> InitializePopulation(int populationSize)
+        public List<List<Location>> InitializePopulation(uint populationSize)
         {
             if (populationSize < 2)
             {
@@ -64,7 +64,7 @@ namespace RouteNavigation
 
         public bool TestInitializePopulation()
         {
-            int unitPopulation = 5;
+            uint unitPopulation = 5;
             List<List<Location>> testPopulation = InitializePopulation(unitPopulation);
             if (testPopulation.Count != unitPopulation)
                 return false;
@@ -175,7 +175,7 @@ namespace RouteNavigation
 
                     Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
 
-                    for (int i = 0; i < iterations; i++)
+                    for (uint i = 0; i < iterations; i++)
                     {
                         if (DataAccess.getCancellationStatus() is true)
                             break;
@@ -311,7 +311,7 @@ namespace RouteNavigation
             int tournamentSizeCount = (int)Math.Round(((tournamentSize * GrowthFunction())), 0);
             if (tournamentSizeCount < 2)
                 tournamentSizeCount = 2;
-            Logger.Info(string.Format("Tournament size is: {0}", tournamentSizeCount));
+            Logger.Trace(string.Format("Tournament size is: {0}", tournamentSizeCount));
 
             List<RouteCalculator> breeders = new List<RouteCalculator>();
             while (breeders.Count < breedersCount)
@@ -597,10 +597,8 @@ namespace RouteNavigation
         {
             Logger.Trace(string.Format("Running tournament with {0} contestants", contestants.Count));
 
-
-
             contestants.SortByFitnessAsc();
-            List<RouteCalculator> winners = contestants.Take(tournamentWinnerCount).ToList();
+            List<RouteCalculator> winners = contestants.Take((int)tournamentWinnerCount).ToList();
 
             Logger.Trace(string.Format("Tournament produced {0} winners", contestants.Count));
             foreach (RouteCalculator contestant in contestants)

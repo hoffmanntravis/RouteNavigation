@@ -25,7 +25,7 @@ namespace RouteNavigation
             url = ReplaceIllegalCharaters(url);
             try
             {
-                LogEventInfo logEvent = new LogEventInfo(NLog.LogLevel.Trace,Logger.Name,"ThreadId:" + Thread.CurrentThread.ManagedThreadId.ToString() + " " +"Calling: " + url);
+                Logger.Info("Calling: " + url);
                 using (HttpClient httpClient = new HttpClient())
                 {
                     HttpResponseMessage responseMessage = await httpClient.GetAsync(url);
