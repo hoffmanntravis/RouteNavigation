@@ -56,7 +56,7 @@
     <div></div>
     <asp:TextBox class="tableInput" Id="txtSearchMinimumDistance" placeholder="5" runat="server"></asp:TextBox>
      <div></div>
-    <asp:Label Text="Search Radius Percent (Distance to Depot)" ToolTip="A percentage value multiplied by the distance traveled from the depot, used to calculate the maximum distance to search for an additional location.  This is used to increase route density, by limiting the algorithm from connecting locations that are far apart in order to achieve global optimal route length.  Value increases with distance to avoid efficiency losses if a long distance has already been traveled to get to the current location.  Numbers closer to 1 will result in more net efficiency, but some erratic route creation to handle outlier locations." runat="server" />
+    <asp:Label Text="Search Radius Ratio (Distance from Depot)" ToolTip="A decimal fraction value multiplied by the distance traveled from the depot, used to calculate the maximum distance to search for an additional location.  This is used to increase route density, by limiting the algorithm from connecting locations that are far apart in order to achieve global optimal route length.  Value increases with distance to avoid efficiency losses if a long distance has already been traveled to get to the current location.  Numbers closer or equal to 1 will result in more net efficiency, but also some erratic route creation to handle outlier locations." runat="server" />
     <div></div>
     <asp:TextBox class="tableInput" id="txtSearchRadiusPercent" placeholder=".25" runat="server"></asp:TextBox>
 
@@ -114,11 +114,6 @@
     <div>
         <asp:CheckBox class="checkBox" ID="chkVehicleFillLevel" ToolTip="Compare Vehicle Fill Level with estimated location level before assigning" runat="server"></asp:CheckBox>
         Calculations - Vehicle Fill Level
-    </div>
-
-    <div>
-        <asp:CheckBox class="checkBox" ID="chkPrioritizeNearestLocation" ToolTip="Incorporate distance as part of the priority calculations. The value of this feature is dubious, and should probably be left disabled." runat="server"></asp:CheckBox>
-        Calculations - Include Distance in Priority
     </div>
 
     <div>

@@ -145,7 +145,7 @@ namespace RouteNavigation
 
                         double nextLocationDistanceMiles = CalculateDistance(previousLocation, nextLocation);
 
-                        double distanceTolerance = nextLocation.distanceFromDepot * Config.Calculation.searchRadiusPercent;
+                        double distanceTolerance = nextLocation.distanceFromDepot * (Config.Calculation.searchRadiusFraction);
 
                         if (potentialRoute.waypoints.Count > 0)
                         {

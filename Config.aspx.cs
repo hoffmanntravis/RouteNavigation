@@ -25,8 +25,10 @@ namespace RouteNavigation
             try
             {
                 DataAccess.PopulateConfig();
+                /*
                 if (Config.Features.prioritizeNearestLocation)
                     chkPrioritizeNearestLocation.Checked = true;
+                */
                 if (Config.Features.vehicleFillLevel)
                     chkVehicleFillLevel.Checked = true;
                 if (Config.Features.geneticAlgorithmGrowthDecayExponent)
@@ -52,7 +54,7 @@ namespace RouteNavigation
 
                 txtMaxDistanceFromDepot.Text = Config.Calculation.maxDistanceFromDepot.ToString();
                 txtSearchMinimumDistance.Text = Config.Calculation.searchMinimumDistance.ToString();
-                txtSearchRadiusPercent.Text = Config.Calculation.searchRadiusPercent.ToString();
+                txtSearchRadiusPercent.Text = Config.Calculation.searchRadiusFraction.ToString();
                 txtIterations.Text = Config.GeneticAlgorithm.Iterations.ToString();
                 txtPopulationSize.Text = Config.GeneticAlgorithm.PopulationSize.ToString();
                 txtNeighborCount.Text = Config.GeneticAlgorithm.NeighborCount.ToString();
@@ -91,10 +93,12 @@ namespace RouteNavigation
                 }
 
                 //This section / data structure could use a rework to be less explicitly mapped to the db keys
+                /*
                 if (chkPrioritizeNearestLocation.Checked == true)
                     DataAccess.UpdateFeature("prioritize_nearest_location", true);
                 else
                     DataAccess.UpdateFeature("prioritize_nearest_location", false);
+                */
                 if (chkVehicleFillLevel.Checked == true)
                     DataAccess.UpdateFeature("vehicle_fill_level", true);
                 else

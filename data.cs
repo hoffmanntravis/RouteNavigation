@@ -444,7 +444,7 @@ namespace RouteNavigation
                 if (row["search_minimum_distance"] != DBNull.Value)
                     Config.Calculation.searchMinimumDistance = double.Parse(row["search_minimum_distance"].ToString());
                 if (row["search_radius_percent"] != DBNull.Value)
-                    Config.Calculation.searchRadiusPercent = double.Parse(row["search_radius_percent"].ToString());
+                    Config.Calculation.searchRadiusFraction = double.Parse(row["search_radius_percent"].ToString());
                 if (row["genetic_algorithm_iterations"] != DBNull.Value)
                     Config.GeneticAlgorithm.Iterations = uint.Parse(row["genetic_algorithm_iterations"].ToString());
                 if (row["genetic_algorithm_population_size"] != DBNull.Value)
@@ -475,8 +475,10 @@ namespace RouteNavigation
                 {
                     if (row["feature_name"] as string == "vehicle_fill_level")
                         Config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
+                    /*
                     if (row["feature_name"] as string == "prioritize_nearest_location")
                         Config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
+                    */
                     if (row["feature_name"] as string == "genetic_algorithm_growth_decay_exponent")
                         Config.Features.geneticAlgorithmGrowthDecayExponent = bool.Parse(row["enabled"].ToString());
                 }

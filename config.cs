@@ -24,7 +24,7 @@ namespace RouteNavigation
             public static double averageHighwayTravelSpeed = 50;
             public static TimeSpan dropOffTime = TimeSpan.FromMinutes(10);
             public static double searchMinimumDistance = 5;
-            public static double searchRadiusPercent = .25;
+            public static double searchRadiusFraction = .25;
             public static double maxDistanceFromDepot = 100;
         }
 
@@ -47,7 +47,7 @@ namespace RouteNavigation
         public static class Features
         {
             public static bool vehicleFillLevel = false;
-            public static bool prioritizeNearestLocation = false;
+            //public static bool prioritizeNearestLocation = false;
             public static bool geneticAlgorithmGrowthDecayExponent = false;
         }
     }

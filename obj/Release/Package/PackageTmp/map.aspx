@@ -83,6 +83,7 @@
             var previousRouteId = null;
             var currentRouteId = null;
             var polyLines = [];
+            var routeUrls = [];
             for (i = 0; i < routes.length; i++) {
                 var points = [[]];
                 for (j = 0; j < routes[i].allLocations.length - 1; j++) {
@@ -91,13 +92,20 @@
                     points.push([pointA, pointB]);
                 }
                 var color = "rgb(" + routes[i].color.R + " ," + routes[i].color.G + "," + routes[i].color.B + ")";
+                var routeUrl = "/routeDetails?routeId=" + routes[i].id;
                 var multiPolyLine = new L.polygon(points, {
                     color: color,
                     weight: 4,
                     opacity: 1,
-                    smoothFactor: 50
+                    smoothFactor: 50,
+                    url: routeUrl
                 });
 
+                var toolTip = L.tooltip({ sticky: true }).setContent("Route ID: " + routes[i].id);
+                multiPolyLine.bindTooltip(toolTip);
+
+
+                multiPolyLine.on("click", function (event) { window.open(event.target.options.url); });
                 var overlayName = routes[i].id;
                 var overlayRoutes = {
                 };

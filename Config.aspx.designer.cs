@@ -274,15 +274,6 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.CheckBox chkVehicleFillLevel;
         
         /// <summary>
-        /// chkPrioritizeNearestLocation control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.CheckBox chkPrioritizeNearestLocation;
-        
-        /// <summary>
         /// chkGrowthDecayExponent control.
         /// </summary>
         /// <remarks>
