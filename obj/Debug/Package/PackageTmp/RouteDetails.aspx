@@ -40,9 +40,6 @@
                         <td id="td6" runat="server">
                             <b>Days Until Due</b>
                         </td>
-                        <td id="td7" runat="server">
-                            <b>Matrix Weight</b>
-                        </td>
                         <td id="td8" runat="server">
                             <b>Route Date</b>
                         </td>
@@ -73,9 +70,6 @@
                         <asp:Label ID="label5" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label6" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
-                    </td>
-                    <td>
                         <asp:Label ID="label7" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                     </td>
                 </tr>
@@ -101,9 +95,6 @@
                     </td>
                     <td>
                         <asp:Label ID="label5" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
-                    </td>
-                    <td>
-                        <asp:Label ID="label6" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label7" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>

@@ -54,9 +54,6 @@
                                 <td id="td7" runat="server">
                                     <b>Days Until Due</b>
                                 </td>
-                                <td id="td8" runat="server">
-                                    <b>Matrix Weight</b>
-                                </td>
                                 <td id="td9" runat="server">
                                     <b>Route Date</b>
                                 </td>
@@ -96,9 +93,6 @@
                                 <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblMatrixWeight" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
-                            </td>
-                            <td>
                                 <asp:Label ID="lblRoutedate" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                             </td>
                             <td>
@@ -136,9 +130,6 @@
                                 <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblMatrixWeight" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
-                            </td>
-                            <td>
                                 <asp:Label ID="lblRoutedate" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                             </td>
                             <td>
@@ -174,9 +165,6 @@
                             </td>
                             <td>
                                 <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
-                            </td>
-                            <td>
-                                <asp:Label ID="lblMatrixWeight" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblRoutedate" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>

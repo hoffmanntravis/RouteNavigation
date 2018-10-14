@@ -99,10 +99,6 @@
                             <b>Days Until Due</b>
                             <asp:ImageButton ID="imgSortDaysUntilDue" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByDaysUntilDue_Click" />
                         </td>
-                        <td id="tdMatrixWeight" runat="server">
-                            <b>Matrix Weight</b>
-                            <asp:ImageButton ID="imgSortMatrixWeight" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByMatrixWeight_Click" />
-                        </td>
                         <td id="tdAction" width="80" runat="server">
                             <b>Action</b>
                         </td>
@@ -170,9 +166,6 @@
                         <asp:Label ID="labe13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="labe14" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
-                    </td>
-                    <td>
                         <asp:LinkButton ID="btnEdit" Text="Edit" runat="server" CommandName="Edit" />
                         <asp:LinkButton ID="btnDelete" Text="Delete" runat="server" OnClientClick="return disp_confirm();" CommandName="Delete" />
                     </td>
@@ -224,9 +217,6 @@
                     <asp:Label ID="label13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label14" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
-                </td>
-                <td>
                     <asp:LinkButton ID="btnEdit2" Text="Edit" runat="server" CommandName="Edit" />
                 </td>
 
@@ -276,9 +266,6 @@
                 </td>
                 <td>
                     <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
-                </td>
-                <td>
-                    <asp:Label ID="lblEditMatrixWeight" runat="server" Text='<%# Eval("matrix_weight") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:LinkButton ID="btnCancel" Text="Cancel" runat="server" CommandName="Cancel" />

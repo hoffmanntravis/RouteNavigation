@@ -206,6 +206,7 @@ namespace RouteNavigation
                     bestCalc = fitnessCalcs.First();
                     //foreach (Route route in bestCalc.routes)
                     //    bestCalc.calculateTSPRouteTwoOpt(route);
+
                     DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                     DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);

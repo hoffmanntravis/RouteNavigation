@@ -106,7 +106,6 @@ namespace RouteNavigation
 
                     Logger.Trace("There are {0} locations that will be moved to the front of the list and receive priority on projected date {1}", serviceNowLocations.Count, startDate);
 
-
                     //serviceNowLocations.ForEach(l => availableLocations.Remove(l));
                     //availableLocations.InsertRange(0, serviceNowLocations);
 
@@ -203,8 +202,8 @@ namespace RouteNavigation
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.greasePickupAverageDurationMinutes);
                         }
 
+                        
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
-
                         potentialRoute.distanceMiles += nextLocationDistanceMiles;
                         //Logger.Trace(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
 
@@ -232,7 +231,6 @@ namespace RouteNavigation
 
                         //add in the average visit time
                         potentialRoute.waypoints.Add(nextLocation);
-                        potentialRoute.allLocations.Add(nextLocation);
                         availableLocations.Remove(nextLocation);
                         compatibleLocations.Remove(nextLocation);
                         //searchStart = nextLocation;
@@ -241,11 +239,10 @@ namespace RouteNavigation
                     }
 
                     //Add the time to travel back to the depot
-                    double distanceToDepot2 = CalculateDistance(previousLocation, origin);
-                    TimeSpan travelTime2 = CalculateTravelTime(distanceToDepot2);
-                    Logger.Trace(String.Format("Travel time back from {0} ({1}) to {2} ({3}) is {4} minutes", previousLocation.locationName, previousLocation.address, origin.locationName, origin.address, travelTime2.TotalMinutes));
-                    currentTime.Add(travelTime2);
-                    potentialRoute.allLocations.Add(origin);
+                    double distanceToDepotFromLastWaypoint = CalculateDistance(previousLocation, origin);
+                    TimeSpan travelTimeBackToDepot = CalculateTravelTime(distanceToDepotFromLastWaypoint);
+                    Logger.Trace(String.Format("Travel time back from {0} ({1}) to {2} ({3}) is {4} minutes", previousLocation.locationName, previousLocation.address, origin.locationName, origin.address, travelTimeBackToDepot.TotalMinutes));
+                    currentTime.Add(travelTimeBackToDepot);
 
                     /*//override nearest location with locations along the route if they are within five miles
                     foreach (Location apiLoc in apiRoute.waypoints)
@@ -271,7 +268,10 @@ namespace RouteNavigation
                             potentialRoute.waypoints[replacementLocationIndex] = serviceNowLocations[x];
                         }
                     }
-                    
+
+                    potentialRoute.allLocations.AddRange(potentialRoute.waypoints);
+                    potentialRoute.allLocations.Add(origin);
+
                     if (potentialRoute.waypoints.Count == 0)
                         throw new Exception("Route waypoints count is 0.  Something went wrong.");
 
@@ -281,13 +281,18 @@ namespace RouteNavigation
                     potentialRoute.date = startDate;
                     potentialRoute = CalculateTSPRouteNN(potentialRoute);
                     //potentialRoute = calculateTSPRouteTwoOpt(potentialRoute);
-                    potentialRoute.distanceMiles = CalculateTotalDistance(potentialRoute.allLocations);
+
                     potentialRoute.totalTime = currentTime - startTime;
                     //int oilLocationsCount = potentialRoute.allLocations.Where(a => a.type == "oil").ToList().Count;
                     //int greaseLocationsCount = potentialRoute.allLocations.Where(a => a.type == "grease").ToList().Count;
                     //Logger.Log(String.Format("there are {0} oil locations and {1} grease locations.", oilLocationsCount, greaseLocationsCount), "DEBUG");
-                    potentialRoute.averageLocationDistance = CalculateAverageLocationDistance(potentialRoute);
+
+                    potentialRoute.distanceMiles = CalculateTotalDistance(potentialRoute.allLocations, true);
                     Logger.Trace("TSP calculated a shortest route 'flight' distance of " + potentialRoute.distanceMiles);
+
+
+                    potentialRoute.averageLocationDistance = CalculateAverageLocationDistance(potentialRoute);
+
                     routes.Add(potentialRoute);
 
                     //Add later date locations back in, so once an eligible date becomes applicable they will be processed.  A copy is used to preserve the original order as much as possible minus locations that were assigned to a route.
@@ -387,13 +392,16 @@ namespace RouteNavigation
             return farthestLocation;
         }
 
-        public static double CalculateTotalDistance(List<Location> locations)
+        public static double CalculateTotalDistance(List<Location> locations,bool roundTrip = false)
         {
             double totalDistance = 0;
+
             for (int x = 0; x < locations.Count - 1; x++)
-            {
                 totalDistance += CalculateDistance(locations[x], locations[x + 1]);
-            }
+
+            if (roundTrip)
+                totalDistance += CalculateDistance(locations[locations.Count - 1], locations[0]);
+
             return totalDistance;
         }
 
@@ -406,7 +414,7 @@ namespace RouteNavigation
             do
             {
                 //add the depot back in to ensure the route is shortest with the depot included
-                previousBestDistance = CalculateTotalDistance(route) + CalculateDistance(route.Last(), origin);
+                previousBestDistance = CalculateTotalDistance(route, true);
                 bestDistance = double.MaxValue;
                 for (int i = 0; i < route.Count - 1; i++)
                 {
@@ -417,7 +425,7 @@ namespace RouteNavigation
                             List<Location> newRoute = RunThreeOptSwap(route, i, j, k);
                             if (routeHashStart != GenerateRouteHash(newRoute))
                                 throw new Exception("hashes do not match!");
-                            double newDistance = CalculateTotalDistance(newRoute) + CalculateDistance(newRoute.Last(), origin);
+                            double newDistance = CalculateTotalDistance(newRoute, true);
                             if (newDistance < previousBestDistance)
                             {
                                 bestDistance = newDistance;
@@ -442,7 +450,7 @@ namespace RouteNavigation
             do
             {
                 //add the depot back in to ensure the route is shortest with the depot included
-                previousBestDistance = CalculateTotalDistance(route) + CalculateDistance(route.Last(), origin);
+                previousBestDistance = CalculateTotalDistance(route, true);
                 bestDistance = double.MaxValue;
                 for (int i = 0; i < route.Count - 1; i++)
                 {
@@ -451,7 +459,7 @@ namespace RouteNavigation
                         List<Location> newRoute = RunTwoOptSwap(route, i, j);
                         if (routeHashStart != GenerateRouteHash(newRoute))
                             throw new Exception("hashes do not match!");
-                        double newDistance = CalculateTotalDistance(newRoute) + CalculateDistance(newRoute.Last(), origin);
+                        double newDistance = CalculateTotalDistance(newRoute, true);
                         if (newDistance < previousBestDistance)
                         {
                             bestDistance = newDistance;
@@ -618,9 +626,7 @@ namespace RouteNavigation
             double average = 0;
             double totalDistance = 0;
             foreach (Route route in routes)
-            {
                 totalDistance += route.distanceMiles;
-            }
 
             average = totalDistance / routes.Count;
             return average;
@@ -861,6 +867,8 @@ namespace RouteNavigation
               Math.Sin(dLong / 2) * Math.Sin(dLong / 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             var d = R * c;
+
+            //Logger.Trace(String.Format("Distance between locations {0}[{1},{2}] and {3}[{4},{5}] is {6}", p1.address, p1.coordinates.lat, p1.coordinates.lng, p2.address, p2.coordinates.lat, p2.coordinates.lng, d));
             return d; // returns the distance in miles
         }
     }
