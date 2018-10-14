@@ -25,10 +25,11 @@ namespace RouteNavigation
         private Random random = new Random();
         protected void Page_Load(object sender, EventArgs e)
         {
-            //initialize objects in page load since they make a sync calls that fail while the page is still starting up
-            DataAccess.PopulateConfig();
             try
             {
+                //initialize objects in page load since they make a sync calls that fail while the page is still starting up
+                DataAccess.PopulateConfig();
+
                 DataTable dtRoute;
                 int routeId;
                 if (Request.QueryString["routeId"] == null)

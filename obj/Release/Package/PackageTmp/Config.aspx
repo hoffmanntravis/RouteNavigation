@@ -39,6 +39,10 @@
     <div></div>
     <asp:TextBox class="tableInput" placeholder="20:00:00" ID="txtWorkDayEnd" runat="server"></asp:TextBox>
     <div></div>
+    <asp:Label Text="Grease Trap Cutoff Time" ToolTip="Ceiling on the last time a grease trap can be picked up for the day." runat="server" />
+    <div></div>
+    <asp:TextBox class="tableInput" placeholder="13:00:00" ID="txtGreaseTrapCutoffTime" runat="server"></asp:TextBox>
+    <div></div>
     <asp:Label Text="Vehicle Fill Level Error Margin" ToolTip="If the 'Vehicle Fill Level' feature is enabled, this margin of error will be used when estimating the current fluid level of a location (location level + margin), compared to the current level of the truck." runat="server" />
     <div></div>
     <asp:TextBox class="tableInput" placeholder=".05" ID="txtCurrentFillLevelErrorMargin" runat="server"></asp:TextBox>
@@ -50,15 +54,15 @@
     <asp:Label Text="Average grease trap duration (minutes)" ToolTip="Average length in minutes of a grease trap pickup. Used in time calculations when adding routes." runat="server" />
     <div></div>
     <asp:TextBox class="tableInput" placeholder="30:00:00" ID="txtGreasePickupAverageDuration" runat="server"></asp:TextBox>
-   
+
     <div></div>
-    <asp:Label Text="Next Location Minimum Search Distance" ToolTip="The length in miles of a minimum distance to search when location for the next location of a route (beyond the first location)." runat="server" />
+    <asp:Label Text="Next Location Minimum Search Distance" ToolTip="The length in miles of a minimum distance to search when retrieving the next location of a route (beyond the first location)." runat="server" />
     <div></div>
-    <asp:TextBox class="tableInput" Id="txtSearchMinimumDistance" placeholder="5" runat="server"></asp:TextBox>
-     <div></div>
+    <asp:TextBox class="tableInput" ID="txtSearchMinimumDistance" placeholder="5" runat="server"></asp:TextBox>
+    <div></div>
     <asp:Label Text="Search Radius Ratio (Distance from Depot)" ToolTip="A decimal fraction value multiplied by the distance traveled from the depot, used to calculate the maximum distance to search for an additional location.  This is used to increase route density, by limiting the algorithm from connecting locations that are far apart in order to achieve global optimal route length.  Value increases with distance to avoid efficiency losses if a long distance has already been traveled to get to the current location.  Numbers closer or equal to 1 will result in more net efficiency, but also some erratic route creation to handle outlier locations." runat="server" />
     <div></div>
-    <asp:TextBox class="tableInput" id="txtSearchRadiusPercent" placeholder=".25" runat="server"></asp:TextBox>
+    <asp:TextBox class="tableInput" ID="txtSearchRadiusPercent" placeholder=".25" runat="server"></asp:TextBox>
 
     <h3>Genetic Algorithm Parameters</h3>
     <div></div>
@@ -114,6 +118,16 @@
     <div>
         <asp:CheckBox class="checkBox" ID="chkVehicleFillLevel" ToolTip="Compare Vehicle Fill Level with estimated location level before assigning" runat="server"></asp:CheckBox>
         Calculations - Vehicle Fill Level
+    </div>
+
+    <div>
+        <asp:CheckBox class="checkBox" ID="chkExcludeJettingLocationsCalculation" ToolTip="Exclude jetting locations from calculations" runat="server"></asp:CheckBox>
+        Calculations - Exclude Jetting Locations
+    </div>
+
+    <div>
+        <asp:CheckBox class="checkBox" ID="chkExcludeJettingLocationsImport" ToolTip="Exclude jetting locations on import" runat="server"></asp:CheckBox>
+        Data Management - Exclude Jetting Locations on Import
     </div>
 
     <div>

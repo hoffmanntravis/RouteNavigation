@@ -396,11 +396,6 @@ namespace RouteNavigation
             locationSort(sender, "days_until_due");
         }
 
-        protected void SortByMatrixWeight_Click(object sender, ImageClickEventArgs e)
-        {
-            locationSort(sender, "matrix_weight");
-        }
-
         private void locationSort(object sender, string sortProperty)
         {
             ImageButton image = (ImageButton)sender;
@@ -438,7 +433,7 @@ namespace RouteNavigation
             {
                 Stream stream = fileUpload.FileContent;
                 StreamReader reader = new StreamReader(stream);
-                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "matrix_weight", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "visit_time", "location_type" };
+                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "visit_time", "location_type" };
 
                 string Content = reader.ReadToEnd();
 
@@ -461,6 +456,11 @@ namespace RouteNavigation
                 string expectedHeaderString = String.Join(",", expectedHeaders);
 
                 DataAccess.RunPostgreImport(String.Format("location ({0}) ", expectedHeaderString), Content);
+                if (Config.Features.locationsJettingRemoveOnImport)
+                {
+                    DataAccess.deleteLocationsWildCardSearch("jetting");
+                    DataAccess.deleteLocationsWildCardSearch("install");
+                }
                 BindListView();
             }
             catch (Exception exception)

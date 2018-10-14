@@ -15,6 +15,7 @@ namespace RouteNavigation
             public static double currentFillLevelErrorMarginPercent = 0;
             public static DateTime workdayStartTime = DateTime.MinValue;
             public static DateTime workdayEndTime = DateTime.MinValue;
+            public static DateTime greaseTrapCutoffTime = DateTime.MinValue;
             public static double oilPickupAverageDurationMinutes = 30;
             public static double greasePickupAverageDurationMinutes = 30;
             public static uint minimDaysUntilPickup = 0;
@@ -46,9 +47,11 @@ namespace RouteNavigation
 
         public static class Features
         {
-            public static bool vehicleFillLevel = false;
             //public static bool prioritizeNearestLocation = false;
+            public static bool vehicleFillLevel = false;
             public static bool geneticAlgorithmGrowthDecayExponent = false;
+            public static bool locationsJettingExcludeFromCalc = true;
+            public static bool locationsJettingRemoveOnImport = false;
         }
     }
 

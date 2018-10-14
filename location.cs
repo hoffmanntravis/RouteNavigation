@@ -21,10 +21,9 @@ namespace RouteNavigation
         public string contactEmail;
         public double capacityGallons = 0;
         public double daysUntilDue = double.NaN;
-        public double matrixWeight;
         public double distanceFromDepot;
-        public DateTime pickupWindowStartTime = default(DateTime);
-        public DateTime pickupWindowEndTime = default(DateTime);
+        public DateTime pickupWindowStartTime = Config.Calculation.workdayStartTime;
+        public DateTime pickupWindowEndTime = Config.Calculation.workdayStartTime;
         public string type;
         
 

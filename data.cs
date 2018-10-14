@@ -439,6 +439,8 @@ namespace RouteNavigation
                     Config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
                 if (row["workday_end_time"] != DBNull.Value)
                     Config.Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
+                if (row["grease_pickup_time_cutoff"] != DBNull.Value)
+                    Config.Calculation.greaseTrapCutoffTime = DateTime.Parse(row["grease_pickup_time_cutoff"].ToString());
                 if (row["max_distance_from_depot"] != DBNull.Value)
                     Config.Calculation.maxDistanceFromDepot = double.Parse(row["max_distance_from_depot"].ToString());
                 if (row["search_minimum_distance"] != DBNull.Value)
@@ -471,17 +473,33 @@ namespace RouteNavigation
                     Config.GeneticAlgorithm.GrowthDecayExponent = double.Parse(row["genetic_algorithm_growth_decay_exponent"].ToString());
             }
 
-                foreach (DataRow row in features.Rows)
-                {
-                    if (row["feature_name"] as string == "vehicle_fill_level")
-                        Config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
-                    /*
-                    if (row["feature_name"] as string == "prioritize_nearest_location")
-                        Config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
-                    */
-                    if (row["feature_name"] as string == "genetic_algorithm_growth_decay_exponent")
-                        Config.Features.geneticAlgorithmGrowthDecayExponent = bool.Parse(row["enabled"].ToString());
-                }
+            foreach (DataRow row in features.Rows)
+            {
+                /*
+                if (row["feature_name"] as string == "prioritize_nearest_location")
+                    Config.Features.prioritizeNearestLocation = bool.Parse(row["enabled"].ToString());
+                */
+                if (row["feature_name"] as string == "vehicle_fill_level")
+                    Config.Features.vehicleFillLevel = bool.Parse(row["enabled"].ToString());
+                if (row["feature_name"] as string == "genetic_algorithm_growth_decay_exponent")
+                    Config.Features.geneticAlgorithmGrowthDecayExponent = bool.Parse(row["enabled"].ToString());
+                if (row["feature_name"] as string == "locations_jetting_exclude_from_calc")
+                    Config.Features.locationsJettingExcludeFromCalc = bool.Parse(row["enabled"].ToString());
+                if (row["feature_name"] as string == "locations_jetting_remove_on_import")
+                    Config.Features.locationsJettingRemoveOnImport = bool.Parse(row["enabled"].ToString());
+            }
+        }
+
+        internal static void deleteLocationsWildCardSearch(string searchString)
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand("delete_location_wildcard");
+            cmd.Parameters.AddWithValue("p_string", NpgsqlTypes.NpgsqlDbType.Varchar, searchString);
+            RunStoredProcedure(cmd);
+        }
+        internal static void updateGreaseCutoffToConfigValue()
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand("update_grease_cutoff_to_config_value");
+            RunStoredProcedure(cmd);
         }
 
         public static List<Location> ConvertDataTableToLocationsList(DataTable dataTable)
@@ -518,8 +536,6 @@ namespace RouteNavigation
                     location.pickupWindowStartTime = DateTime.Parse(row["pickup_window_start_time"].ToString());
                 if (row["pickup_window_end_time"] != DBNull.Value)
                     location.pickupWindowEndTime = DateTime.Parse(row["pickup_window_end_time"].ToString());
-                if (row["matrix_weight"] != DBNull.Value)
-                    location.matrixWeight = double.Parse(row["matrix_weight"].ToString());
                 if (row["contact_name"] != DBNull.Value)
                     location.contactName = row["contact_name"].ToString();
                 if (row["contact_email"] != DBNull.Value)
@@ -557,8 +573,8 @@ namespace RouteNavigation
                     location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
                 if (row["distance_from_source"] != DBNull.Value)
                     location.distanceFromDepot = double.Parse(row["distance_from_source"].ToString());
-                if (row["matrix_weight"] != DBNull.Value)
-                    location.matrixWeight = double.Parse(row["matrix_weight"].ToString());
+                if (row["type"] != DBNull.Value)
+                    location.type = row["type"].ToString();
                 locations.Add(location);
             }
             return locations;
@@ -731,7 +747,7 @@ namespace RouteNavigation
         }
 
 
-            public static void UpdateFeature(string name, bool enabled)
+        public static void UpdateFeature(string name, bool enabled)
         {
             try
             {

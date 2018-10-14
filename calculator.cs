@@ -129,7 +129,16 @@ namespace RouteNavigation
                     {
                         DateTime potentialTime = currentTime;
                         double potentialDistance = currentDistance;
-                        Location nextLocation = compatibleLocations.First();
+
+                        Location nextLocation;
+                        nextLocation = compatibleLocations.First();
+                        
+                        if (compatibleLocations.Count > 1)
+                        {
+                            Location nearestLocation = FindNearestLocation(previousLocation, compatibleLocations);
+                            if (CalculateDistance(previousLocation, nearestLocation) == 0)
+                                nextLocation = nearestLocation;
+                        }
 
                         nextLocation.currentGallonsEstimate = EstimateLocationGallons(nextLocation);
 
@@ -165,15 +174,25 @@ namespace RouteNavigation
                         Logger.Trace(String.Format("Travel time from {0} ({1}) to next location {2} ({3}) is {4} minutes", previousLocation.locationName, previousLocation.address, nextLocation.locationName, nextLocation.address, travelTime.TotalMinutes));
                         potentialTime += travelTime;
 
-                        //If the location is not allowed before or after a certain time and the potential time has been exceeded, remove it.  Calc will advance a day and deal with it at that point if it's not compatible currently.
+                        //If the time it would take to travel to the location is greater than the allowed pickup window, go anyway.  Otherwise it will never get visited.
 
-                        if (nextLocation.pickupWindowStartTime != DateTime.MinValue)
-                            //If the time it would take to travel to the location is greater than the allowed pickup window, go anyway.  Otherwise it will never get visited.
-                            if ((potentialTime < nextLocation.pickupWindowStartTime || potentialTime > nextLocation.pickupWindowEndTime) && !(travelTime >= nextLocation.pickupWindowEndTime - nextLocation.pickupWindowEndTime))
-                            {
-                                compatibleLocations.Remove(nextLocation);
-                                continue;
-                            }
+                        if (travelTime <= nextLocation.pickupWindowEndTime - nextLocation.pickupWindowStartTime)
+                        {
+                            //If the location is not allowed before or after a certain time and the potential time has been exceeded, remove it.  Calc will advance a day and deal with it at that point if it's not compatible currently.
+                            if (nextLocation.pickupWindowStartTime != DateTime.MinValue)
+                                if ((potentialTime < nextLocation.pickupWindowStartTime))
+                                {
+                                    compatibleLocations.Remove(nextLocation);
+                                    continue;
+                                }
+
+                            if (nextLocation.pickupWindowEndTime != DateTime.MaxValue)
+                                if ((potentialTime > nextLocation.pickupWindowEndTime))
+                                {
+                                    compatibleLocations.Remove(nextLocation);
+                                    continue;
+                                }
+                        }
 
                         if (nextLocation.type == "oil")
                         {
@@ -240,15 +259,19 @@ namespace RouteNavigation
                             }
                     }
                     */
-
+                    
                     for (int x = 0; x < Math.Min(serviceNowLocations.Count, potentialRoute.waypoints.Count); x++)
                     {
-                        Location locationToReplace = FindNearestLocation(serviceNowLocations[x], potentialRoute.waypoints.Except(serviceNowLocations).ToList());
-                        int replacementLocationIndex = potentialRoute.waypoints.IndexOf(locationToReplace);
-                        Logger.Trace("{0} needs service now or it will become overdue.  Swapping with {1} to fulfill this requirement.", serviceNowLocations[x], locationToReplace.locationName);
-                        potentialRoute.waypoints[replacementLocationIndex] = serviceNowLocations[x];
+                        List<Location> locationsExceptServiceNowLocations = potentialRoute.waypoints.Except(serviceNowLocations).ToList();
+                        if (locationsExceptServiceNowLocations.Count > 1)
+                        {
+                            Location locationToReplace = FindNearestLocation(serviceNowLocations[x], locationsExceptServiceNowLocations);
+                            int replacementLocationIndex = potentialRoute.waypoints.IndexOf(locationToReplace);
+                            Logger.Trace("{0} needs service now or it will become overdue.  Swapping with {1} to fulfill this requirement.", serviceNowLocations[x], locationToReplace.locationName);
+                            potentialRoute.waypoints[replacementLocationIndex] = serviceNowLocations[x];
+                        }
                     }
-
+                    
                     if (potentialRoute.waypoints.Count == 0)
                         throw new Exception("Route waypoints count is 0.  Something went wrong.");
 
@@ -565,24 +588,28 @@ namespace RouteNavigation
 
         private static List<Location> NearestNeighbor(List<Location> route)
         {
-            //int routeHashStart = generateRouteHash(route);
+            if (route.Count == 1)
+                return route;
+
+            int routeHashStart = GenerateRouteHash(route);
 
             List<Location> nearestNeighborRoute = new List<Location>();
             List<Location> unVisitedNodes = new List<Location>(route);
 
-            Location nearest = route.First();
+            Location nearest = unVisitedNodes.First();
+            nearestNeighborRoute.Add(nearest);
+            unVisitedNodes.Remove(nearest);
 
-            foreach (Location location in route)
+            while (unVisitedNodes.Count > 0)
             {
                 nearest = FindNearestLocation(nearest, unVisitedNodes);
                 nearestNeighborRoute.Add(nearest);
                 unVisitedNodes.Remove(nearest);
             }
-            //if (routeHashStart != generateRouteHash(nearestNeighborRoute))
-            //    throw new Exception("hashes do not match!");
 
+            if (routeHashStart != GenerateRouteHash(nearestNeighborRoute))
+                throw new Exception("hashes do not match!");
             route = nearestNeighborRoute;
-
             return route;
         }
 
@@ -722,8 +749,14 @@ namespace RouteNavigation
 
         public static Location FindNearestLocation(Location source, List<Location> locations)
         {
+            if (locations.Count == 1)
+                return locations.First();
+
             double shortestDistance = double.MaxValue;
             Location nearestLocation = new Location();
+
+            locations.Remove(source);
+
             foreach (Location location in locations)
             {
                 double thisDistance = CalculateDistance(source, location);

@@ -20,15 +20,18 @@ namespace RouteNavigation
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            DataAccess.PopulateConfig();
-            //initialize objects in page load since they make a sync calls that fail while the page is still starting up
             try
             {
+                DataAccess.PopulateConfig();
+                //initialize objects in page load since they make a sync calls that fail while the page is still starting up
+
                 if (!Page.IsPostBack)
                     BindListView();
             }
             catch (Exception exception)
             {
+                routeValidation.IsValid = false;
+                routeValidation.ErrorMessage = exception.Message;
                 Logger.Error(exception);
             }
         }
@@ -54,7 +57,7 @@ namespace RouteNavigation
 
                 if (locationId == Config.Calculation.origin.id)
                 {
-                    Exception exception = new Exception(String.Format("Cannot move location with Id of {0}, since it is the depot and must be both the start and end of the route.",locationId));
+                    Exception exception = new Exception(String.Format("Cannot move location with Id of {0}, since it is the depot and must be both the start and end of the route.", locationId));
                     throw exception;
                 }
                 DataAccess.updateRouteLocation(locationId, routeId, order);

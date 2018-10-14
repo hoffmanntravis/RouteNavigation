@@ -10,8 +10,6 @@ namespace RouteNavigation
     public partial class _Config : Page
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        
-
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!Page.IsPostBack)
@@ -33,6 +31,10 @@ namespace RouteNavigation
                     chkVehicleFillLevel.Checked = true;
                 if (Config.Features.geneticAlgorithmGrowthDecayExponent)
                     chkGrowthDecayExponent.Checked = true;
+                if (Config.Features.locationsJettingExcludeFromCalc)
+                    chkExcludeJettingLocationsCalculation.Checked = true;
+                if (Config.Features.locationsJettingRemoveOnImport)
+                    chkExcludeJettingLocationsImport.Checked = true;
 
                 if (Config.Calculation.origin != null)
                 {
@@ -51,6 +53,11 @@ namespace RouteNavigation
                     txtWorkDayStart.Text = Config.Calculation.workdayStartTime.TimeOfDay.ToString();
                 if (Config.Calculation.workdayEndTime != DateTime.MinValue)
                     txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
+                if (Config.Calculation.greaseTrapCutoffTime != DateTime.MinValue)
+                {
+                    txtGreaseTrapCutoffTime.Text = Config.Calculation.greaseTrapCutoffTime.TimeOfDay.ToString();
+                    DataAccess.updateGreaseCutoffToConfigValue();
+                }
 
                 txtMaxDistanceFromDepot.Text = Config.Calculation.maxDistanceFromDepot.ToString();
                 txtSearchMinimumDistance.Text = Config.Calculation.searchMinimumDistance.ToString();
@@ -67,7 +74,6 @@ namespace RouteNavigation
                 txtMutationProbability.Text = Config.GeneticAlgorithm.MutationProbability.ToString();
                 txtMutationAlleleMax.Text = Config.GeneticAlgorithm.MutationAlleleMax.ToString();
                 txtGrowthDecayExponent.Text =  Config.GeneticAlgorithm.GrowthDecayExponent.ToString();
-
             }
             catch (Exception exception)
             {
@@ -99,15 +105,25 @@ namespace RouteNavigation
                 else
                     DataAccess.UpdateFeature("prioritize_nearest_location", false);
                 */
-                if (chkVehicleFillLevel.Checked == true)
+                if (chkVehicleFillLevel.Checked)
                     DataAccess.UpdateFeature("vehicle_fill_level", true);
                 else
                     DataAccess.UpdateFeature("vehicle_fill_level", false);
 
-                if (chkGrowthDecayExponent.Checked == true)
+                if (chkGrowthDecayExponent.Checked)
                     DataAccess.UpdateFeature("genetic_algorithm_growth_decay_exponent", true);
                 else
                     DataAccess.UpdateFeature("genetic_algorithm_growth_decay_exponent", false);
+
+                if (chkExcludeJettingLocationsCalculation.Checked)
+                    DataAccess.UpdateFeature("locations_jetting_exclude_from_calc", true);
+                else
+                    DataAccess.UpdateFeature("locations_jetting_exclude_from_calc", false);
+
+                if (chkExcludeJettingLocationsImport.Checked)
+                    DataAccess.UpdateFeature("locations_jetting_remove_on_import", true);
+                else
+                    DataAccess.UpdateFeature("locations_jetting_remove_on_import", false);
 
                 NpgsqlCommand cmd = new NpgsqlCommand("upsert_config");
                 if (!(String.IsNullOrEmpty(txtOriginLocationId.Text)))
@@ -125,6 +141,8 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_workday_start_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayStart.Text);
                 if (!(String.IsNullOrEmpty(txtWorkDayEnd.Text)))
                     cmd.Parameters.AddWithValue("p_workday_end_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayEnd.Text);
+                if (!(String.IsNullOrEmpty(txtGreaseTrapCutoffTime.Text)))
+                    cmd.Parameters.AddWithValue("p_grease_pickup_time_cutoff", NpgsqlTypes.NpgsqlDbType.Time, txtGreaseTrapCutoffTime.Text);
                 if (!(String.IsNullOrEmpty(txtOilPickupAverageDuration.Text)))
                     cmd.Parameters.AddWithValue("p_oil_pickup_average_duration", NpgsqlTypes.NpgsqlDbType.Interval, TimeSpan.FromMinutes(int.Parse(txtOilPickupAverageDuration.Text)));
                 if (!(String.IsNullOrEmpty(txtGreasePickupAverageDuration.Text)))

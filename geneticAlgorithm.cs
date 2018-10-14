@@ -139,6 +139,8 @@ namespace RouteNavigation
                     }
 
                     Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.", allLocations.Count));
+                    //Update the grease cutoff window to whatever is in the config for all locations
+                    DataAccess.updateGreaseCutoffToConfigValue();
                     //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
                     availableVehicles = DataAccess.GetVehicles().Where(v => v.operational == true).ToList();
                     possibleLocations = allLocations.ToList();
@@ -147,6 +149,14 @@ namespace RouteNavigation
                     possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                     //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
                     possibleLocations.RemoveAll(s => s.address == Config.Calculation.origin.address);
+
+
+
+                    if (Config.Features.locationsJettingExcludeFromCalc)
+                    {
+                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.locationName.ToLower().Contains("jetting"))).ToList();
+                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.locationName.ToLower().Contains("install"))).ToList();
+                    }
 
                     Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));
 
@@ -389,8 +399,8 @@ namespace RouteNavigation
 
             Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
 
-            int routeHashParentA = generateRouteHash(parentALocations);
-            int routeHashParentB = generateRouteHash(parentBLocations);
+            int routeHashParentA = GenerateRouteHash(parentALocations);
+            int routeHashParentB = GenerateRouteHash(parentBLocations);
 
             if (routeHashParentA != routeHashParentB)
             {
@@ -437,7 +447,7 @@ namespace RouteNavigation
                     int x = 0;
                 }
 
-            int childRouteHash = generateRouteHash(child);
+            int childRouteHash = GenerateRouteHash(child);
             if (routeHashParentA != childRouteHash)
             {
                 Logger.LogMessage("routeHashes for ParentA and child do not match");
@@ -467,8 +477,8 @@ namespace RouteNavigation
             Logger.Trace("Performing genetic crossover from parents");
             /*
 
-            int routeHashParentA = generateRouteHash(parentALocations);
-            int routeHashParentB = generateRouteHash(parentBLocations);
+            int routeHashParentA = GenerateRouteHash(parentALocations);
+            int routeHashParentB = GenerateRouteHash(parentBLocations);
 
             if (routeHashParentA != routeHashParentB)
             {
@@ -519,7 +529,7 @@ namespace RouteNavigation
             }
 
             /*
-            int childRouteHash = generateRouteHash(child);
+            int childRouteHash = GenerateRouteHash(child);
             if (routeHashParentA != childRouteHash)
             {
                 Logger.LogMessage("routeHashes for ParentA and child do not match");

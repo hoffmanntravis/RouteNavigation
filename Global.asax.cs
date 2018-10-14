@@ -17,6 +17,7 @@ namespace RouteNavigation
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             DataAccess.cleanupNullBatchCalcs();
+            DataAccess.PopulateConfig();
         }
     }
 }

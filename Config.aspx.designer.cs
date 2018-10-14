@@ -112,6 +112,15 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.TextBox txtWorkDayEnd;
         
         /// <summary>
+        /// txtGreaseTrapCutoffTime control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtGreaseTrapCutoffTime;
+        
+        /// <summary>
         /// txtCurrentFillLevelErrorMargin control.
         /// </summary>
         /// <remarks>
@@ -272,6 +281,24 @@ namespace RouteNavigation {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.CheckBox chkVehicleFillLevel;
+        
+        /// <summary>
+        /// chkExcludeJettingLocationsCalculation control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkExcludeJettingLocationsCalculation;
+        
+        /// <summary>
+        /// chkExcludeJettingLocationsImport control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkExcludeJettingLocationsImport;
         
         /// <summary>
         /// chkGrowthDecayExponent control.
