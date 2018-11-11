@@ -54,10 +54,13 @@ namespace RouteNavigation
             List<List<Location>> startingPopulation = new List<List<Location>>();
             Logger.Info("Creating a randomized starting Population of locations, pool size:" + populationSize);
 
-            for (int x = 0; x < populationSize; x++)
-            {
-                startingPopulation.Add(new List<Location>(possibleLocations).Shuffle(rng).ToList());
-            }
+            //startingPopulation.Add(new List<Location>(possibleLocations).OrderBy(p => p.daysUntilDue).ToList());
+            //Attempt to seed some good data
+            //
+
+            startingPopulation = ThreadInitialPool(50);
+
+            //startingPopulation.Add(new List<Location>(possibleLocations).Shuffle(rng).ToList());
 
             return startingPopulation;
         }
@@ -148,9 +151,7 @@ namespace RouteNavigation
                     possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
                     possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                     //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
-                    possibleLocations.RemoveAll(s => s.address == Config.Calculation.origin.address);
-
-
+                    possibleLocations.Remove(Config.Calculation.origin);
 
                     if (Config.Features.locationsJettingExcludeFromCalc)
                     {
@@ -231,7 +232,7 @@ namespace RouteNavigation
             int eliteCount = Convert.ToInt32(Math.Round(elitismRatio * calcs.Count()));
             if (eliteCount < 1 && elitismRatio > 0)
                 eliteCount = 1;
-            calcs.SortByFitnessAsc();
+            calcs.SortByDistanceAsc();
             List<RouteCalculator> elites = new List<RouteCalculator>();
             elites.AddRange(calcs.Take(eliteCount));
             calcs.RemoveRange(0, eliteCount);
@@ -313,6 +314,32 @@ namespace RouteNavigation
 
             return calcs;
         }
+
+        public List<List<Location>> ThreadInitialPool(int count)
+        {
+            List<List<Location>> locationsList = new List<List<Location>>();
+            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
+            for (int x = 0; x < count; x++)
+            {
+                Thread thread = new Thread(Action =>
+                {
+                    List<Location> l = new List<Location>(possibleLocations).Shuffle(rng).ToList();
+                    l = RouteCalculator.NearestNeighbor(l);
+                    lock (newCalcLock)
+                        locationsList.Add(l);
+                });
+
+                thread.Priority = ThreadPriority.BelowNormal;
+                threads.Add(thread);
+                thread.Start();
+            }
+
+            foreach (Thread t in threads)
+                t.Join();
+
+            return locationsList;
+        }
+
 
         public List<RouteCalculator> GeneticSelection(List<RouteCalculator> parents)
         {

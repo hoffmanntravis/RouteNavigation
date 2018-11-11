@@ -25,11 +25,12 @@ namespace RouteNavigation
         public DateTime pickupWindowStartTime = Config.Calculation.workdayStartTime;
         public DateTime pickupWindowEndTime = Config.Calculation.workdayStartTime;
         public string type;
+        public TimeSpan projectedAmountOverdue;
         
 
         public DateTime lastVisited = default(DateTime);
         public double currentGallonsEstimate;
-        public TimeSpan visitTime;
+        public DateTime intendedPickupDate;
         public List<Location> neighbors = new List<Location>();
     }
 

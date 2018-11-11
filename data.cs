@@ -540,8 +540,8 @@ namespace RouteNavigation
                     location.contactName = row["contact_name"].ToString();
                 if (row["contact_email"] != DBNull.Value)
                     location.contactEmail = row["contact_email"].ToString();
-                if (row["visit_time"] != DBNull.Value)
-                    location.visitTime = TimeSpan.Parse(row["visit_time"].ToString());
+                if (row["intended_pickup_date"] != DBNull.Value)
+                    location.intendedPickupDate = DateTime.Parse(row["intended_pickup_date"].ToString());
                 if (row["type_text"] != DBNull.Value)
                     location.type = row["type_text"].ToString();
                 locations.Add(location);

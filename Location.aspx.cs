@@ -433,7 +433,7 @@ namespace RouteNavigation
             {
                 Stream stream = fileUpload.FileContent;
                 StreamReader reader = new StreamReader(stream);
-                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "visit_time", "location_type" };
+                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "intended_pickup_date", "location_type" };
 
                 string Content = reader.ReadToEnd();
 
