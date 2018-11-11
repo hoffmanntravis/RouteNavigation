@@ -55,6 +55,10 @@ namespace RouteNavigation
                     throw exception;
                 }
 
+                List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startTime);
+                availableLocations = availableLocations.Except(serviceNowLocations).ToList();
+                availableLocations.InsertRange(0, serviceNowLocations);
+
                 //UpdateDistanceFromSource(allLocations);
 
                 //sort the locations by distance from the source in descending order
@@ -71,13 +75,6 @@ namespace RouteNavigation
                         startDate = AdvanceDateToNextWeekday(startDate);
                     }
                     Logger.Trace("startdate is {0}", startDate);
-
-                    List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startDate);
-                    //Insert the locations that need service now at the front of the list as soon as possible.  
-                    //We want the Genetic Algorithm to select these, so the general order is preserved.  However, they need to be processed immediately.
-                    //availableLocations = availableLocations.Except(serviceNowLocations).ToList();
-                    availableLocations.InsertRange(0, serviceNowLocations);
-
                     //Remove any locations that would be picked up too soon to be relevent.  We'll invoke a recursive call at the end to deal with these.
                     List<Location> availableLocationsWithPostponedLocations = availableLocations.ToList();
                     List<Location> postPonedLocations = GetLaterDateLocations(availableLocations);
@@ -98,19 +95,12 @@ namespace RouteNavigation
                         continue;
                     }
 
-                    //Reorganize the list of locations so that locations which require service now due to being overdue or would be overdue relative to the schedule will be get priority.  
-                    //Preserve the overall order that the genetic algorithm set by simply moving them from original position in the list to the front in the same order otherwise.
-
-                    /*
+                    serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startTime);
                     availableLocations = availableLocations.Except(serviceNowLocations).ToList();
                     availableLocations.InsertRange(0, serviceNowLocations);
-                    */
-
-                    //serviceNowLocations.ForEach(l => availableLocations.Remove(l));
-                    //availableLocations.InsertRange(0, serviceNowLocations);
 
                     //sort vehicles by size descending.  We do this to ensure that large vehicles are handled first since they have a limited location list available to them.
-                    //currentVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
+                    currentVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
                     Vehicle vehicle = currentVehicles.First();
 
                     List<Location> compatibleLocations = GetCompatibleLocations(vehicle, availableLocations.ToList());
@@ -128,6 +118,10 @@ namespace RouteNavigation
                     {
                         DateTime potentialTime = currentTime;
                         double potentialDistance = currentDistance;
+
+                        serviceNowLocations = GetRequireServiceNowLocations(compatibleLocations, currentTime);
+                        compatibleLocations = compatibleLocations.Except(serviceNowLocations).ToList();
+                        compatibleLocations.InsertRange(0, serviceNowLocations);
 
                         Location nextLocation;
                         nextLocation = compatibleLocations.First();
