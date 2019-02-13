@@ -21,6 +21,7 @@ namespace RouteNavigation
         private uint breedersCount;
         private uint offSpringPoolSize;
         private uint neighborCount;
+
         double crossoverProbability;
 
         double elitismRatio;
@@ -58,7 +59,7 @@ namespace RouteNavigation
             //Attempt to seed some good data
             //
 
-            startingPopulation = ThreadInitialPool(50);
+            startingPopulation = ThreadInitialPool(populationSize);
 
             //startingPopulation.Add(new List<Location>(possibleLocations).Shuffle(rng).ToList());
 
@@ -146,6 +147,9 @@ namespace RouteNavigation
                     DataAccess.updateGreaseCutoffToConfigValue();
                     //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
                     availableVehicles = DataAccess.GetVehicles().Where(v => v.operational == true).ToList();
+                    if (availableVehicles.Count <= 0)
+                        throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
+
                     possibleLocations = allLocations.ToList();
                     possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
                     possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
@@ -185,6 +189,8 @@ namespace RouteNavigation
                     Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
 
                     Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
+                    //DataAccess.insertRoutes(batchId, fitnessCalcs.First().routes, fitnessCalcs.First().activityId);
+                    //DataAccess.UpdateRouteMetadata(batchId, fitnessCalcs.First().metadata);
 
                     for (uint i = 0; i < iterations; i++)
                     {
@@ -212,6 +218,7 @@ namespace RouteNavigation
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                     DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
                     DataAccess.updateIteration(0, 0);
+                    
                     Logger.Info("Finished calculations.");
                 }
                 finally
@@ -251,24 +258,6 @@ namespace RouteNavigation
 
             offspring = GeneticMutation(offspring);
             calcs = ThreadCalculations(offspring, calcs);
-
-            /*List<List<Location>> randomSampleMutate = new List<List<Location>>();
-            int mutationCount = Convert.ToInt32(Math.Round(mutationProbability * decayFunction() * calcs.Count));
-            if (mutationCount > 0)
-            {
-                for (int x = 0; x < mutationCount; x++)
-                {
-                    randomSampleMutate.Add(calcs[rng.Next(calcs.Count)].metadata.processedLocations.ToList());
-                }
-            }
-
-            randomSampleMutate = geneticMutation(randomSampleMutate);
-            calcs = threadCalculations(randomSampleMutate, calcs);
-
-            Logger.LogMessage(string.Format("running potential mutation of {0} random sample of all calcs", mutationCount), "DEBUG");
-            */
-            //foreach (RouteCalculator c in calcs)
-            //    Logger.LogMessage("CalcCount after mutation: " + c.metadata.processedLocations.Count.ToString());
 
             //add elites into the list since lower performing items will be removed in place of them
             elites.ForEach(a => calcs.Add(a));
@@ -315,7 +304,7 @@ namespace RouteNavigation
             return calcs;
         }
 
-        public List<List<Location>> ThreadInitialPool(int count)
+        public List<List<Location>> ThreadInitialPool(uint count)
         {
             List<List<Location>> locationsList = new List<List<Location>>();
             SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
@@ -324,7 +313,7 @@ namespace RouteNavigation
                 Thread thread = new Thread(Action =>
                 {
                     List<Location> l = new List<Location>(possibleLocations).Shuffle(rng).ToList();
-                    l = RouteCalculator.NearestNeighbor(l);
+
                     lock (newCalcLock)
                         locationsList.Add(l);
                 });
@@ -337,7 +326,38 @@ namespace RouteNavigation
             foreach (Thread t in threads)
                 t.Join();
 
+            int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * locationsList.Count, 0);
+            for (int x = 0; x < seedCount; x++)
+                locationsList[x] = RouteCalculator.NearestNeighbor(locationsList[x]);
+
             return locationsList;
+
+            /*
+            int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * possibleLocations.Count, 0);
+            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
+            for (int x = 0; x < seedCount; x++)
+            {
+                Location startingLocation = possibleLocations[x];
+                List<Location> locationsTemp = new List<Location>(possibleLocations);
+                Thread thread = new Thread(Action =>
+                {
+                    List<Location> l = RouteCalculator.NearestNeighbor(locationsTemp, startingLocation);
+                    lock (newCalcLock)
+                        locationsList.Add(l);
+                });
+
+                thread.Priority = ThreadPriority.BelowNormal;
+                threads.Add(thread);
+                thread.Start();
+            }
+
+            foreach (Thread t in threads)
+                t.Join();
+
+            
+
+            return locationsList;
+            */
         }
 
 
@@ -373,7 +393,6 @@ namespace RouteNavigation
 
         public List<List<Location>> ProduceOffspring(List<RouteCalculator> breeders)
         {
-
             Logger.Trace(string.Format("Producing offspring from {0} breeders", breeders.Count));
             List<List<Location>> offspring = new List<List<Location>>();
             //make a copy of the original list.  We'll remove from breeders as we populate offspring, but if we need more breeders and run out, we'll refresh the pool with the oirignals.
@@ -425,75 +444,75 @@ namespace RouteNavigation
         /*public List<Location> geneticCrossover(List<Location> parentALocations, List<Location> parentBLocations)
         {
 
-            Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
+        Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
 
-            int routeHashParentA = GenerateRouteHash(parentALocations);
-            int routeHashParentB = GenerateRouteHash(parentBLocations);
+        int routeHashParentA = GenerateRouteHash(parentALocations);
+        int routeHashParentB = GenerateRouteHash(parentBLocations);
 
-            if (routeHashParentA != routeHashParentB)
+        if (routeHashParentA != routeHashParentB)
+        {
+            Logger.LogMessage("routeHashes for ParentA and ParentB do not match");
+        }
+
+
+        int crossoverCount = Convert.ToInt32(Math.Round(crossoverRatio * parentALocations.Count));
+        if (crossoverRatio > 0 && crossoverCount == 0)
+            crossoverCount = 1;
+        List<Location> child = new List<Location>();
+
+        int startSwathIndex = rng.Next(parentALocations.Count - crossoverCount);
+
+        //fill the child List with empty locations so we can update existing index locations in future swaps
+
+        List<Location> swathLocations = parentALocations.GetRange(startSwathIndex, crossoverCount);
+        //apply the randomely selected swath to the child
+
+        child = swathLocations;
+
+        foreach (Location l in parentBLocations)
+        {
+            //ignore any locations that were already inserted as part of the swath
+            if (child.Contains(l))
+                continue;
+
+            //if the location is on the left of the swath start, insert it at the beginning of the child and increment the index for the next insertion
+            if (parentBLocations.IndexOf(l) <= startSwathIndex)
             {
-                Logger.LogMessage("routeHashes for ParentA and ParentB do not match");
+                child.Insert(0, l);
+            }
+            //if the location is on the right of the swath start, insert it at the beginning of the child and increment the index for the next insertion
+            if (parentBLocations.IndexOf(l) > startSwathIndex)
+            {
+                child.Insert(child.Count - 1, l);
+                //wrapAround the leftside if we exceed the index on the right side
+            }
+        }
+
+        foreach (Location c in child)
+            if (c.address == null)
+            {
+                int x = 0;
             }
 
+        int childRouteHash = GenerateRouteHash(child);
+        if (routeHashParentA != childRouteHash)
+        {
+            Logger.LogMessage("routeHashes for ParentA and child do not match");
+        }
+        else
+        {
+                Logger.LogMessage("routeHashes for ParentA and child match");
+        }
 
-            int crossoverCount = Convert.ToInt32(Math.Round(crossoverRatio * parentALocations.Count));
-            if (crossoverRatio > 0 && crossoverCount == 0)
-                crossoverCount = 1;
-            List<Location> child = new List<Location>();
-
-            int startSwathIndex = rng.Next(parentALocations.Count - crossoverCount);
-
-            //fill the child List with empty locations so we can update existing index locations in future swaps
-
-            List<Location> swathLocations = parentALocations.GetRange(startSwathIndex, crossoverCount);
-            //apply the randomely selected swath to the child
-
-            child = swathLocations;
-
-            foreach (Location l in parentBLocations)
-            {
-                //ignore any locations that were already inserted as part of the swath
-                if (child.Contains(l))
-                    continue;
-
-                //if the location is on the left of the swath start, insert it at the beginning of the child and increment the index for the next insertion
-                if (parentBLocations.IndexOf(l) <= startSwathIndex)
-                {
-                    child.Insert(0, l);
-                }
-                //if the location is on the right of the swath start, insert it at the beginning of the child and increment the index for the next insertion
-                if (parentBLocations.IndexOf(l) > startSwathIndex)
-                {
-                    child.Insert(child.Count - 1, l);
-                    //wrapAround the leftside if we exceed the index on the right side
-                }
-            }
-
-            foreach (Location c in child)
-                if (c.address == null)
-                {
-                    int x = 0;
-                }
-
-            int childRouteHash = GenerateRouteHash(child);
-            if (routeHashParentA != childRouteHash)
-            {
-                Logger.LogMessage("routeHashes for ParentA and child do not match");
-            }
-            else
-            {
-                    Logger.LogMessage("routeHashes for ParentA and child match");
-            }
-
-            if (routeHashParentB != childRouteHash)
-            {
-                Logger.LogMessage("routeHashes for ParentB and child do not match");
-            }
-            else
-            {
-                Logger.LogMessage("routeHashes for ParentB and child match");
-            }
-            return child;
+        if (routeHashParentB != childRouteHash)
+        {
+            Logger.LogMessage("routeHashes for ParentB and child do not match");
+        }
+        else
+        {
+            Logger.LogMessage("routeHashes for ParentB and child match");
+        }
+        return child;
         }
         */
 
@@ -606,21 +625,6 @@ namespace RouteNavigation
                         mutateLocations.RemoveAt(displacedGeneIndex);
 
                         int insertGeneIndex = rng.Next(mutateLocations.Count);
-                        /*
-                        //Insert at a neighbor location
-                        List<Location> displacedGeneNeighbors = RouteCalculator.FindNeighbors(mutateLocations[displacedGeneIndex], mutateLocations, 2).ToList();
-                        Location insertGene = displacedGeneNeighbors[rng.Next(displacedGeneNeighbors.Count)];
-                        int insertGeneIndex = mutateLocations.IndexOf(insertGene);
-
-                        double proximalInsertionChance = .5;
-
-                        //Have a percent chance of the mutation occurring at a neighbor location of the displaced gene instead of randomly
-                        if (rng.Next(101) <= proximalInsertionChance * 100)
-                        {
-                            Location insertGeneNeighbor = displacedGene.neighbors[displacedGene.neighbors.Count / 5];
-                            insertGeneIndex = mutateLocations.IndexOf(insertGeneNeighbor);
-                        }*/
-
                         mutateLocations.Insert(insertGeneIndex, displacedGene);
 
                     }
@@ -658,9 +662,7 @@ namespace RouteNavigation
                 string concat = "";
                 locationsCopy.Sort((a, b) => a.address.CompareTo(b.address));
                 foreach (Location location in locationsCopy)
-                {
                     concat += location.address;
-                }
 
                 hash = concat.GetHashCode();
             }

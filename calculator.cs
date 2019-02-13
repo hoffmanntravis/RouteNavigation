@@ -33,6 +33,8 @@ namespace RouteNavigation
         {
             this.allLocations = new List<Location>(allLocations);
             this.availableVehicles = new List<Vehicle>(availableVehicles);
+            if (availableVehicles.Count <= 0)
+                throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
         }
 
         public List<Route> CalculateRoutes(List<Location> availableLocations)
@@ -40,9 +42,9 @@ namespace RouteNavigation
             List<Vehicle> currentVehicles = availableVehicles.ToList();
             Trace.CorrelationManager.ActivityId = Guid.NewGuid();
             activityId = Trace.CorrelationManager.ActivityId;
-            DateTime startTime = Config.Calculation.workdayStartTime;
-            DateTime endTime = Config.Calculation.workdayEndTime;
             metadata.intakeLocations = allLocations;
+            DateTime startTime = startDate + Config.Calculation.workdayStartTime;
+            DateTime endTime = startDate + Config.Calculation.workdayEndTime;
 
             try
             {
@@ -73,8 +75,12 @@ namespace RouteNavigation
                         //get some more vehicles and start a new day, with new routes
                         currentVehicles = availableVehicles.ToList();
                         startDate = AdvanceDateToNextWeekday(startDate);
+
                     }
                     Logger.Trace("startdate is {0}", startDate);
+                    startTime = startDate + Config.Calculation.workdayStartTime;
+                    endTime = startDate + Config.Calculation.workdayEndTime;
+
                     //Remove any locations that would be picked up too soon to be relevent.  We'll invoke a recursive call at the end to deal with these.
                     List<Location> availableLocationsWithPostponedLocations = availableLocations.ToList();
                     List<Location> postPonedLocations = GetLaterDateLocations(availableLocations);
@@ -169,29 +175,27 @@ namespace RouteNavigation
 
                         //If the time it would take to travel to the location is greater than the allowed pickup window, go anyway.  Otherwise it will never get visited.
 
-                        if (travelTime <= nextLocation.pickupWindowEndTime - nextLocation.pickupWindowStartTime)
+                        /*if (travelTime <= nextLocation.pickupWindowEndTime - nextLocation.pickupWindowStartTime)
                         {
                             //If the location is not allowed before or after a certain time and the potential time has been exceeded, remove it.  Calc will advance a day and deal with it at that point if it's not compatible currently.
-                            if (nextLocation.pickupWindowStartTime != DateTime.MinValue)
-                                if ((potentialTime < nextLocation.pickupWindowStartTime))
+                                if ((potentialTime < startDate + nextLocation.pickupWindowStartTime))
                                 {
                                     compatibleLocations.Remove(nextLocation);
                                     continue;
                                 }
 
-                            if (nextLocation.pickupWindowEndTime != DateTime.MaxValue)
-                                if ((potentialTime > nextLocation.pickupWindowEndTime))
+                                if ((potentialTime > startDate + nextLocation.pickupWindowEndTime))
                                 {
                                     compatibleLocations.Remove(nextLocation);
                                     continue;
                                 }
-                        }
+                        }*/
 
-                        if (nextLocation.type == "oil")
+                        if (nextLocation.hasOil == true)
                         {
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.oilPickupAverageDurationMinutes);
                         }
-                        if (nextLocation.type == "grease")
+                        if (nextLocation.hasGrease == true)
                         {
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.greasePickupAverageDurationMinutes);
                         }
@@ -616,7 +620,7 @@ namespace RouteNavigation
             return route;
         }
 
-        public static List<Location> NearestNeighbor(List<Location> route)
+        public static List<Location> NearestNeighbor(List<Location> route, Location firstNode = null)
         {
             if (route.Count == 1)
                 return route;
@@ -625,8 +629,12 @@ namespace RouteNavigation
 
             List<Location> nearestNeighborRoute = new List<Location>();
             List<Location> unVisitedNodes = new List<Location>(route);
+            Location nearest;
+            if (firstNode == null)
+                nearest = unVisitedNodes.First();
+            else
+                nearest = firstNode;
 
-            Location nearest = unVisitedNodes.First();
             nearestNeighborRoute.Add(nearest);
             unVisitedNodes.Remove(nearest);
 

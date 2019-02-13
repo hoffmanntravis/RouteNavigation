@@ -13,8 +13,8 @@ namespace RouteNavigation
         {
             public static Location origin;
             public static double currentFillLevelErrorMarginPercent = 0;
-            public static DateTime workdayStartTime = DateTime.MinValue;
-            public static DateTime workdayEndTime = DateTime.MinValue;
+            public static TimeSpan workdayStartTime = TimeSpan.MinValue;
+            public static TimeSpan workdayEndTime = TimeSpan.MaxValue;
             public static DateTime greaseTrapCutoffTime = DateTime.MinValue;
             public static double oilPickupAverageDurationMinutes = 30;
             public static double greasePickupAverageDurationMinutes = 30;
@@ -43,6 +43,7 @@ namespace RouteNavigation
             public static double MutationProbability = .05;
             public static uint MutationAlleleMax = 1;
             public static double GrowthDecayExponent = 1;
+            public static double seedRatioNearestNeighbor = .2;
         }
 
         public static class Features

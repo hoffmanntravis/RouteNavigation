@@ -44,8 +44,9 @@
                     var locationLastVisited = "Last Visited: " + parseJsonDate(location.lastVisited);
                     var locationDaysUntilDue = "Days Until Due: " + location.daysUntilDue;
                     var locationDistanceFromDepot = "Distance From Depot: " + location.distanceFromDepot + " miles";
-                    var locationType = "Type: " + location.type;
-                    var popup = L.popup().setContent(locationNameText + "<br>" + locationAddressText + "<br>" + locationType + "<br>" + locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot + "<br>" + locationLastVisited);
+                    var locationOil = "Oil: " + location.hasOil;
+                    var locationGrease = "Grease: " + location.hasGrease;
+                    var popup = L.popup().setContent(locationNameText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" +  locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot + "<br>" + locationLastVisited);
 
                     var marker = L.marker([routes[i].allLocations[j].coordinates.lat, routes[i].allLocations[j].coordinates.lng], { icon: iconImage })
                     marker.bindTooltip(routes[i].allLocations[j].locationName);

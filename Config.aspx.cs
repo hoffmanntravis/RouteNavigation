@@ -49,10 +49,12 @@ namespace RouteNavigation
                 txtMinimumDaysUntilPickup.Text = Config.Calculation.minimDaysUntilPickup.ToString();
                 txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
 
-                if (Config.Calculation.workdayStartTime != DateTime.MinValue)
-                    txtWorkDayStart.Text = Config.Calculation.workdayStartTime.TimeOfDay.ToString();
-                if (Config.Calculation.workdayEndTime != DateTime.MinValue)
-                    txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.TimeOfDay.ToString();
+                
+                  if (Config.Calculation.workdayStartTime != TimeSpan.MinValue)
+                    txtWorkDayStart.Text = Config.Calculation.workdayStartTime.ToString();
+                if (Config.Calculation.workdayEndTime != TimeSpan.MinValue)
+                    txtWorkDayEnd.Text = Config.Calculation.workdayEndTime.ToString();
+               
                 if (Config.Calculation.greaseTrapCutoffTime != DateTime.MinValue)
                 {
                     txtGreaseTrapCutoffTime.Text = Config.Calculation.greaseTrapCutoffTime.TimeOfDay.ToString();
@@ -138,9 +140,9 @@ namespace RouteNavigation
                 if (!(String.IsNullOrEmpty(txtMaximumDaysOverdue.Text)))
                     cmd.Parameters.AddWithValue("p_maximum_days_overdue", NpgsqlTypes.NpgsqlDbType.Integer, txtMaximumDaysOverdue.Text);
                 if (!(String.IsNullOrEmpty(txtWorkDayStart.Text)))
-                    cmd.Parameters.AddWithValue("p_workday_start_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayStart.Text);
+                    cmd.Parameters.AddWithValue("p_workday_start_time", NpgsqlTypes.NpgsqlDbType.Date, txtWorkDayStart.Text);
                 if (!(String.IsNullOrEmpty(txtWorkDayEnd.Text)))
-                    cmd.Parameters.AddWithValue("p_workday_end_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayEnd.Text);
+                    cmd.Parameters.AddWithValue("p_workday_end_time", NpgsqlTypes.NpgsqlDbType.Date, txtWorkDayEnd.Text);
                 if (!(String.IsNullOrEmpty(txtGreaseTrapCutoffTime.Text)))
                     cmd.Parameters.AddWithValue("p_grease_pickup_time_cutoff", NpgsqlTypes.NpgsqlDbType.Time, txtGreaseTrapCutoffTime.Text);
                 if (!(String.IsNullOrEmpty(txtOilPickupAverageDuration.Text)))

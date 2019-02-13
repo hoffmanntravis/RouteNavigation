@@ -15,6 +15,7 @@
     <div class="divHeader">
         <asp:Button CssClass="headerRowRight" ID="btnExportCsv" runat="server" Text="Export data to .CSV" Style="float: right;" OnClick="BtnExportCsv_Click" />
         <asp:Button CssClass="headerRowRight" ID="btnImportCsv" runat="server" Text="Upload .CSV data" Style="float: right;" OnClientClick="return disp_confirm_severe();" OnClick="BtnImportCsv_Click" />
+
         <asp:FileUpload CssClass="headerRowRight" ID="fileUpload" runat="server" Style="float: right;" />
         <asp:Panel runat="server" DefaultButton="BtnSearch">
             <asp:DropDownList CssClass="headerRowLeft" ID="lstSearchFilters" runat="server" Style="float: left;" />
@@ -26,14 +27,12 @@
 
     <asp:ListView ID="LocationsListView" runat="server"
         DataKeyNames="id"
-        OnItemDataBound="LocationstListView_ItemDataBound"
         OnPagePropertiesChanging="LocationsListView_PagePropertiesChanging"
         OnItemEditing="LocationsListView_RowEditing"
         OnItemCanceling="LocationsListView_RowCancelingEdit"
         OnItemUpdating="LocationsListView_RowUpdating"
         OnItemDeleting="LocationsListView_RowDeleting"
         OnItemInserting="LocationsListView_RowInsert"
-        OnItemCreated="LocationsListView_ItemCreated"
         InsertItemPosition="LastItem">
 
         <EmptyDataTemplate>
@@ -91,9 +90,13 @@
                             <b>Contact Email</b>
                             <asp:ImageButton ID="imgSortContactEmail" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByContactEmail_Click" />
                         </td>
-                        <td id="tdType" runat="server">
-                            <b>type</b>
+                        <td id="tdOil" runat="server">
+                            <b>Oil</b>
                             <asp:ImageButton ID="imgSortType" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByType_Click" />
+                        </td>
+                        <td id="tdGrease" runat="server">
+                            <b>Grease</b>
+                            <asp:ImageButton ID="ImageButton1" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByType_Click" />
                         </td>
                         <td id="tdDaysUntilDue" runat="server">
                             <b>Days Until Due</b>
@@ -160,7 +163,10 @@
                         <asp:Label ID="labe11" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="labe12" runat="server" Text='<%# Eval("type_text") %>'></asp:Label>
+                        <asp:CheckBox ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>' Enabled="false"   />
+                    </td>
+                    <td>
+                        <asp:CheckBox ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>' Enabled="false" />
                     </td>
                     <td>
                         <asp:Label ID="labe13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
@@ -211,7 +217,10 @@
                     <asp:Label ID="label11" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label12" runat="server" Text='<%# Bind("type_text") %>'></asp:Label>
+                    <asp:CheckBox  ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>'  />
+                </td>
+                <td>
+                    <asp:CheckBox  ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>'  />
                 </td>
                 <td>
                     <asp:Label ID="label13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
@@ -261,8 +270,10 @@
                     <asp:TextBox class="tableInput" ID="txtEditContactEmail" runat="server" Text='<%# Bind("contact_email") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:DropDownList class="tableInput" ID="ddlEditLocationType" runat="server"></asp:DropDownList>
-                    <asp:Label ID="lblEditLocationType" runat="server" Text='<%# Eval("type") %>' Visible="false"></asp:Label>
+                    <asp:CheckBox class="tableInput" ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>'  />
+                </td>
+                <td>
+                    <asp:CheckBox class="tableInput" ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>'  />
                 </td>
                 <td>
                     <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
@@ -331,7 +342,10 @@
                     </asp:Panel>
                 </td>
                 <td>
-                    <asp:DropDownList class="tableInput" ID="ddlInsertLocationType" runat="server"></asp:DropDownList>
+                    <asp:CheckBox  ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>'  />
+                </td>
+                <td>
+                    <asp:CheckBox  ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>'  />
                 </td>
                 <td></td>
                 <td></td>

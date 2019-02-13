@@ -1,10 +1,14 @@
-﻿using NLog;
+﻿using Dapper;
+using Dapper.FluentMap;
+using NLog;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Web;
 
@@ -17,6 +21,14 @@ namespace RouteNavigation
         static string mapsBaseUrl = System.Configuration.ConfigurationManager.AppSettings["googleDirectionsMapsUrl"];
         static string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
         static string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
+
+        static DataAccess()
+        {
+            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+            FluentMapper.Initialize(config => {
+                config.AddMap(new CoordinatesMap());
+            });
+        }
 
         public static void UpdateDbConfigWithApiStrings()
         {
@@ -239,12 +251,28 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static List<Location> GetLocations(string filterColumnName = "location_name", string filterString = null)
+        static string GetDescriptionFromAttribute(MemberInfo member)
         {
-            DataTable dataTable = new DataTable();
-            GetLocationData(dataTable, filterColumnName, filterString);
-            List<Location> list = ConvertDataTableToLocationsList(dataTable);
-            return list;
+            if (member == null) return null;
+
+            var attrib = (DescriptionAttribute)Attribute.GetCustomAttribute(member, typeof(DescriptionAttribute), false);
+            return attrib == null ? null : attrib.Description;
+        }
+
+        public static List<Location> GetLocations()
+        {
+            List<Location> locations = new List<Location>();
+
+            using (var connection = new Npgsql.NpgsqlConnection(conString))
+                //return connection.Query<Location>("select_location", commandType: CommandType.StoredProcedure).ToList();
+
+                //mapping example in case a join or multi query is needed to map this
+                locations = connection.Query<Location, Coordinates, Location> ("select_location", (l, coordinates) => {
+                    l.coordinates = coordinates;
+                    return l;
+                }, splitOn: "coordinates_latitude", commandType: CommandType.StoredProcedure).ToList();
+
+            return locations;
         }
 
         public static DataTable GetLocationTypes()
@@ -374,22 +402,32 @@ namespace RouteNavigation
 
         public static void PopulateConfig()
         {
-            DataTable configsDataTable = GetConfigData();
-            DataTable featuresDataTable = GetFeaturesData();
+                DataTable configsDataTable = GetConfigData();
+                DataTable featuresDataTable = GetFeaturesData();
 
-            ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
+                ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
         }
 
         public static Location GetLocationById(int id)
         {
             UpdateDaysUntilDue();
-            DataTable dataTable = GetLocationData(id);
-
-            List<Location> list = ConvertDataTableToLocationsList(dataTable);
-            if (list.Count > 0)
-                return list.First();
-            else
-                return null;
+            Location location;
+            using (var connection = new Npgsql.NpgsqlConnection(conString))
+            {
+                try
+                {
+                    location = connection.Query<Location, Coordinates, Location>("select_location_by_id", (l, coordinates) => {
+                        l.coordinates = coordinates;
+                        return l;
+                    }, new { p_id = id }, splitOn: "coordinates_latitude", commandType: CommandType.StoredProcedure).FirstOrDefault();
+                    return location;
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error(exception);
+                    return null;
+                }
+            }
         }
 
         public static void SetOrigin(int id)
@@ -415,7 +453,6 @@ namespace RouteNavigation
         }
 
 
-
         public static void ConvertDataTablesToConfig(DataTable configs, DataTable features)
         {
             foreach (DataRow row in configs.Rows)
@@ -436,9 +473,9 @@ namespace RouteNavigation
                 if (row["maximum_days_overdue"] != DBNull.Value)
                     Config.Calculation.maximumDaysOverdue = uint.Parse(row["maximum_days_overdue"].ToString());
                 if (row["workday_start_time"] != DBNull.Value)
-                    Config.Calculation.workdayStartTime = DateTime.Parse(row["workday_start_time"].ToString());
+                    Config.Calculation.workdayStartTime = TimeSpan.Parse(row["workday_start_time"].ToString());
                 if (row["workday_end_time"] != DBNull.Value)
-                    Config.Calculation.workdayEndTime = DateTime.Parse(row["workday_end_time"].ToString());
+                    Config.Calculation.workdayEndTime = TimeSpan.Parse(row["workday_end_time"].ToString());
                 if (row["grease_pickup_time_cutoff"] != DBNull.Value)
                     Config.Calculation.greaseTrapCutoffTime = DateTime.Parse(row["grease_pickup_time_cutoff"].ToString());
                 if (row["max_distance_from_depot"] != DBNull.Value)
@@ -502,53 +539,6 @@ namespace RouteNavigation
             RunStoredProcedure(cmd);
         }
 
-        public static List<Location> ConvertDataTableToLocationsList(DataTable dataTable)
-        {
-            List<Location> locations = new List<Location>();
-            foreach (DataRow row in dataTable.Rows)
-            {
-                Location location = new Location();
-                if (row["id"] != DBNull.Value)
-                    location.id = int.Parse(row["id"].ToString());
-                if (row["last_visited"] != DBNull.Value)
-                    location.lastVisited = DateTime.Parse(row["last_visited"].ToString());
-                if (row["client_priority"] != DBNull.Value)
-                    location.clientPriority = int.Parse(row["client_priority"].ToString());
-                if (row["location_name"] != DBNull.Value)
-                    location.locationName = row["location_name"].ToString();
-                if (row["address"] != DBNull.Value)
-                    location.address = row["address"].ToString();
-                if (row["days_until_due"] != DBNull.Value)
-                    location.daysUntilDue = double.Parse(row["days_until_due"].ToString());
-                if (row["capacity_gallons"] != DBNull.Value)
-                    location.capacityGallons = double.Parse(row["capacity_gallons"].ToString());
-                if (row["vehicle_size"] != DBNull.Value)
-                    location.vehicleSize = int.Parse(row["vehicle_size"].ToString());
-                if (row["coordinates_latitude"] != DBNull.Value)
-                    location.coordinates.lat = double.Parse(row["coordinates_latitude"].ToString());
-                if (row["coordinates_longitude"] != DBNull.Value)
-                    location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
-                if (row["distance_from_source"] != DBNull.Value)
-                    location.distanceFromDepot = double.Parse(row["distance_from_source"].ToString());
-                if (row["pickup_interval_days"] != DBNull.Value)
-                    location.pickupIntervalDays = int.Parse(row["pickup_interval_days"].ToString());
-                if (row["pickup_window_start_time"] != DBNull.Value)
-                    location.pickupWindowStartTime = DateTime.Parse(row["pickup_window_start_time"].ToString());
-                if (row["pickup_window_end_time"] != DBNull.Value)
-                    location.pickupWindowEndTime = DateTime.Parse(row["pickup_window_end_time"].ToString());
-                if (row["contact_name"] != DBNull.Value)
-                    location.contactName = row["contact_name"].ToString();
-                if (row["contact_email"] != DBNull.Value)
-                    location.contactEmail = row["contact_email"].ToString();
-                if (row["intended_pickup_date"] != DBNull.Value)
-                    location.intendedPickupDate = DateTime.Parse(row["intended_pickup_date"].ToString());
-                if (row["type_text"] != DBNull.Value)
-                    location.type = row["type_text"].ToString();
-                locations.Add(location);
-            }
-            return locations;
-        }
-
         public static List<Location> ConvertRouteDetailsDataTableToLocations(DataTable dataTable)
         {
             List<Location> locations = new List<Location>();
@@ -573,8 +563,10 @@ namespace RouteNavigation
                     location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
                 if (row["distance_from_source"] != DBNull.Value)
                     location.distanceFromDepot = double.Parse(row["distance_from_source"].ToString());
-                if (row["type"] != DBNull.Value)
-                    location.type = row["type"].ToString();
+                if (row["has_oil"] != DBNull.Value)
+                    location.hasOil = (bool)row["has_oil"];
+                if (row["has_grease"] != DBNull.Value)
+                    location.hasGrease = (bool)row["has_grease"];
                 locations.Add(location);
             }
             return locations;
@@ -636,64 +628,17 @@ namespace RouteNavigation
             return vehicles;
         }
 
-        public static List<Route> ConvertDataTableToRoutesList(DataTable dataTable)
-        {
-            List<Route> routes = new List<Route>();
-
-            foreach (DataRow row in dataTable.Rows)
-            {
-                Location origin = new Location();
-                if (row["origin_location_id"] != DBNull.Value)
-                    origin = (GetLocations("id", row["origin_location_id"].ToString())).First();
-
-                Route route = new Route();
-                if (row["id"] != DBNull.Value)
-                    route.id = int.Parse(row["id"].ToString());
-                if (row["total_time"] != DBNull.Value)
-                    route.totalTime = TimeSpan.Parse(row["total_time"].ToString());
-                if (row["origin_location_address"] != DBNull.Value)
-                    route.origin.address = row["origin_location_address"].ToString();
-                if (row["origin_location_id"] != DBNull.Value)
-                    route.origin.id = int.Parse(row["origin_location_id"].ToString());
-                if (row["date"] != DBNull.Value)
-                    route.date = DateTime.Parse(row["date"].ToString());
-                if (row["distance_miles"] != DBNull.Value)
-                    route.distanceMiles = int.Parse(row["distance_miles"].ToString());
-                if (row["maps_url"] != DBNull.Value)
-                    route.mapsUrl = row["maps_url"].ToString();
-                routes.Add(route);
-            }
-            return routes;
-        }
-
-        public static List<Route> GetRoutes(string columnName = "id", string filterString = null)
-        {
-            DataTable dataTable = GetRouteInformationData();
-            List<Route> routes = ConvertDataTableToRoutesList(dataTable);
-            return routes;
-        }
-
         public static string GetAddressByCoordinates(double lat, double lng)
         {
-            NpgsqlConnection connection = null;
             string address = "";
-            using (connection = new Npgsql.NpgsqlConnection(conString))
+            using (var connection = new Npgsql.NpgsqlConnection(conString))
             {
                 try
                 {
-                    NpgsqlCommand cmd = new NpgsqlCommand("select_address_by_coordinates", connection);
-
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("p_lat", NpgsqlTypes.NpgsqlDbType.Integer, lat);
-                    cmd.Parameters.AddWithValue("p_lng", NpgsqlTypes.NpgsqlDbType.Integer, lng);
-                    connection.Open();
-                    address = cmd.ExecuteScalar().ToString();
-                    connection.Close();
-
+                    address = connection.Query<string>("select_address_by_coordinates", commandType: CommandType.StoredProcedure).ToString();
                 }
                 catch (Exception exception)
                 {
-
                     Logger.Error("Unable to retreive address from coordinates" + lat + "," + lng);
                     Logger.Error(exception);
                 }
@@ -842,11 +787,11 @@ namespace RouteNavigation
         {
             try
             {
-                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location;"))
-                    RunSqlCommandText(cmd);
+                //using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location;"))
+                //    RunSqlCommandText(cmd);
 
-                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
-                    RunSqlCommandText(cmd);
+                //using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
+                //    RunSqlCommandText(cmd);
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location where location_id = " + id + ";"))
                     RunSqlCommandText(cmd);

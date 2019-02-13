@@ -13,6 +13,8 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Threading;
 using NLog;
+using System.Linq;
+using CsvHelper;
 
 namespace RouteNavigation
 {
@@ -66,7 +68,7 @@ namespace RouteNavigation
             lstSearchFilters.Items.Insert(3, contactEmail);
         }
 
-        protected void LocationstListView_ItemDataBound(object sender, ListViewItemEventArgs e)
+        /*protected void LocationstListView_ItemDataBound(object sender, ListViewItemEventArgs e)
         {
             DropDownList ddlEdit = e.Item.FindControl("ddlEditLocationType") as DropDownList;
             if (ddlEdit != null)
@@ -76,6 +78,7 @@ namespace RouteNavigation
                 ddlEdit.DataBind();
             }
         }
+        */
 
         protected DropDownList populateLocationTypeDropDown(DropDownList ddlLocationType)
         {
@@ -87,18 +90,18 @@ namespace RouteNavigation
             return ddlLocationType;
         }
 
-        protected void LocationsListView_ItemCreated(object sender, ListViewItemEventArgs e)
-        {
-            if ((e.Item != null) && (e.Item.ItemType == ListViewItemType.InsertItem))
-            {
-                DropDownList ddlLocationType;
-                ddlLocationType = e.Item.FindControl("ddlInsertLocationType") as DropDownList;
-                ddlLocationType = populateLocationTypeDropDown(ddlLocationType);
-                ddlLocationType.DataBind();
-            }
+        /* protected void LocationsListView_ItemCreated(object sender, ListViewItemEventArgs e)
+          {
+               if ((e.Item != null) && (e.Item.ItemType == ListViewItemType.InsertItem))
+              {
+                  DropDownList ddlLocationType;
+                  ddlLocationType = e.Item.FindControl("ddlInsertLocationType") as DropDownList;
+                  ddlLocationType = populateLocationTypeDropDown(ddlLocationType);
+                  ddlLocationType.DataBind();
+              }
 
-        }
-
+          }
+          */
         protected void LocationsListView_RowDeleting(object sender, ListViewDeleteEventArgs e)
         {
 
@@ -131,7 +134,8 @@ namespace RouteNavigation
                 string contactName = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactName")).Text;
                 string contactEmail = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactEmail")).Text;
                 string vehicleSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditVehicleSize")).Text;
-                string locationType = ((DropDownList)LocationsListView.EditItem.FindControl("ddlEditLocationType")).SelectedItem.Value;
+                bool hasOil = ((CheckBox)LocationsListView.EditItem.FindControl("chkHasOil")).Checked;
+                bool hasGrease = ((CheckBox)LocationsListView.EditItem.FindControl("chkHasGrease")).Checked;
 
                 NpgsqlCommand cmd = new NpgsqlCommand("update_location");
                 cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
@@ -159,7 +163,7 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_address", NpgsqlTypes.NpgsqlDbType.Varchar, address.Trim());
                     DataAccess.UpdateDistanceFromSource(DataAccess.GetLocationById(id));
-                    DataAccess.UpdateGpsCoordinates(address,id);
+                    DataAccess.UpdateGpsCoordinates(address, id);
                 }
                 if (locationName != null && locationName != "")
                 {
@@ -181,10 +185,8 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                 }
-                if (locationType != null && locationType != "")
-                {
-                    cmd.Parameters.AddWithValue("p_location_type", NpgsqlTypes.NpgsqlDbType.Integer, locationType.Trim());
-                }
+                cmd.Parameters.AddWithValue("p_has_oil", NpgsqlTypes.NpgsqlDbType.Boolean, hasOil);
+                cmd.Parameters.AddWithValue("p_has_grease", NpgsqlTypes.NpgsqlDbType.Boolean, hasGrease);
 
                 DataAccess.RunStoredProcedure(cmd);
 
@@ -243,7 +245,8 @@ namespace RouteNavigation
             string contactName = ((TextBox)e.Item.FindControl("txtInsertContactName")).Text;
             string contactEmail = ((TextBox)e.Item.FindControl("txtInsertContactEmail")).Text;
             string vehicleSize = ((TextBox)e.Item.FindControl("txtInsertVehicleSize")).Text;
-            string locationType = ((DropDownList)e.Item.FindControl("ddlInsertLocationType")).SelectedItem.Value;
+            bool hasOil = ((CheckBox)e.Item.FindControl("chkHasOil")).Checked;
+            bool hasGrease = ((CheckBox)e.Item.FindControl("chkHasGrease")).Checked;
             try
             {
                 using (NpgsqlCommand cmd = new NpgsqlCommand("insert_location"))
@@ -294,10 +297,8 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                     }
-                    if (locationType != null && locationType != "")
-                    {
-                        cmd.Parameters.AddWithValue("p_location_type", NpgsqlTypes.NpgsqlDbType.Integer, locationType.Trim());
-                    }
+                    cmd.Parameters.AddWithValue("p_has_oil", NpgsqlTypes.NpgsqlDbType.Boolean, hasOil);
+                    cmd.Parameters.AddWithValue("p_has_grease", NpgsqlTypes.NpgsqlDbType.Boolean, hasGrease);
 
                     DataAccess.RunStoredProcedure(cmd);
                 }
@@ -433,18 +434,29 @@ namespace RouteNavigation
             {
                 Stream stream = fileUpload.FileContent;
                 StreamReader reader = new StreamReader(stream);
-                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "intended_pickup_date", "location_type" };
+                char delimiter = ',';
 
-                string Content = reader.ReadToEnd();
+                List<List<string>> fileLines = new List<List<string>>();
+                while (reader.Peek() >= 0)
+                {
+                    string line = reader.ReadLine();
+                    List<string> splitLine = line.Split(delimiter).ToList();
+                    fileLines.Add(splitLine);
+                }
 
-                if (String.IsNullOrEmpty(Content))
+                if (!(fileLines.Count > 0))
                 {
                     dataValidation.IsValid = false;
                     dataValidation.ErrorMessage = "Upload File is blank.  Please select a file to upload before clicking upload.";
                     return;
                 }
 
-                Content = purifyCsvDataForPostgreImport(expectedHeaders, Content);
+                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "pickup_window_end_time", "pickup_window_start_time", "location_type", "intended_pickup_date", "has_oil", "has_grease" };
+
+                fileLines = updateHeaderDataForPostgreImport(expectedHeaders, fileLines);
+
+                string updatedCsvContent = convertLinesToCSV(fileLines);
+                string updatedCsvHeader = String.Join(",", fileLines.First());
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location;"))
                     DataAccess.RunSqlCommandText(cmd);
@@ -453,9 +465,7 @@ namespace RouteNavigation
                 using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM location;"))
                     DataAccess.RunSqlCommandText(cmd);
 
-                string expectedHeaderString = String.Join(",", expectedHeaders);
-
-                DataAccess.RunPostgreImport(String.Format("location ({0}) ", expectedHeaderString), Content);
+                DataAccess.RunPostgreImport(String.Format("location ({0}) ", updatedCsvHeader), updatedCsvContent);
                 if (Config.Features.locationsJettingRemoveOnImport)
                 {
                     DataAccess.deleteLocationsWildCardSearch("jetting");
@@ -530,64 +540,51 @@ namespace RouteNavigation
             LocationsListView.DataBind();
         }
 
-        private string purifyCsvDataForPostgreImport(string[] expectedHeaders, string Content, char delimiter = ',')
-        {
-            StringReader strReader = new StringReader(Content);
-            string headerLine = strReader.ReadLine();
-            string[] headers = headerLine.Split(delimiter);
 
+        private List<List<string>> updateHeaderDataForPostgreImport(string[] expectedHeaders, List<List<string>> fileLines, char delimiter = ',')
+        {
+            List<string> headers = fileLines.First();
             List<string> expectedHeadersList = new List<string>(expectedHeaders);
             List<int> indexesToRemove = new List<int>();
 
-            for (int x = 0; x < headers.Length; x++)
+            if (headers.Contains("TrackingNumber"))
             {
-                if (!(expectedHeadersList.Contains(headers[x])))
-                {
-                    indexesToRemove.Add(x);
-                }
+                if (headers.IndexOf("AddressFullOneLine") != -1)
+                    headers[headers.IndexOf("AddressFullOneLine")] = "address";
+                if (headers.IndexOf("Account") != -1)
+                    headers[headers.IndexOf("Account")] = "location_name";
+                if (headers.IndexOf("OilPickup_Customer") != -1)
+                    headers[headers.IndexOf("OilPickup_Customer")] = "has_oil";
+                if (headers.IndexOf("GreaseTrap_Customer") != -1)
+                    headers[headers.IndexOf("GreaseTrap_Customer")] = "has_grease";
             }
 
-            string updatedContent = null;
-            string line;
-
-            StringReader strReader2 = new StringReader(Content);
-            while ((line = strReader2.ReadLine()) != null)
+            //remove columns in reverse order so the array size doesn't shift to the left as we are indexing through
+            for (int x = headers.Count() - 1; x >= 0; x--)
+                if (!(expectedHeadersList.Contains(headers[x])))
+                    for (int y = 0; y < fileLines.Count; y++)
+                        fileLines[y].RemoveAt(x);
+            /*
+            for (int x = 0; x < headers.Count(); x++)
             {
-                string[] row = line.Split(delimiter);
+                if ((headers[x] == "has_oil" || headers[x] == "has_grease"))
+                    for (int y = 0; y < fileLines.Count; y++)
+                         if (fileLines[y].IndexOf("has_oil") != -1 && fileLines[y][fileLines[y].IndexOf("has_oil")] == "")
+                            fileLines[y][x] = "false";
+            }*/
+            return fileLines;
+        }
 
-                foreach (int index in indexesToRemove)
-                {
-                    row[index] = null;
-                }
-                string lineToAdd = null;
-                //add comas between columns of row
-                bool lineHasData = false;
-                for (int x = 0; x < row.Length - 1; x++)
-                {
-
-                    if (lineHasData == false)
-                    {
-                        if (row[x] != null && row[x] != "")
-                        {
-                            lineHasData = true;
-                        }
-                    }
-                    if (row[x] != null)
-                    {
-                        lineToAdd += row[x] + ",";
-                    }
-                }
-
-                //add last item in row without a comma after
-                lineToAdd += row[row.Length - 1];
-                lineToAdd += Environment.NewLine;
-
-                if (lineHasData)
-                {
-                    updatedContent += lineToAdd;
-                }
+        private string convertLinesToCSV(List<List<string>> fileLines, char delimiter = ',')
+        {
+            string updatedContent = null;
+            foreach (List<string> line in fileLines)
+            {
+                updatedContent += String.Join(delimiter.ToString(), line);
+                updatedContent += Environment.NewLine;
             }
             return updatedContent;
         }
+
     }
 }
