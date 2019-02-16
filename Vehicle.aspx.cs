@@ -51,7 +51,7 @@ namespace RouteNavigation
                 string id = e.Keys["id"].ToString();
                 string vehicleName = ((TextBox)VehiclesListView.EditItem.FindControl("txtEditName")).Text;
                 string vehicleModel = ((TextBox)VehiclesListView.EditItem.FindControl("txtEditModel")).Text;
-                string vehicleCapacityGallons = ((TextBox)VehiclesListView.EditItem.FindControl("txtEditCapacityGallons")).Text;
+                string vehicleoilTankSize = ((TextBox)VehiclesListView.EditItem.FindControl("txtEditoilTankSize")).Text;
                 string vehiclePhysicalSize = ((TextBox)VehiclesListView.EditItem.FindControl("txtEditPhysicalSize")).Text;
                 string vehicleOperational = ((TextBox)VehiclesListView.EditItem.FindControl("txtEditOperational")).Text;
 
@@ -65,9 +65,9 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_model", NpgsqlTypes.NpgsqlDbType.Varchar, vehicleModel);
                 }
-                if (vehicleCapacityGallons != null && vehicleCapacityGallons != "")
+                if (vehicleoilTankSize != null && vehicleoilTankSize != "")
                 {
-                    cmd.Parameters.AddWithValue("p_capacity_gallons", NpgsqlTypes.NpgsqlDbType.Double, vehicleCapacityGallons);
+                    cmd.Parameters.AddWithValue("p_oil_tank_size", NpgsqlTypes.NpgsqlDbType.Double, vehicleoilTankSize);
                 }
                 if (vehiclePhysicalSize != null && vehiclePhysicalSize != "")
                 {
@@ -111,7 +111,7 @@ namespace RouteNavigation
             //Finding the controls from Gridview for the row which is going to update  
             string vehicleName = ((TextBox)e.Item.FindControl("txtInsertName")).Text;
             string vehicleModel = ((TextBox)e.Item.FindControl("txtInsertModel")).Text;
-            string vehicleCapacityGallons = ((TextBox)e.Item.FindControl("txtInsertCapacityGallons")).Text;
+            string vehicleoilTankSize = ((TextBox)e.Item.FindControl("txtInsertoilTankSize")).Text;
             string vehicleOperational = ((TextBox)e.Item.FindControl("txtInsertOperational")).Text;
             string vehiclePhysicalSize = ((TextBox)e.Item.FindControl("txtInsertPhysicalSize")).Text;
 
@@ -126,9 +126,9 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_model", NpgsqlTypes.NpgsqlDbType.Varchar, vehicleModel);
                 }
-                if (vehicleCapacityGallons != null && vehicleCapacityGallons != "")
+                if (vehicleoilTankSize != null && vehicleoilTankSize != "")
                 {
-                    cmd.Parameters.AddWithValue("p_capacity_gallons", NpgsqlTypes.NpgsqlDbType.Double, vehicleCapacityGallons);
+                    cmd.Parameters.AddWithValue("p_oil_tank_size", NpgsqlTypes.NpgsqlDbType.Double, vehicleoilTankSize);
                 }
                 if (vehicleOperational != null && vehicleOperational != "")
                 {

@@ -46,9 +46,9 @@
                             <b>id</b>
                             <asp:ImageButton ID="imgSortLocationId" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationId_Click" />
                         </td>
-                        <td id="tdLocationName" width="400" runat="server">
+                        <td id="tdaccount" width="400" runat="server">
                             <b>Location Name</b>
-                            <asp:ImageButton ID="imgSortLocationName" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLocationName_Click" />
+                            <asp:ImageButton ID="imgSortaccount" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByaccount_Click" />
                         </td>
                         <td id="tdDistanceFromDepot" onclick="tdDistanceFromDepot_click" runat="server">
                             <b>Distance from Depot</b>
@@ -58,17 +58,17 @@
                             <b>Address</b>
                             <asp:ImageButton ID="imgSortAddress" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByAddress_Click" />
                         </td>
-                        <td id="tdPickupIntervalDays"  width="60" runat="server">
+                        <td id="tdoilPickupSchedule"  width="60" runat="server">
                             <b>Pickup Interval Days</b>
                             <asp:ImageButton ID="imgSortPickupInterval" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupInterval_Click" />
                         </td>
-                        <td id="tdPickupWindowStartTime" width="90" runat="server">
+                        <td id="tdgreaseTrapPreferredTimeStart" width="90" runat="server">
                             <b>Pickup Time Start</b>
-                            <asp:ImageButton ID="imgSortPickupWindowStartTime" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowStartTime_Click" />
+                            <asp:ImageButton ID="imgSortgreaseTrapPreferredTimeStart" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortBygreaseTrapPreferredTimeStart_Click" />
                         </td>
-                        <td id="tdPickupWindowEndTime" width="80" runat="server">
+                        <td id="tdgreaseTrapPreferredTimeEnd" width="80" runat="server">
                             <b>Pickup Time End</b>
-                            <asp:ImageButton ID="imgSortPickupWindowEndTime" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupWindowEndTime_Click" />
+                            <asp:ImageButton ID="imgSortgreaseTrapPreferredTimeEnd" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortBygreaseTrapPreferredTimeEnd_Click" />
                         </td>
                         <td id="tdLastVisited" width="160" runat="server">
                             <b>Last Visited</b>
@@ -130,7 +130,7 @@
                         <asp:Label ID="lblId" runat="server" Text='<%# Eval("id") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label1" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
+                        <asp:Label ID="label1" runat="server" Text='<%# Eval("account") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label2" runat="server" Text='<%# Eval("distance_from_source") %>'></asp:Label>
@@ -139,19 +139,19 @@
                         <asp:Label ID="label3" runat="server" Text='<%# Eval("address") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label4" runat="server" Text='<%# Eval("pickup_interval_days") %>'></asp:Label>
+                        <asp:Label ID="label4" runat="server" Text='<%# Eval("oil_pickup_schedule") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label5" runat="server" Text='<%# Eval("pickup_window_start_time") %>'></asp:Label>
+                        <asp:Label ID="label5" runat="server" Text='<%# Eval("grease_trap_preferred_time_start") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label6" runat="server" Text='<%# Eval("pickup_window_end_time") %>'></asp:Label>
+                        <asp:Label ID="label6" runat="server" Text='<%# Eval("grease_trap_preferred_time_end") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label7" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label8" runat="server" Text='<%# Eval("capacity_gallons") %>'></asp:Label>
+                        <asp:Label ID="label8" runat="server" Text='<%# Eval("oil_tank_size") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label9" runat="server" Text='<%# Eval("vehicle_size") %>'></asp:Label>
@@ -163,10 +163,10 @@
                         <asp:Label ID="labe11" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:CheckBox ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>' Enabled="false"   />
+                        <asp:CheckBox ID="chkoilPickupCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("oil_pickup_customer")) %>' Enabled="false"   />
                     </td>
                     <td>
-                        <asp:CheckBox ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>' Enabled="false" />
+                        <asp:CheckBox ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>' Enabled="false" />
                     </td>
                     <td>
                         <asp:Label ID="labe13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
@@ -184,7 +184,7 @@
                     <asp:Label ID="lblSelectedId" runat="server" Text='<%# Eval("id") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label1" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
+                    <asp:Label ID="label1" runat="server" Text='<%# Eval("account") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label2" runat="server" Text='<%# Eval("distance_from_source") %>'></asp:Label>
@@ -193,19 +193,19 @@
                     <asp:Label ID="label3" runat="server" Text='<%# Eval("address") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label4" runat="server" Text='<%# Eval("pickup_interval_days") %>'></asp:Label>
+                    <asp:Label ID="label4" runat="server" Text='<%# Eval("oil_pickup_schedule") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label5" runat="server" Text='<%# Eval("pickup_window_start_time") %>'></asp:Label>
+                    <asp:Label ID="label5" runat="server" Text='<%# Eval("grease_trap_preferred_time_start") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label6" runat="server" Text='<%# Eval("pickup_window_end_time") %>'></asp:Label>
+                    <asp:Label ID="label6" runat="server" Text='<%# Eval("grease_trap_preferred_time_end") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label7" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label8" runat="server" Text='<%# Bind("capacity_gallons") %>'></asp:Label>
+                    <asp:Label ID="label8" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label9" runat="server" Text='<%# Bind("vehicle_size") %>'></asp:Label>
@@ -217,10 +217,10 @@
                     <asp:Label ID="label11" runat="server" Text='<%# Eval("contact_email") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:CheckBox  ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>'  />
+                    <asp:CheckBox  ID="chkoilPickupCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("oil_pickup_customer")) %>'  />
                 </td>
                 <td>
-                    <asp:CheckBox  ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>'  />
+                    <asp:CheckBox  ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>'  />
                 </td>
                 <td>
                     <asp:Label ID="label13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
@@ -237,7 +237,7 @@
                     <asp:Label ID="lblId" runat="server" Text='<%# Eval("id") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditClientName" runat="server" Text='<%# Bind("location_name") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditClientName" runat="server" Text='<%# Bind("account") %>'></asp:TextBox>
                 </td>
                 <td>
                     <asp:label class="tableInput" ID="lblDistanceFromDepot" runat="server" Text='<%# Bind("distance_from_source") %>'></asp:label>
@@ -246,19 +246,19 @@
                     <asp:TextBox class="tableInput" ID="txtEditAddress" runat="server" Text='<%# Bind("address") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditPickupIntervalDays" runat="server" Text='<%# Bind("pickup_interval_days") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditoilPickupSchedule" runat="server" Text='<%# Bind("oil_pickup_schedule") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditPickupWindowStartTime" runat="server" Text='<%# Bind("pickup_window_start_time") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditgreaseTrapPreferredTimeStart" runat="server" Text='<%# Bind("grease_trap_preferred_time_start") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditPickupWindowEndTime" runat="server" Text='<%# Bind("pickup_window_end_time") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditgreaseTrapPreferredTimeEnd" runat="server" Text='<%# Bind("grease_trap_preferred_time_end") %>'></asp:TextBox>
                 </td>
                 <td>
                     <asp:TextBox class="tableInput" ID="txtEditLastVisited" runat="server" Text='<%# Bind("last_visited") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditCapacityGallons" runat="server" Text='<%# Bind("capacity_gallons") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditoilTankSize" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:TextBox>
                 </td>
                 <td>
                     <asp:TextBox class="tableInput" ID="txtEditVehicleSize" runat="server" Text='<%# Bind("vehicle_size") %>'></asp:TextBox>
@@ -270,10 +270,10 @@
                     <asp:TextBox class="tableInput" ID="txtEditContactEmail" runat="server" Text='<%# Bind("contact_email") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:CheckBox class="tableInput" ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>'  />
+                    <asp:CheckBox class="tableInput" ID="chkoilPickupCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("oil_pickup_customer")) %>'  />
                 </td>
                 <td>
-                    <asp:CheckBox class="tableInput" ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>'  />
+                    <asp:CheckBox class="tableInput" ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>'  />
                 </td>
                 <td>
                     <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
@@ -289,7 +289,7 @@
                 <td></td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertClientName" placeholder="Sample Location Name" runat="server" Text='<%# Bind("location_name") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtInsertClientName" placeholder="Sample Location Name" runat="server" Text='<%# Bind("account") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
                 <td>
@@ -301,18 +301,18 @@
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertPickupIntervalDays" placeholder="30" runat="server" Text='<%# Bind("pickup_interval_days") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtInsertoilPickupSchedule" placeholder="30" runat="server" Text='<%# Bind("oil_pickup_schedule") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertPickupWindowStartTime" placeholder="06:00" runat="server" Text='<%# Bind("pickup_window_start_time") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtInsertgreaseTrapPreferredTimeStart" placeholder="06:00" runat="server" Text='<%# Bind("grease_trap_preferred_time_start") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
 
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertPickupWindowEndTime" placeholder="16:00" runat="server" Text='<%# Bind("pickup_window_end_time") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtInsertgreaseTrapPreferredTimeEnd" placeholder="16:00" runat="server" Text='<%# Bind("grease_trap_preferred_time_end") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
 
@@ -323,7 +323,7 @@
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertCapacityGallons" placeholder="500" runat="server" Text='<%# Bind("capacity_gallons")%>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtInsertoilTankSize" placeholder="500" runat="server" Text='<%# Bind("oil_tank_size")%>'></asp:TextBox>
                     </asp:Panel>
                 </td>
                 <td>
@@ -342,10 +342,10 @@
                     </asp:Panel>
                 </td>
                 <td>
-                    <asp:CheckBox  ID="chkHasOil" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_oil")) %>'  />
+                    <asp:CheckBox  ID="chkoilPickupCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("oil_pickup_customer")) %>'  />
                 </td>
                 <td>
-                    <asp:CheckBox  ID="chkHasGrease" runat="server" Checked='<%# Convert.ToBoolean(Eval("has_grease")) %>'  />
+                    <asp:CheckBox  ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>'  />
                 </td>
                 <td></td>
                 <td></td>

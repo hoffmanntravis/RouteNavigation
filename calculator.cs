@@ -1,15 +1,11 @@
-﻿using Npgsql;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
-using System.Device.Location;
-using System.Threading;
 using NLog;
 using System.Diagnostics;
+using System.Collections.Concurrent;
+
 
 namespace RouteNavigation
 {
@@ -24,10 +20,14 @@ namespace RouteNavigation
         private List<Location> allLocations;
         private List<Vehicle> availableVehicles;
 
+        private static Int32 cacheHit;
+        private static Int32 cacheMiss;
+
         public List<Location> orphanedLocations = new List<Location>();
 
         private DateTime startDate = AdvanceDateToNextWeekday(System.DateTime.Now.Date);
 
+        private static ConcurrentDictionary<string, double> distanceCache = new ConcurrentDictionary<string, double>(Environment.ProcessorCount * 20, 10000000);
 
         public RouteCalculator(List<Location> allLocations, List<Vehicle> availableVehicles)
         {
@@ -159,43 +159,43 @@ namespace RouteNavigation
                         {
                             if (nextLocationDistanceMiles >= Math.Max(distanceTolerance, Config.Calculation.searchMinimumDistance))
                             {
-                                Logger.Trace(String.Format("Removing location {1} from compatible locations. Distance from {1} to {0} is greater than the radius search tolerance of {2} miles.", nextLocation.locationName, previousLocation.locationName, distanceTolerance));
+                                Logger.Trace(String.Format("Removing location {1} from compatible locations. Distance from {1} to {0} is greater than the radius search tolerance of {2} miles.", nextLocation.account, previousLocation.account, distanceTolerance));
                                 compatibleLocations.Remove(nextLocation);
                                 continue;
                             }
                             else
-                                Logger.Trace(String.Format("Distance from {1} to {0} is less than the radius search tolerance of {2} miles.  Will not remove from compatible locations.", nextLocation.locationName, previousLocation.locationName, distanceTolerance));
+                                Logger.Trace(String.Format("Distance from {1} to {0} is less than the radius search tolerance of {2} miles.  Will not remove from compatible locations.", nextLocation.account, previousLocation.account, distanceTolerance));
                         }
                         else
                             Logger.Trace(String.Format("Route currently has 0 locations.  Adding {0} to populate the route.", nextLocation));
 
                         TimeSpan travelTime = CalculateTravelTime(nextLocationDistanceMiles);
-                        Logger.Trace(String.Format("Travel time from {0} ({1}) to next location {2} ({3}) is {4} minutes", previousLocation.locationName, previousLocation.address, nextLocation.locationName, nextLocation.address, travelTime.TotalMinutes));
+                        Logger.Trace(String.Format("Travel time from {0} ({1}) to next location {2} ({3}) is {4} minutes", previousLocation.account, previousLocation.address, nextLocation.account, nextLocation.address, travelTime.TotalMinutes));
                         potentialTime += travelTime;
 
                         //If the time it would take to travel to the location is greater than the allowed pickup window, go anyway.  Otherwise it will never get visited.
 
-                        /*if (travelTime <= nextLocation.pickupWindowEndTime - nextLocation.pickupWindowStartTime)
+                        /*if (travelTime <= nextLocation.greaseTrapPreferredTimeEnd - nextLocation.greaseTrapPreferredTimeStart)
                         {
                             //If the location is not allowed before or after a certain time and the potential time has been exceeded, remove it.  Calc will advance a day and deal with it at that point if it's not compatible currently.
-                                if ((potentialTime < startDate + nextLocation.pickupWindowStartTime))
+                                if ((potentialTime < startDate + nextLocation.greaseTrapPreferredTimeStart))
                                 {
                                     compatibleLocations.Remove(nextLocation);
                                     continue;
                                 }
 
-                                if ((potentialTime > startDate + nextLocation.pickupWindowEndTime))
+                                if ((potentialTime > startDate + nextLocation.greaseTrapPreferredTimeEnd))
                                 {
                                     compatibleLocations.Remove(nextLocation);
                                     continue;
                                 }
                         }*/
 
-                        if (nextLocation.hasOil == true)
+                        if (nextLocation.oilPickupCustomer == true)
                         {
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.oilPickupAverageDurationMinutes);
                         }
-                        if (nextLocation.hasGrease == true)
+                        if (nextLocation.greaseTrapCustomer == true)
                         {
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.greasePickupAverageDurationMinutes);
                         }
@@ -218,7 +218,7 @@ namespace RouteNavigation
                             //if the location is within a certain radius, even if it means the day length being exceeded
                             if (potentialTime > endTime)
                             {
-                                Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.locationName, potentialTime, endTime));
+                                Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.account, potentialTime, endTime));
                                 compatibleLocations.Remove(nextLocation);
                                 continue;
                             }
@@ -226,7 +226,7 @@ namespace RouteNavigation
 
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
                         vehicle.currentGallons += nextLocation.currentGallonsEstimate;
-                        nextLocation.intendedPickupDate = potentialTime;
+                        nextLocation.oilPickupNextDate = potentialTime;
 
                         //add in the average visit time
                         potentialRoute.waypoints.Add(nextLocation);
@@ -241,7 +241,7 @@ namespace RouteNavigation
                     //Add the time to travel back to the depot
                     double distanceToDepotFromLastWaypoint = CalculateDistance(previousLocation, origin);
                     TimeSpan travelTimeBackToDepot = CalculateTravelTime(distanceToDepotFromLastWaypoint);
-                    Logger.Trace(String.Format("Travel time back from {0} ({1}) to {2} ({3}) is {4} minutes", previousLocation.locationName, previousLocation.address, origin.locationName, origin.address, travelTimeBackToDepot.TotalMinutes));
+                    Logger.Trace(String.Format("Travel time back from {0} ({1}) to {2} ({3}) is {4} minutes", previousLocation.account, previousLocation.address, origin.account, origin.address, travelTimeBackToDepot.TotalMinutes));
                     currentTime.Add(travelTimeBackToDepot);
 
                     /*//override nearest location with locations along the route if they are within five miles
@@ -279,7 +279,7 @@ namespace RouteNavigation
                             //find the nearest location of a waypoint in the route to the overdue location
                             Location locationToReplace = FindNearestLocation(serviceNowLocations[x], locationsExceptServiceNowLocations);
                             int replacementLocationIndex = potentialRoute.waypoints.IndexOf(locationToReplace);
-                            Logger.Trace("{0} needs service now or it will become overdue.  Swapping with {1} to fulfill this requirement.", serviceNowLocations[x], locationToReplace.locationName);
+                            Logger.Trace("{0} needs service now or it will become overdue.  Swapping with {1} to fulfill this requirement.", serviceNowLocations[x], locationToReplace.account);
                             potentialRoute.waypoints[replacementLocationIndex] = serviceNowLocations[x];
                             int originalIndex = availableLocations.IndexOf(serviceNowLocations[x]);
                             availableLocations.Remove(serviceNowLocations[x]);
@@ -684,7 +684,7 @@ namespace RouteNavigation
         private bool CheckVehicleCanAcceptMoreLiquid(Vehicle vehicle, Location location)
         {
             //Check if the vehicle can accept more gallons.  Also, multiple the total gallons by a percentage.  Finally, check that the vehicle isn't empty, otherwise we're going to visit regadless.
-            if (vehicle.currentGallons + location.currentGallonsEstimate > vehicle.capacityGallons * ((100 - Config.Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
+            if (vehicle.currentGallons + location.currentGallonsEstimate > vehicle.oilTankSize * ((100 - Config.Calculation.currentFillLevelErrorMarginPercent) / 100) && vehicle.currentGallons != 0)
                 return false;
             return true;
         }
@@ -693,10 +693,10 @@ namespace RouteNavigation
         {
             double currentGallonsEstimate;
             if (location.daysUntilDue > 0)
-                currentGallonsEstimate = (location.daysUntilDue / location.pickupIntervalDays) * location.capacityGallons;
+                currentGallonsEstimate = (location.daysUntilDue / location.oilPickupSchedule) * location.oilTankSize;
             else
                 //capacity is assumed to be full if we have lapsed since the last visit
-                currentGallonsEstimate = location.capacityGallons;
+                currentGallonsEstimate = location.oilTankSize;
 
             return currentGallonsEstimate;
         }
@@ -715,7 +715,7 @@ namespace RouteNavigation
 
         private void SetProjectedDaysOverdue(List<Location> availableLocations)
         {
-            availableLocations.ForEach(a => a.projectedAmountOverdue = (a.intendedPickupDate - a.lastVisited) - TimeSpan.FromDays(a.pickupIntervalDays));
+            availableLocations.ForEach(a => a.projectedAmountOverdue = (a.oilPickupNextDate - a.lastVisited) - TimeSpan.FromDays(a.oilPickupSchedule));
         }
 
         private List<Location> GetRequireServiceNowLocations(List<Location> availableLocations, DateTime currentDate)
@@ -723,11 +723,11 @@ namespace RouteNavigation
             List<Location> serviceNowLocations = new List<Location>();
             foreach (Location l in availableLocations)
             {
-                if (l.intendedPickupDate == null)
-                    l.intendedPickupDate = currentDate;
-                double daysElapsed = (l.intendedPickupDate - l.lastVisited).TotalDays;
+                if (l.oilPickupNextDate == null)
+                    l.oilPickupNextDate = currentDate;
+                double daysElapsed = (l.oilPickupNextDate - l.lastVisited).TotalDays;
                 //Set interval days to interval days -1 so we can be 'on time' instead of late
-                if (daysElapsed >= l.pickupIntervalDays - 1)
+                if (daysElapsed >= l.oilPickupSchedule - 1)
                     serviceNowLocations.Add(l);
             }
             return serviceNowLocations;
@@ -770,20 +770,20 @@ namespace RouteNavigation
             {
                 if (location.vehicleSize <= smallestVehicle)
                 {
-                    Logger.Debug(String.Format("{0} is being ignored because it's size of {1} is smaller than the smallest vehicle size of {2}", location.locationName, location.vehicleSize, smallestVehicle));
+                    Logger.Debug(String.Format("{0} is being ignored because it's size of {1} is smaller than the smallest vehicle size of {2}", location.account, location.vehicleSize, smallestVehicle));
                     //if we find a vehicle that works with the location, add the location to the list of possible locations and break out to the next location
                     continue;
                 }
 
                 if (location.daysUntilDue <= (Config.Calculation.maximumDaysOverdue * -1) && location.lastVisited != default(DateTime))
                 {
-                    Logger.Debug(String.Format("{0} is being ignored because it's last visited date of {1} is more than {2} days overdue", location.locationName, location.lastVisited, Config.Calculation.maximumDaysOverdue));
+                    Logger.Debug(String.Format("{0} is being ignored because it's last visited date of {1} is more than {2} days overdue", location.account, location.lastVisited, Config.Calculation.maximumDaysOverdue));
                     continue;
                 }
 
                 if (location.distanceFromDepot >= Config.Calculation.maxDistanceFromDepot)
                 {
-                    Logger.Debug(String.Format("{0} is being ignored because it's distance from the depot of {1} is farther than the maximimum config distance of {2} miles", location.locationName, location.distanceFromDepot, Config.Calculation.maxDistanceFromDepot));
+                    Logger.Debug(String.Format("{0} is being ignored because it's distance from the depot of {1} is farther than the maximimum config distance of {2} miles", location.account, location.distanceFromDepot, Config.Calculation.maxDistanceFromDepot));
                     continue;
                 }
                 possibleLocations.Add(location);
@@ -895,19 +895,72 @@ namespace RouteNavigation
             return travelTime;
         }
 
-        public static double CalculateDistance(Location p1, Location p2)
+        public static double CalculateDistanceHaverSine(Location l1, Location l2)
         {
+            //Sort the string since distance from a to b == distance from b to a.  So cache them in the dictionary as the same value and lookup accordingly.
+
+            /*string idsConcatenatedInOrder;
+            if (l1.id < l2.id)
+                idsConcatenatedInOrder = l1.id.ToString() + "," + l2.id.ToString();
+            else
+                idsConcatenatedInOrder = l2.id.ToString() + "," + l1.id.ToString();
+            
+            double cacheDistance;
+            if (distanceCache.TryGetValue(idsConcatenatedInOrder, out cacheDistance))
+            {
+                cacheHit++;
+                return cacheDistance;
+            }
+            */
             var R = 3963.190592; // Earth’s mean radius in miles
-            var dLat = Radians(p2.coordinates.lat - p1.coordinates.lat);
-            var dLong = Radians(p2.coordinates.lng - p1.coordinates.lng);
+            var dLat = Radians(l2.coordinates.lat - l1.coordinates.lat);
+            var dLong = Radians(l2.coordinates.lng - l1.coordinates.lng);
             var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-              Math.Cos(Radians(p1.coordinates.lat)) * Math.Cos(Radians(p2.coordinates.lat)) *
+              Math.Cos(Radians(l1.coordinates.lat)) * Math.Cos(Radians(l2.coordinates.lat)) *
               Math.Sin(dLong / 2) * Math.Sin(dLong / 2);
             var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             var d = R * c;
 
             //Logger.Trace(String.Format("Distance between locations {0}[{1},{2}] and {3}[{4},{5}] is {6}", p1.address, p1.coordinates.lat, p1.coordinates.lng, p2.address, p2.coordinates.lat, p2.coordinates.lng, d));
+            //cacheMiss++;
+            //distanceCache.TryAdd(idsConcatenatedInOrder, d);
+            //double cacheRatio = cacheHit / (cacheHit + cacheMiss);
             return d; // returns the distance in miles
         }
+
+        private static double DotProduct(double[] vec1, double[] vec2)
+        {
+            if (vec1 == null)
+                return 0;
+
+            if (vec2 == null)
+                return 0;
+
+            if (vec1.Length != vec2.Length)
+                return 0;
+
+            double tVal = 0;
+            for (int x = 0; x < vec1.Length; x++)
+            {
+                tVal += vec1[x] * vec2[x];
+            }
+
+            return tVal;
+        }
+
+        public static double CalculateDistance(Location l1, Location l2)
+        {
+            return Math.Sqrt(Math.Pow(l2.cartesianCoordinates.x - l1.cartesianCoordinates.x,2) + Math.Pow(l2.cartesianCoordinates.y - l1.cartesianCoordinates.y,2) + Math.Pow(l2.cartesianCoordinates.z - l1.cartesianCoordinates.z,2));
+        }
+
+        /*
+        public static double CalculateDistance(Location l1, Location l2)
+        {
+            //2 * pi * 3959 / 360 Looks like it's 69.0975851 miles.
+            double dHorizontal = (l2.coordinates.lng - l1.coordinates.lng) * Math.Cos(l1.coordinates.lat);
+            double dVertical = (l2.coordinates.lat - l1.coordinates.lat);
+            return Math.Sqrt(dHorizontal * dHorizontal + dVertical * dVertical);
+        }
+        */
     }
 }

@@ -39,7 +39,7 @@ namespace RouteNavigation
                 if (Config.Calculation.origin != null)
                 {
                     txtOriginLocationId.Text = Config.Calculation.origin.id.ToString();
-                    txtOriginName.Text = Config.Calculation.origin.locationName;
+                    txtOriginName.Text = Config.Calculation.origin.account;
                     txtOriginAddress.Text = Config.Calculation.origin.address;
                 }
 

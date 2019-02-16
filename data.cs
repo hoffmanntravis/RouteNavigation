@@ -27,6 +27,7 @@ namespace RouteNavigation
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
             FluentMapper.Initialize(config => {
                 config.AddMap(new CoordinatesMap());
+                config.AddMap(new sphericalCoordinatesMap());
             });
         }
 
@@ -267,10 +268,11 @@ namespace RouteNavigation
                 //return connection.Query<Location>("select_location", commandType: CommandType.StoredProcedure).ToList();
 
                 //mapping example in case a join or multi query is needed to map this
-                locations = connection.Query<Location, Coordinates, Location> ("select_location", (l, coordinates) => {
+                locations = connection.Query<Location, cartesianCoordinates, Coordinates, Location> ("select_location", (l, sphericalCoordinates, coordinates) => {
                     l.coordinates = coordinates;
+                    l.cartesianCoordinates = sphericalCoordinates;
                     return l;
-                }, splitOn: "coordinates_latitude", commandType: CommandType.StoredProcedure).ToList();
+                }, splitOn: "cartesian_x,coordinates_latitude", commandType: CommandType.StoredProcedure).ToList();
 
             return locations;
         }
@@ -416,10 +418,11 @@ namespace RouteNavigation
             {
                 try
                 {
-                    location = connection.Query<Location, Coordinates, Location>("select_location_by_id", (l, coordinates) => {
+                    location = connection.Query<Location, cartesianCoordinates, Coordinates, Location>("select_location_by_id", (l, sphericalCoordinates, coordinates) => {
                         l.coordinates = coordinates;
+                        l.cartesianCoordinates = sphericalCoordinates;
                         return l;
-                    }, new { p_id = id }, splitOn: "coordinates_latitude", commandType: CommandType.StoredProcedure).FirstOrDefault();
+                    }, new {p_id = id}, splitOn: "cartesian_x,coordinates_latitude", commandType: CommandType.StoredProcedure).First();
                     return location;
                 }
                 catch (Exception exception)
@@ -551,8 +554,8 @@ namespace RouteNavigation
                     location.lastVisited = DateTime.Parse(row["last_visited"].ToString());
                 if (row["client_priority"] != DBNull.Value)
                     location.clientPriority = int.Parse(row["client_priority"].ToString());
-                if (row["location_name"] != DBNull.Value)
-                    location.locationName = row["location_name"].ToString();
+                if (row["account"] != DBNull.Value)
+                    location.account = row["account"].ToString();
                 if (row["address"] != DBNull.Value)
                     location.address = row["address"].ToString();
                 if (row["days_until_due"] != DBNull.Value)
@@ -563,10 +566,10 @@ namespace RouteNavigation
                     location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
                 if (row["distance_from_source"] != DBNull.Value)
                     location.distanceFromDepot = double.Parse(row["distance_from_source"].ToString());
-                if (row["has_oil"] != DBNull.Value)
-                    location.hasOil = (bool)row["has_oil"];
-                if (row["has_grease"] != DBNull.Value)
-                    location.hasGrease = (bool)row["has_grease"];
+                if (row["oil_pickup_customer"] != DBNull.Value)
+                    location.oilPickupCustomer = (bool)row["oil_pickup_customer"];
+                if (row["grease_trap_customer"] != DBNull.Value)
+                    location.greaseTrapCustomer = (bool)row["grease_trap_customer"];
                 locations.Add(location);
             }
             return locations;
@@ -613,8 +616,8 @@ namespace RouteNavigation
                 Vehicle vehicle = new Vehicle();
                 if (row["id"] != DBNull.Value)
                     vehicle.id = int.Parse(row["id"].ToString());
-                if (row["capacity_gallons"] != DBNull.Value)
-                    vehicle.capacityGallons = double.Parse(row["capacity_gallons"].ToString());
+                if (row["oil_tank_size"] != DBNull.Value)
+                    vehicle.oilTankSize = double.Parse(row["oil_tank_size"].ToString());
                 if (row["name"] != DBNull.Value)
                     vehicle.name = row["name"].ToString();
                 if (row["model"] != DBNull.Value)

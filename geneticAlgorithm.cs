@@ -159,8 +159,8 @@ namespace RouteNavigation
 
                     if (Config.Features.locationsJettingExcludeFromCalc)
                     {
-                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.locationName.ToLower().Contains("jetting"))).ToList();
-                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.locationName.ToLower().Contains("install"))).ToList();
+                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.account.ToLower().Contains("jetting"))).ToList();
+                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.account.ToLower().Contains("install"))).ToList();
                     }
 
                     Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));

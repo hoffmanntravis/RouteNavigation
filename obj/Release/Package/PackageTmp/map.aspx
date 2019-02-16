@@ -19,7 +19,7 @@
             var mapX = <%=mapXCoordinate %>;
             var mapY = <%=mapYCoordinate %>;
             var routeCount = <%=routeCount %>;
-            var locationNames = locationNames;
+            var accounts = accounts;
             var locationMarkers = [];
 
             var iconImage = L.icon({
@@ -38,18 +38,18 @@
             for (i = 0; i < routes.length; i++) {
                 for (j = 0; j < routes[i].allLocations.length; j++) {
                     var location = routes[i].allLocations[j];
-                    var locationNameText = "Name: " + location.locationName
+                    var accountText = "Name: " + location.account
                     var locationAddressText = "Address: " + location.address
                     var locationCoordinates = "Coordinates: " + "(Lat: " + location.coordinates.lat + ",Lng: " + location.coordinates.lng + ")";
                     var locationLastVisited = "Last Visited: " + parseJsonDate(location.lastVisited);
                     var locationDaysUntilDue = "Days Until Due: " + location.daysUntilDue;
                     var locationDistanceFromDepot = "Distance From Depot: " + location.distanceFromDepot + " miles";
-                    var locationOil = "Oil: " + location.hasOil;
-                    var locationGrease = "Grease: " + location.hasGrease;
-                    var popup = L.popup().setContent(locationNameText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" +  locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot + "<br>" + locationLastVisited);
+                    var locationOil = "Oil: " + location.oilPickupCustomer;
+                    var locationGrease = "Grease: " + location.greaseTrapCustomer;
+                    var popup = L.popup().setContent(accountText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" +  locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot + "<br>" + locationLastVisited);
 
                     var marker = L.marker([routes[i].allLocations[j].coordinates.lat, routes[i].allLocations[j].coordinates.lng], { icon: iconImage })
-                    marker.bindTooltip(routes[i].allLocations[j].locationName);
+                    marker.bindTooltip(routes[i].allLocations[j].account);
                     marker.bindPopup(popup);
                     locationMarkers.push(marker);
                 }

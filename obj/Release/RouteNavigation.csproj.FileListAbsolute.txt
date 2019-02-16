@@ -54,3 +54,11 @@ C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin
 C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\NLog.config
 C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\NLog.dll
 C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\NLog.xml
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\CsvHelper.dll
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\Dapper.dll
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\Dapper.FluentMap.dll
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\System.ValueTuple.dll
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\CsvHelper.xml
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\Dapper.xml
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\Dapper.FluentMap.xml
+C:\Users\travis.DESKTOP-I30T9MQ\source\repos\RouteNavigation\RouteNavigation\bin\System.ValueTuple.xml

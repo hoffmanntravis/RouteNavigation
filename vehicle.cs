@@ -10,7 +10,7 @@ namespace RouteNavigation
         public int id;
         public string model;
         public string name;
-        public double capacityGallons;
+        public double oilTankSize;
         public double currentGallons = 0;
         public double physicalSize;
         public bool operational;

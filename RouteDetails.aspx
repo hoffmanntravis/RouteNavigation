@@ -55,7 +55,7 @@
                         <asp:Label ID="lblId" runat="server" Text='<%# Eval("location_id") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="Label1" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
+                        <asp:Label ID="Label1" runat="server" Text='<%# Eval("account") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label2" runat="server" Text='<%# Eval("client_priority") %>'></asp:Label>
@@ -82,7 +82,7 @@
                         <asp:Label ID="lblId" runat="server" Text='<%# Eval("location_id") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="Label1" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
+                        <asp:Label ID="Label1" runat="server" Text='<%# Eval("account") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label2" runat="server" Text='<%# Eval("client_priority") %>'></asp:Label>

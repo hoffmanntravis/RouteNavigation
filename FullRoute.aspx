@@ -78,7 +78,7 @@
                                 <asp:HyperLink ID="urlRouteId" runat="server" Text='<%# Eval("route_id") %>' NavigateUrl='<%# Eval("route_id","/RouteDetails?routeId={0}") %>' />
                             </td>
                             <td>
-                                <asp:Label ID="lblLocationName" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
+                                <asp:Label ID="lblaccount" runat="server" Text='<%# Eval("account") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblClientPriority" runat="server" Text='<%# Eval("client_priority") %>'></asp:Label>
@@ -115,7 +115,7 @@
                                 <asp:TextBox ID="txtRouteId" runat="server" Text='<%# Eval("route_id") %>'></asp:TextBox>
                             </td>
                             <td>
-                                <asp:Label ID="lblLocationName" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
+                                <asp:Label ID="lblaccount" runat="server" Text='<%# Eval("account") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblClientPriority" runat="server" Text='<%# Eval("client_priority") %>'></asp:Label>
@@ -152,7 +152,7 @@
                                 <asp:HyperLink ID="urlRouteId" runat="server" Text='<%# Eval("route_id") %>'></asp:HyperLink>
                             </td>
                             <td>
-                                <asp:Label ID="lblLocationName" runat="server" Text='<%# Eval("location_name") %>'></asp:Label>
+                                <asp:Label ID="lblaccount" runat="server" Text='<%# Eval("account") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblClientPriority" runat="server" Text='<%# Eval("client_priority") %>'></asp:Label>

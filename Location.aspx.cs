@@ -49,9 +49,9 @@ namespace RouteNavigation
 
         private void populateDdlSearchFilter()
         {
-            ListItem locationName = new ListItem();
-            locationName.Value = "location_name";
-            locationName.Text = "Location Name";
+            ListItem account = new ListItem();
+            account.Value = "account";
+            account.Text = "Location Name";
             ListItem address = new ListItem();
             address.Value = "address";
             address.Text = "Address";
@@ -62,7 +62,7 @@ namespace RouteNavigation
             contactEmail.Value = "contact_email";
             contactEmail.Text = "Contact Email";
 
-            lstSearchFilters.Items.Insert(0, locationName);
+            lstSearchFilters.Items.Insert(0, account);
             lstSearchFilters.Items.Insert(1, address);
             lstSearchFilters.Items.Insert(2, contactName);
             lstSearchFilters.Items.Insert(3, contactEmail);
@@ -124,18 +124,18 @@ namespace RouteNavigation
                 //Finding the controls from Gridview for the row which is going to update  
                 int id = int.Parse(e.Keys["id"].ToString());
                 //string clientPriority = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientPriority")).Text;
-                string locationName = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientName")).Text;
-                string pickupIntervalDays = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupIntervalDays")).Text;
-                string insertPickupWindowStartTime = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupWindowStartTime")).Text;
-                string insertPickupWindowEndTime = ((TextBox)LocationsListView.EditItem.FindControl("txtEditPickupWindowEndTime")).Text;
+                string account = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientName")).Text;
+                string oilPickupSchedule = ((TextBox)LocationsListView.EditItem.FindControl("txtEditoilPickupSchedule")).Text;
+                string insertgreaseTrapPreferredTimeStart = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeStart")).Text;
+                string insertgreaseTrapPreferredTimeEnd = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeEnd")).Text;
                 string lastVisisted = ((TextBox)LocationsListView.EditItem.FindControl("txtEditLastVisited")).Text;
                 string address = ((TextBox)LocationsListView.EditItem.FindControl("txtEditAddress")).Text;
-                string capacityGallons = ((TextBox)LocationsListView.EditItem.FindControl("txtEditCapacityGallons")).Text;
+                string oilTankSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditoilTankSize")).Text;
                 string contactName = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactName")).Text;
                 string contactEmail = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactEmail")).Text;
                 string vehicleSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditVehicleSize")).Text;
-                bool hasOil = ((CheckBox)LocationsListView.EditItem.FindControl("chkHasOil")).Checked;
-                bool hasGrease = ((CheckBox)LocationsListView.EditItem.FindControl("chkHasGrease")).Checked;
+                bool oilPickupCustomer = ((CheckBox)LocationsListView.EditItem.FindControl("chkoilPickupCustomer")).Checked;
+                bool greaseTrapCustomer = ((CheckBox)LocationsListView.EditItem.FindControl("chkgreaseTrapCustomer")).Checked;
 
                 NpgsqlCommand cmd = new NpgsqlCommand("update_location");
                 cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
@@ -147,17 +147,17 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_last_visited", NpgsqlTypes.NpgsqlDbType.Date, lastVisisted.Trim());
                 }
-                if (pickupIntervalDays != null && pickupIntervalDays != "")
+                if (oilPickupSchedule != null && oilPickupSchedule != "")
                 {
-                    cmd.Parameters.AddWithValue("p_pickup_interval_days", NpgsqlTypes.NpgsqlDbType.Integer, pickupIntervalDays.Trim());
+                    cmd.Parameters.AddWithValue("p_oil_pickup_schedule", NpgsqlTypes.NpgsqlDbType.Integer, oilPickupSchedule.Trim());
                 }
-                if (insertPickupWindowStartTime != null && insertPickupWindowStartTime != "")
+                if (insertgreaseTrapPreferredTimeStart != null && insertgreaseTrapPreferredTimeStart != "")
                 {
-                    cmd.Parameters.AddWithValue("p_pickup_window_start_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowStartTime.Trim());
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeStart.Trim());
                 }
-                if (insertPickupWindowEndTime != null && insertPickupWindowEndTime != "")
+                if (insertgreaseTrapPreferredTimeEnd != null && insertgreaseTrapPreferredTimeEnd != "")
                 {
-                    cmd.Parameters.AddWithValue("p_pickup_window_end_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowEndTime.Trim());
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeEnd.Trim());
                 }
                 if (address != null && address != "")
                 {
@@ -165,13 +165,13 @@ namespace RouteNavigation
                     DataAccess.UpdateDistanceFromSource(DataAccess.GetLocationById(id));
                     DataAccess.UpdateGpsCoordinates(address, id);
                 }
-                if (locationName != null && locationName != "")
+                if (account != null && account != "")
                 {
-                    cmd.Parameters.AddWithValue("p_location_name", NpgsqlTypes.NpgsqlDbType.Varchar, locationName.Trim());
+                    cmd.Parameters.AddWithValue("p_account", NpgsqlTypes.NpgsqlDbType.Varchar, account.Trim());
                 }
-                if (capacityGallons != null && capacityGallons != "")
+                if (oilTankSize != null && oilTankSize != "")
                 {
-                    cmd.Parameters.AddWithValue("p_capacity_gallons", NpgsqlTypes.NpgsqlDbType.Integer, capacityGallons.Trim());
+                    cmd.Parameters.AddWithValue("p_oil_tank_size", NpgsqlTypes.NpgsqlDbType.Integer, oilTankSize.Trim());
                 }
                 if (contactName != null && contactName != "")
                 {
@@ -185,8 +185,8 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                 }
-                cmd.Parameters.AddWithValue("p_has_oil", NpgsqlTypes.NpgsqlDbType.Boolean, hasOil);
-                cmd.Parameters.AddWithValue("p_has_grease", NpgsqlTypes.NpgsqlDbType.Boolean, hasGrease);
+                cmd.Parameters.AddWithValue("p_oil_pickup_customer", NpgsqlTypes.NpgsqlDbType.Boolean, oilPickupCustomer);
+                cmd.Parameters.AddWithValue("p_grease_trap_customer", NpgsqlTypes.NpgsqlDbType.Boolean, greaseTrapCustomer);
 
                 DataAccess.RunStoredProcedure(cmd);
 
@@ -235,18 +235,18 @@ namespace RouteNavigation
                 id = int.Parse(DataAccess.ReadStoredProcedureAsString(cmd));
 
             //string clientPriority = ((TextBox)e.Item.FindControl("txtInsertClientPriority")).Text;
-            string locationName = ((TextBox)e.Item.FindControl("txtInsertClientName")).Text;
-            string pickupIntervalDays = ((TextBox)e.Item.FindControl("txtInsertPickupIntervalDays")).Text;
-            string insertPickupWindowStartTime = ((TextBox)e.Item.FindControl("txtInsertPickupWindowStartTime")).Text;
-            string insertPickupWindowEndTime = ((TextBox)e.Item.FindControl("txtInsertPickupWindowEndTime")).Text;
+            string account = ((TextBox)e.Item.FindControl("txtInsertClientName")).Text;
+            string oilPickupSchedule = ((TextBox)e.Item.FindControl("txtInsertoilPickupSchedule")).Text;
+            string insertgreaseTrapPreferredTimeStart = ((TextBox)e.Item.FindControl("txtInsertgreaseTrapPreferredTimeStart")).Text;
+            string insertgreaseTrapPreferredTimeEnd = ((TextBox)e.Item.FindControl("txtInsertgreaseTrapPreferredTimeEnd")).Text;
             string lastVisisted = ((TextBox)e.Item.FindControl("txtInsertLastVisited")).Text;
             string address = ((TextBox)e.Item.FindControl("txtInsertAddress")).Text;
-            string capacityGallons = ((TextBox)e.Item.FindControl("txtInsertCapacityGallons")).Text;
+            string oilTankSize = ((TextBox)e.Item.FindControl("txtInsertoilTankSize")).Text;
             string contactName = ((TextBox)e.Item.FindControl("txtInsertContactName")).Text;
             string contactEmail = ((TextBox)e.Item.FindControl("txtInsertContactEmail")).Text;
             string vehicleSize = ((TextBox)e.Item.FindControl("txtInsertVehicleSize")).Text;
-            bool hasOil = ((CheckBox)e.Item.FindControl("chkHasOil")).Checked;
-            bool hasGrease = ((CheckBox)e.Item.FindControl("chkHasGrease")).Checked;
+            bool oilPickupCustomer = ((CheckBox)e.Item.FindControl("chkoilPickupCustomer")).Checked;
+            bool greaseTrapCustomer = ((CheckBox)e.Item.FindControl("chkgreaseTrapCustomer")).Checked;
             try
             {
                 using (NpgsqlCommand cmd = new NpgsqlCommand("insert_location"))
@@ -260,30 +260,30 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_last_visited", NpgsqlTypes.NpgsqlDbType.Date, lastVisisted.Trim());
                     }
-                    if (pickupIntervalDays != null && pickupIntervalDays != "")
+                    if (oilPickupSchedule != null && oilPickupSchedule != "")
                     {
-                        cmd.Parameters.AddWithValue("p_pickup_interval_days", NpgsqlTypes.NpgsqlDbType.Integer, pickupIntervalDays.Trim());
+                        cmd.Parameters.AddWithValue("p_oil_pickup_schedule", NpgsqlTypes.NpgsqlDbType.Integer, oilPickupSchedule.Trim());
                     }
-                    if (insertPickupWindowStartTime != null && insertPickupWindowStartTime != "")
+                    if (insertgreaseTrapPreferredTimeStart != null && insertgreaseTrapPreferredTimeStart != "")
                     {
-                        cmd.Parameters.AddWithValue("pickup_window_start_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowStartTime.Trim());
+                        cmd.Parameters.AddWithValue("grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeStart.Trim());
                     }
-                    if (insertPickupWindowEndTime != null && insertPickupWindowEndTime != "")
+                    if (insertgreaseTrapPreferredTimeEnd != null && insertgreaseTrapPreferredTimeEnd != "")
                     {
-                        cmd.Parameters.AddWithValue("pickup_window_end_time", NpgsqlTypes.NpgsqlDbType.Time, insertPickupWindowEndTime.Trim());
+                        cmd.Parameters.AddWithValue("grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeEnd.Trim());
                     }
                     if (address != null && address != "")
                     {
                         cmd.Parameters.AddWithValue("p_address", NpgsqlTypes.NpgsqlDbType.Varchar, address.Trim());
                         DataAccess.UpdateGpsCoordinates(address, id);
                     }
-                    if (locationName != null && locationName != "")
+                    if (account != null && account != "")
                     {
-                        cmd.Parameters.AddWithValue("p_location_name", NpgsqlTypes.NpgsqlDbType.Varchar, locationName.Trim());
+                        cmd.Parameters.AddWithValue("p_account", NpgsqlTypes.NpgsqlDbType.Varchar, account.Trim());
                     }
-                    if (capacityGallons != null && capacityGallons != "")
+                    if (oilTankSize != null && oilTankSize != "")
                     {
-                        cmd.Parameters.AddWithValue("p_capacity_gallons", NpgsqlTypes.NpgsqlDbType.Integer, capacityGallons.Trim());
+                        cmd.Parameters.AddWithValue("p_oil_tank_size", NpgsqlTypes.NpgsqlDbType.Integer, oilTankSize.Trim());
                     }
                     if (contactName != null && contactName != "")
                     {
@@ -297,8 +297,8 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, vehicleSize.Trim());
                     }
-                    cmd.Parameters.AddWithValue("p_has_oil", NpgsqlTypes.NpgsqlDbType.Boolean, hasOil);
-                    cmd.Parameters.AddWithValue("p_has_grease", NpgsqlTypes.NpgsqlDbType.Boolean, hasGrease);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_customer", NpgsqlTypes.NpgsqlDbType.Boolean, oilPickupCustomer);
+                    cmd.Parameters.AddWithValue("p_grease_trap_customer", NpgsqlTypes.NpgsqlDbType.Boolean, greaseTrapCustomer);
 
                     DataAccess.RunStoredProcedure(cmd);
                 }
@@ -332,9 +332,9 @@ namespace RouteNavigation
             locationSort(sender, "id");
         }
 
-        protected void SortByLocationName_Click(object sender, ImageClickEventArgs e)
+        protected void SortByaccount_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "location_name");
+            locationSort(sender, "account");
         }
 
         protected void SortByDistanceFromDepot_Click(object sender, ImageClickEventArgs e)
@@ -349,7 +349,7 @@ namespace RouteNavigation
 
         protected void SortByPickupInterval_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "pickup_interval_days");
+            locationSort(sender, "oil_pickup_schedule");
         }
 
         protected void SortByLastVisited_Click(object sender, ImageClickEventArgs e)
@@ -357,19 +357,19 @@ namespace RouteNavigation
             locationSort(sender, "last_visited");
         }
 
-        protected void SortByPickupWindowStartTime_Click(object sender, ImageClickEventArgs e)
+        protected void SortBygreaseTrapPreferredTimeStart_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "pickup_window_start_time");
+            locationSort(sender, "grease_trap_preferred_time_start");
         }
 
-        protected void SortByPickupWindowEndTime_Click(object sender, ImageClickEventArgs e)
+        protected void SortBygreaseTrapPreferredTimeEnd_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "pickup_window_end_time");
+            locationSort(sender, "grease_trap_preferred_time_end");
         }
 
         protected void SortByCapacity_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "capacity_gallons");
+            locationSort(sender, "oil_tank_size");
         }
 
         protected void SortByVehicleSize_Click(object sender, ImageClickEventArgs e)
@@ -451,7 +451,7 @@ namespace RouteNavigation
                     return;
                 }
 
-                string[] expectedHeaders = { "last_visited", "client_priority", "address", "location_name", "capacity_gallons", "coordinates_latitude", "coordinates_longitude", "days_until_due", "pickup_interval_days", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "pickup_window_end_time", "pickup_window_start_time", "location_type", "intended_pickup_date", "has_oil", "has_grease" };
+                string[] expectedHeaders = { "last_visited", "client_priority", "address", "account", "oil_tank_size", "coordinates_latitude", "coordinates_longitude", "days_until_due", "oil_pickup_schedule", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "grease_trap_preferred_time_end", "grease_trap_preferred_time_start", "location_type", "oil_pickup_next_date", "oil_pickup_customer", "grease_trap_customer" };
 
                 fileLines = updateHeaderDataForPostgreImport(expectedHeaders, fileLines);
 
@@ -512,12 +512,12 @@ namespace RouteNavigation
 
         private void BindListView(string columnFilterName = null, string filterString = null, string columnSortName = null, bool ascending = true)
         {
-            //This applies to a filtered search.  In other cases, a default of location_name is passed in, or a column sort columnName is passed in
+            //This applies to a filtered search.  In other cases, a default of account is passed in, or a column sort columnName is passed in
             if (String.IsNullOrEmpty(columnFilterName))
-                columnFilterName = "location_name";
+                columnFilterName = "account";
             if (String.IsNullOrEmpty(columnSortName))
                 if (ViewState[viewStatePropertyLocation] == null)
-                    columnSortName = "location_name";
+                    columnSortName = "account";
                 else
                     columnSortName = ViewState[viewStatePropertyLocation].ToString();
 
@@ -552,11 +552,11 @@ namespace RouteNavigation
                 if (headers.IndexOf("AddressFullOneLine") != -1)
                     headers[headers.IndexOf("AddressFullOneLine")] = "address";
                 if (headers.IndexOf("Account") != -1)
-                    headers[headers.IndexOf("Account")] = "location_name";
+                    headers[headers.IndexOf("Account")] = "account";
                 if (headers.IndexOf("OilPickup_Customer") != -1)
-                    headers[headers.IndexOf("OilPickup_Customer")] = "has_oil";
+                    headers[headers.IndexOf("OilPickup_Customer")] = "oil_pickup_customer";
                 if (headers.IndexOf("GreaseTrap_Customer") != -1)
-                    headers[headers.IndexOf("GreaseTrap_Customer")] = "has_grease";
+                    headers[headers.IndexOf("GreaseTrap_Customer")] = "grease_trap_customer";
             }
 
             //remove columns in reverse order so the array size doesn't shift to the left as we are indexing through
@@ -567,9 +567,9 @@ namespace RouteNavigation
             /*
             for (int x = 0; x < headers.Count(); x++)
             {
-                if ((headers[x] == "has_oil" || headers[x] == "has_grease"))
+                if ((headers[x] == "oil_pickup_customer" || headers[x] == "grease_trap_customer"))
                     for (int y = 0; y < fileLines.Count; y++)
-                         if (fileLines[y].IndexOf("has_oil") != -1 && fileLines[y][fileLines[y].IndexOf("has_oil")] == "")
+                         if (fileLines[y].IndexOf("oil_pickup_customer") != -1 && fileLines[y][fileLines[y].IndexOf("oil_pickup_customer")] == "")
                             fileLines[y][x] = "false";
             }*/
             return fileLines;
