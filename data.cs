@@ -25,9 +25,10 @@ namespace RouteNavigation
         static DataAccess()
         {
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-            FluentMapper.Initialize(config => {
+            FluentMapper.Initialize(config =>
+            {
                 config.AddMap(new CoordinatesMap());
-                config.AddMap(new sphericalCoordinatesMap());
+                config.AddMap(new SphericalCoordinatesMap());
             });
         }
 
@@ -50,13 +51,13 @@ namespace RouteNavigation
         {
             List<Location> locations;
             if (fillEmptyOnly)
-                locations = GetLocations().Where(l => l.coordinates.lat is Double.NaN || l.coordinates.lng is Double.NaN).ToList();
+                locations = GetLocations().Where(l => l.Coordinates.Lat is null || l.Coordinates.Lng is null).ToList();
             else
                 locations = GetLocations();
 
             foreach (Location location in locations)
             {
-                UpdateGpsCoordinates(location.address, location.id);
+                UpdateGpsCoordinates(location.Address, location.Id);
                 //Google API calls will fail if called too rapidly
                 Thread.Sleep(2000);
             }
@@ -216,6 +217,12 @@ namespace RouteNavigation
             return dataTable;
         }
 
+        public static int GetLatestBatchId()
+        {
+            int id = GetNextRouteBatchId() - 1;
+            return id;
+        }
+
         public static DataTable GetLocationData(DataTable dataTable, string filterColumnName = null, string filterString = null, string columnSortString = null, bool ascending = true)
         {
             try
@@ -257,7 +264,7 @@ namespace RouteNavigation
             if (member == null) return null;
 
             var attrib = (DescriptionAttribute)Attribute.GetCustomAttribute(member, typeof(DescriptionAttribute), false);
-            return attrib == null ? null : attrib.Description;
+            return attrib?.Description;
         }
 
         public static List<Location> GetLocations()
@@ -268,9 +275,10 @@ namespace RouteNavigation
                 //return connection.Query<Location>("select_location", commandType: CommandType.StoredProcedure).ToList();
 
                 //mapping example in case a join or multi query is needed to map this
-                locations = connection.Query<Location, cartesianCoordinates, Coordinates, Location> ("select_location", (l, sphericalCoordinates, coordinates) => {
-                    l.coordinates = coordinates;
-                    l.cartesianCoordinates = sphericalCoordinates;
+                locations = connection.Query<Location, CartesianCoordinates, Coordinates, Location>("select_location", (l, cartesianCoordinates, coordinates) =>
+                {
+                    l.Coordinates = new Coordinates(coordinates);
+                    l.CartesianCoordinates = new CartesianCoordinates(cartesianCoordinates);
                     return l;
                 }, splitOn: "cartesian_x,coordinates_latitude", commandType: CommandType.StoredProcedure).ToList();
 
@@ -370,7 +378,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static void updateRouteLocation(int locationId, int routeId, int order)
+        public static void UpdateRouteLocation(int locationId, int routeId, int order)
         {
             NpgsqlCommand cmd = new NpgsqlCommand("update_route_location");
 
@@ -404,10 +412,10 @@ namespace RouteNavigation
 
         public static void PopulateConfig()
         {
-                DataTable configsDataTable = GetConfigData();
-                DataTable featuresDataTable = GetFeaturesData();
+            DataTable configsDataTable = GetConfigData();
+            DataTable featuresDataTable = GetFeaturesData();
 
-                ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
+            ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
         }
 
         public static Location GetLocationById(int id)
@@ -418,11 +426,12 @@ namespace RouteNavigation
             {
                 try
                 {
-                    location = connection.Query<Location, cartesianCoordinates, Coordinates, Location>("select_location_by_id", (l, sphericalCoordinates, coordinates) => {
-                        l.coordinates = coordinates;
-                        l.cartesianCoordinates = sphericalCoordinates;
+                    location = connection.Query<Location, CartesianCoordinates, Coordinates, Location>("select_location_by_id", (l, cartesianCoordinates, coordinates) =>
+                    {
+                        l.Coordinates = new Coordinates(coordinates);
+                        l.CartesianCoordinates = new CartesianCoordinates(cartesianCoordinates);
                         return l;
-                    }, new {p_id = id}, splitOn: "cartesian_x,coordinates_latitude", commandType: CommandType.StoredProcedure).First();
+                    }, new { p_id = id }, splitOn: "cartesian_x,coordinates_latitude", commandType: CommandType.StoredProcedure).First();
                     return location;
                 }
                 catch (Exception exception)
@@ -449,7 +458,7 @@ namespace RouteNavigation
                 }
                 else
                 {
-                    Logger.Debug(String.Format("Set origin to id: {0}", Config.Calculation.origin.id));
+                    Logger.Debug(String.Format("Set origin to id: {0}", Config.Calculation.origin.Id));
                 }
             }
 
@@ -466,7 +475,7 @@ namespace RouteNavigation
                 }
 
                 if (row["minimum_days_until_pickup"] != DBNull.Value)
-                    Config.Calculation.minimDaysUntilPickup = uint.Parse(row["minimum_days_until_pickup"].ToString());
+                    Config.Calculation.minimumDaysUntilPickup = uint.Parse(row["minimum_days_until_pickup"].ToString());
                 if (row["current_fill_level_error_margin"] != DBNull.Value)
                     Config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
                 if (row["oil_pickup_average_duration"] != DBNull.Value)
@@ -530,13 +539,13 @@ namespace RouteNavigation
             }
         }
 
-        internal static void deleteLocationsWildCardSearch(string searchString)
+        internal static void DeleteLocationsWildCardSearch(string searchString)
         {
             NpgsqlCommand cmd = new NpgsqlCommand("delete_location_wildcard");
             cmd.Parameters.AddWithValue("p_string", NpgsqlTypes.NpgsqlDbType.Varchar, searchString);
             RunStoredProcedure(cmd);
         }
-        internal static void updateGreaseCutoffToConfigValue()
+        internal static void UpdateGreaseCutoffToConfigValue()
         {
             NpgsqlCommand cmd = new NpgsqlCommand("update_grease_cutoff_to_config_value");
             RunStoredProcedure(cmd);
@@ -549,27 +558,25 @@ namespace RouteNavigation
             {
                 Location location = new Location();
                 if (row["route_id"] != DBNull.Value)
-                    location.routeId = int.Parse(row["route_id"].ToString());
-                if (row["last_visited"] != DBNull.Value)
-                    location.lastVisited = DateTime.Parse(row["last_visited"].ToString());
+                    location.RouteId = int.Parse(row["route_id"].ToString());
                 if (row["client_priority"] != DBNull.Value)
-                    location.clientPriority = int.Parse(row["client_priority"].ToString());
+                    location.ClientPriority = int.Parse(row["client_priority"].ToString());
                 if (row["account"] != DBNull.Value)
-                    location.account = row["account"].ToString();
+                    location.Account = row["account"].ToString();
                 if (row["address"] != DBNull.Value)
-                    location.address = row["address"].ToString();
+                    location.Address = row["address"].ToString();
                 if (row["days_until_due"] != DBNull.Value)
-                    location.daysUntilDue = double.Parse(row["days_until_due"].ToString());
+                    location.DaysUntilDue = double.Parse(row["days_until_due"].ToString());
                 if (row["coordinates_latitude"] != DBNull.Value)
-                    location.coordinates.lat = double.Parse(row["coordinates_latitude"].ToString());
+                    location.Coordinates.Lat = double.Parse(row["coordinates_latitude"].ToString());
                 if (row["coordinates_longitude"] != DBNull.Value)
-                    location.coordinates.lng = double.Parse(row["coordinates_longitude"].ToString());
+                    location.Coordinates.Lng = double.Parse(row["coordinates_longitude"].ToString());
                 if (row["distance_from_source"] != DBNull.Value)
-                    location.distanceFromDepot = double.Parse(row["distance_from_source"].ToString());
+                    location.DistanceFromDepot = double.Parse(row["distance_from_source"].ToString());
                 if (row["oil_pickup_customer"] != DBNull.Value)
-                    location.oilPickupCustomer = (bool)row["oil_pickup_customer"];
+                    location.OilPickupCustomer = (bool)row["oil_pickup_customer"];
                 if (row["grease_trap_customer"] != DBNull.Value)
-                    location.greaseTrapCustomer = (bool)row["grease_trap_customer"];
+                    location.GreaseTrapCustomer = (bool)row["grease_trap_customer"];
                 locations.Add(location);
             }
             return locations;
@@ -683,8 +690,8 @@ namespace RouteNavigation
             try
             {
                 NpgsqlCommand cmd = new NpgsqlCommand("update_location");
-                cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.id);
-                cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.distanceFromDepot);
+                cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.Id);
+                cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.DistanceFromDepot);
                 RunStoredProcedure(cmd);
             }
             catch (Exception exception)
@@ -711,7 +718,7 @@ namespace RouteNavigation
             }
         }
 
-        public static void cleanupNullBatchCalcs()
+        public static void CleanupNullBatchCalcs()
         {
             try
             {
@@ -726,19 +733,19 @@ namespace RouteNavigation
             }
         }
 
-        public static void updateCancellationStatus(bool cancel = true)
+        public static void UpdateCancellationStatus(bool cancel = true)
         {
             NpgsqlCommand cmd = new NpgsqlCommand("update_route_batch_cancellation_status");
             cmd.Parameters.AddWithValue("p_cancellation_request", NpgsqlTypes.NpgsqlDbType.Boolean, cancel);
             RunStoredProcedure(cmd);
         }
-        public static Boolean getCancellationStatus()
+        public static Boolean GetCancellationStatus()
         {
             NpgsqlCommand cmd = new NpgsqlCommand("get_route_batch_cancellation_status");
             return Boolean.Parse(ReadStoredProcedureAsString(cmd));
         }
 
-        public static void updateIteration(uint currentIteration, uint totalIterations)
+        public static void UpdateIteration(uint currentIteration, uint totalIterations)
         {
             try
             {
@@ -832,7 +839,7 @@ namespace RouteNavigation
             }
         }
 
-        public static void insertRoutes(int batchId, List<Route> routes, Guid activityId)
+        public static void InsertRoutes(int batchId, List<Route> routes, Guid activityId)
         {
             foreach (Route route in routes)
             {
@@ -845,7 +852,7 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_batch_id", NpgsqlTypes.NpgsqlDbType.Integer, batchId);
                         cmd.Parameters.AddWithValue("p_total_time", NpgsqlTypes.NpgsqlDbType.Interval, route.totalTime);
-                        cmd.Parameters.AddWithValue("p_origin_location_id", NpgsqlTypes.NpgsqlDbType.Integer, Config.Calculation.origin.id);
+                        cmd.Parameters.AddWithValue("p_origin_location_id", NpgsqlTypes.NpgsqlDbType.Integer, Config.Calculation.origin.Id);
                         cmd.Parameters.AddWithValue("p_route_date", NpgsqlTypes.NpgsqlDbType.TimestampTZ, route.date);
                         cmd.Parameters.AddWithValue("p_distance_miles", NpgsqlTypes.NpgsqlDbType.Double, route.distanceMiles);
                         cmd.Parameters.AddWithValue("p_vehicle_id", NpgsqlTypes.NpgsqlDbType.Integer, route.assignedVehicle.id);
@@ -865,13 +872,13 @@ namespace RouteNavigation
                 try
                 {
                     int insertOrder = 0;
-                    InsertRouteLocation(Config.Calculation.origin.id, insertOrder += 1, route.id);
+                    InsertRouteLocation(Config.Calculation.origin.Id, insertOrder += 1, route.id);
 
                     foreach (Location waypoint in route.waypoints)
-                        InsertRouteLocation(waypoint.id, insertOrder += 1, route.id);
+                        InsertRouteLocation(waypoint.Id, insertOrder += 1, route.id);
 
                     //insert the route origin since every route returns to HQ
-                    InsertRouteLocation(Config.Calculation.origin.id, insertOrder += 1, route.id);
+                    InsertRouteLocation(Config.Calculation.origin.Id, insertOrder += 1, route.id);
                 }
                 catch (Exception exception)
                 {
@@ -880,10 +887,97 @@ namespace RouteNavigation
             }
         }
 
-        public static int GetLatestBatchId()
+        public static void InsertLocations(List<Location> locations)
         {
-            int id = GetNextRouteBatchId() - 1;
-            return id;
+            using (var connection = new Npgsql.NpgsqlConnection(conString))
+            {
+                foreach (Location l in locations)
+                {
+                    connection.Query<Location>("insert_location",
+                        new
+                        {
+                            p_tracking_number = l.TrackingNumber,
+                            p_account = l.Account,
+                            p_address = l.Address,
+                            p_client_priority = l.ClientPriority,
+                            p_contact_email = l.ContactEmail,
+                            p_contact_name = l.ContactName,
+                            p_days_until_due = l.DaysUntilDue,
+                            p_distance_from_source = l.DistanceFromDepot,
+                            p_grease_trap_customer = l.GreaseTrapCustomer,
+                            p_grease_trap_pickup_next_date = l.GreaseTrapPickupNextDate,
+                            p_grease_trap_preferred_day = l.GreaseTrapPreferredDay,
+                            p_grease_trap_preferred_time_end = l.GreaseTrapPreferredTimeEnd,
+                            p_grease_trap_preferred_time_start = l.GreaseTrapPreferredTimeStart,
+                            p_grease_trap_schedule = l.GreaseTrapSchedule,
+                            p_grease_trap_service_notes = l.GreaseTrapServiceNotes,
+                            p_grease_trap_signature_req = l.GreaseTrapSignatureRequired,
+                            p_grease_trap_size = l.GreaseTrapSize,
+                            p_grease_trap_units = l.GreaseTrapUnits,
+                            p_intended_pickup_date = l.intendedPickupDate,
+                            p_number_of_manholes = l.NumberOfManHoles,
+                            p_oil_pickup_customer = l.OilPickupCustomer,
+                            p_oil_pickup_next_date = l.OilPickupNextDate,
+                            p_oil_pickup_schedule = l.OilPickupSchedule,
+                            p_oil_pickup_service_notes = l.OilPickupServiceNotes,
+                            p_oil_pickup_signature_req = l.OilPickupSignatureRequired,
+                            p_oil_tank_size = l.OilTankSize,
+                            p_vehicle_size = l.VehicleSize,
+                        },
+                        commandType: CommandType.StoredProcedure);
+                }
+            }
+
+            /*
+            foreach (Location l in locations)
+            {
+                using (NpgsqlCommand cmd = new NpgsqlCommand("insert_location"))
+                {
+                    cmd.Parameters.AddWithValue("p_intended_pickup_date", NpgsqlTypes.NpgsqlDbType.Date, l.intendedPickupDate);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_schedule", NpgsqlTypes.NpgsqlDbType.Integer, l.OilPickupSchedule);
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, l.GreaseTrapPreferredTimeStart);
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, l.GreaseTrapPreferredTimeEnd);
+                    cmd.Parameters.AddWithValue("p_address", NpgsqlTypes.NpgsqlDbType.Varchar, l.Address);
+                    cmd.Parameters.AddWithValue("p_account", NpgsqlTypes.NpgsqlDbType.Varchar, l.Account);
+                    cmd.Parameters.AddWithValue("p_oil_tank_size", NpgsqlTypes.NpgsqlDbType.Integer, l.OilTankSize);
+                    cmd.Parameters.AddWithValue("p_contact_name", NpgsqlTypes.NpgsqlDbType.Varchar, l.ContactName);
+                    cmd.Parameters.AddWithValue("p_contact_email", NpgsqlTypes.NpgsqlDbType.Varchar, l.ContactEmail);
+                    cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, l.VehicleSize);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_customer", NpgsqlTypes.NpgsqlDbType.Boolean, l.OilPickupCustomer);
+                    cmd.Parameters.AddWithValue("p_grease_trap_customer", NpgsqlTypes.NpgsqlDbType.Boolean, l.GreaseTrapCustomer);
+                    cmd.Parameters.AddWithValue("p_number_of_man_holes", NpgsqlTypes.NpgsqlDbType.Boolean, l.NumberOfManHoles);
+
+                    cmd.Parameters.AddWithValue("intended_pickudate", NpgsqlTypes.NpgsqlDbType.Date, l.intendedPickupDate);
+                    cmd.Parameters.AddWithValue("p_client_priority", NpgsqlTypes.NpgsqlDbType.Integer, l.ClientPriority);
+                    cmd.Parameters.AddWithValue("p_address", NpgsqlTypes.NpgsqlDbType.Varchar, l.Address);
+                    cmd.Parameters.AddWithValue("p_account", NpgsqlTypes.NpgsqlDbType.Varchar, l.Account);
+                    cmd.Parameters.AddWithValue("p_days_until_due", NpgsqlTypes.NpgsqlDbType.Double, l.DaysUntilDue);
+                    cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, l.DistanceFromDepot);
+                    cmd.Parameters.AddWithValue("p_contact_name", NpgsqlTypes.NpgsqlDbType.Varchar, l.ContactName);
+                    cmd.Parameters.AddWithValue("p_contact_email", NpgsqlTypes.NpgsqlDbType.Varchar, l.ContactEmail);
+                    cmd.Parameters.AddWithValue("p_vehicle_size", NpgsqlTypes.NpgsqlDbType.Integer, l.VehicleSize);
+
+                    cmd.Parameters.AddWithValue("p_oil_tank_size", NpgsqlTypes.NpgsqlDbType.Double, l.OilTankSize);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_next_date", NpgsqlTypes.NpgsqlDbType.Date, l.OilPickupNextDate);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_customer", NpgsqlTypes.NpgsqlDbType.Boolean, l.OilPickupCustomer);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_schedule", NpgsqlTypes.NpgsqlDbType.Integer, l.OilPickupSchedule);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_service_notes", NpgsqlTypes.NpgsqlDbType.Varchar, l.OilPickupServiceNotes);
+                    cmd.Parameters.AddWithValue("p_oil_pickup_signature_req", NpgsqlTypes.NpgsqlDbType.Boolean, l.OilPickupSignatureRequired);
+
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, l.GreaseTrapPreferredTimeStart);
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, l.GreaseTrapPreferredTimeEnd);
+                    cmd.Parameters.AddWithValue("p_grease_trap_pickunext_date", NpgsqlTypes.NpgsqlDbType.Date, l.GreaseTrapPickupNextDate);
+                    cmd.Parameters.AddWithValue("p_grease_trap_customer", NpgsqlTypes.NpgsqlDbType.Boolean, l.GreaseTrapCustomer);
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_day", NpgsqlTypes.NpgsqlDbType.Varchar, l.GreaseTrapPreferredDay);
+                    cmd.Parameters.AddWithValue("p_grease_trap_schedule", NpgsqlTypes.NpgsqlDbType.Integer, l.GreaseTrapSchedule);
+                    cmd.Parameters.AddWithValue("p_grease_trap_service_notes", NpgsqlTypes.NpgsqlDbType.Varchar, l.GreaseTrapServiceNotes);
+                    cmd.Parameters.AddWithValue("p_grease_trap_signature_req", NpgsqlTypes.NpgsqlDbType.Boolean, l.GreaseTrapSignatureRequired);
+                    cmd.Parameters.AddWithValue("p_grease_trap_size", NpgsqlTypes.NpgsqlDbType.Double, l.GreaseTrapSize);
+                    cmd.Parameters.AddWithValue("p_grease_trap_units", NpgsqlTypes.NpgsqlDbType.Integer, l.GreaseTrapUnits);
+                    cmd.Parameters.AddWithValue("p_number_of_manholes", NpgsqlTypes.NpgsqlDbType.Integer, l.NumberOfManHoles);
+                    RunStoredProcedure(cmd);
+                }
+            }*/
         }
 
         public static void UpdateRouteMetadata(int batchId, RouteCalculator.Metadata metadata)

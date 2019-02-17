@@ -43,7 +43,7 @@ namespace RouteNavigation
                 if (!(dtRoute is null))
                 {
                     List<Location> locations = DataAccess.ConvertRouteDetailsDataTableToLocations(dtRoute);
-                    routeCount = locations.GroupBy(l => l.routeId).Count();
+                    routeCount = locations.GroupBy(l => l.RouteId).Count();
 
                     List<Color> colors = new List<Color>();
                     if (routeCount == 1)
@@ -57,7 +57,7 @@ namespace RouteNavigation
                     }
 
                     List<Route> routes = new List<Route>();
-                    var locationsGroup = locations.GroupBy(l => l.routeId);
+                    var locationsGroup = locations.GroupBy(l => l.RouteId);
 
                     int colorIndex = 0;
                     colors.Shuffle(random);
@@ -68,7 +68,7 @@ namespace RouteNavigation
                         Color color = colors[colorIndex];
                         colorIndex++;
                         r.color = color;
-                        r.id = r.allLocations[0].routeId;
+                        r.id = r.allLocations[0].RouteId;
                         routes.Add(r);
                     }
 
@@ -79,9 +79,9 @@ namespace RouteNavigation
                 if (routesJson is null)
                     routesJson = "\"\"";
 
-                Config.Calculation.origin = DataAccess.GetLocationById(Config.Calculation.origin.id);
-                mapXCoordinate = Config.Calculation.origin.coordinates.lat;
-                mapYCoordinate = Config.Calculation.origin.coordinates.lng;
+                Config.Calculation.origin = DataAccess.GetLocationById(Config.Calculation.origin.Id);
+                mapXCoordinate = Config.Calculation.origin.Coordinates.Lat.Value;
+                mapYCoordinate = Config.Calculation.origin.Coordinates.Lng.Value;
 
                 ClientScript.RegisterStartupScript(GetType(), "Javascript", "javascript:showMap(); ", true);
 

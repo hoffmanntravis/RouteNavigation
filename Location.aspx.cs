@@ -15,6 +15,9 @@ using System.Threading;
 using NLog;
 using System.Linq;
 using CsvHelper;
+using CsvHelper.Configuration;
+using System.Text.RegularExpressions;
+using CsvHelper.TypeConversion;
 
 namespace RouteNavigation
 {
@@ -29,7 +32,7 @@ namespace RouteNavigation
             //initialize objects in page load since they make async calls that fail while the page is still starting up
             if (!Page.IsPostBack)
             {
-                populateDdlSearchFilter();
+                PopulateDdlSearchFilter();
                 BindListView();
             }
         }
@@ -47,7 +50,7 @@ namespace RouteNavigation
             }
         }
 
-        private void populateDdlSearchFilter()
+        private void PopulateDdlSearchFilter()
         {
             ListItem account = new ListItem();
             account.Value = "account";
@@ -80,7 +83,7 @@ namespace RouteNavigation
         }
         */
 
-        protected DropDownList populateLocationTypeDropDown(DropDownList ddlLocationType)
+        protected DropDownList PopulateLocationTypeDropDown(DropDownList ddlLocationType)
         {
             DataTable dt = DataAccess.GetLocationTypes();
 
@@ -126,8 +129,8 @@ namespace RouteNavigation
                 //string clientPriority = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientPriority")).Text;
                 string account = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientName")).Text;
                 string oilPickupSchedule = ((TextBox)LocationsListView.EditItem.FindControl("txtEditoilPickupSchedule")).Text;
-                string insertgreaseTrapPreferredTimeStart = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeStart")).Text;
-                string insertgreaseTrapPreferredTimeEnd = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeEnd")).Text;
+                string greaseTrapPreferredTimeStart = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeStart")).Text;
+                string greaseTrapPreferredTimeEnd = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeEnd")).Text;
                 string lastVisisted = ((TextBox)LocationsListView.EditItem.FindControl("txtEditLastVisited")).Text;
                 string address = ((TextBox)LocationsListView.EditItem.FindControl("txtEditAddress")).Text;
                 string oilTankSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditoilTankSize")).Text;
@@ -151,13 +154,13 @@ namespace RouteNavigation
                 {
                     cmd.Parameters.AddWithValue("p_oil_pickup_schedule", NpgsqlTypes.NpgsqlDbType.Integer, oilPickupSchedule.Trim());
                 }
-                if (insertgreaseTrapPreferredTimeStart != null && insertgreaseTrapPreferredTimeStart != "")
+                if (greaseTrapPreferredTimeStart != null && greaseTrapPreferredTimeStart != "")
                 {
-                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeStart.Trim());
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, greaseTrapPreferredTimeStart.Trim());
                 }
-                if (insertgreaseTrapPreferredTimeEnd != null && insertgreaseTrapPreferredTimeEnd != "")
+                if (greaseTrapPreferredTimeEnd != null && greaseTrapPreferredTimeEnd != "")
                 {
-                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeEnd.Trim());
+                    cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, greaseTrapPreferredTimeEnd.Trim());
                 }
                 if (address != null && address != "")
                 {
@@ -237,8 +240,8 @@ namespace RouteNavigation
             //string clientPriority = ((TextBox)e.Item.FindControl("txtInsertClientPriority")).Text;
             string account = ((TextBox)e.Item.FindControl("txtInsertClientName")).Text;
             string oilPickupSchedule = ((TextBox)e.Item.FindControl("txtInsertoilPickupSchedule")).Text;
-            string insertgreaseTrapPreferredTimeStart = ((TextBox)e.Item.FindControl("txtInsertgreaseTrapPreferredTimeStart")).Text;
-            string insertgreaseTrapPreferredTimeEnd = ((TextBox)e.Item.FindControl("txtInsertgreaseTrapPreferredTimeEnd")).Text;
+            string greaseTrapPreferredTimeStart = ((TextBox)e.Item.FindControl("txtGreaseTrapPreferredTimeStart")).Text;
+            string greaseTrapPreferredTimeEnd = ((TextBox)e.Item.FindControl("txtGreaseTrapPreferredTimeEnd")).Text;
             string lastVisisted = ((TextBox)e.Item.FindControl("txtInsertLastVisited")).Text;
             string address = ((TextBox)e.Item.FindControl("txtInsertAddress")).Text;
             string oilTankSize = ((TextBox)e.Item.FindControl("txtInsertoilTankSize")).Text;
@@ -264,13 +267,13 @@ namespace RouteNavigation
                     {
                         cmd.Parameters.AddWithValue("p_oil_pickup_schedule", NpgsqlTypes.NpgsqlDbType.Integer, oilPickupSchedule.Trim());
                     }
-                    if (insertgreaseTrapPreferredTimeStart != null && insertgreaseTrapPreferredTimeStart != "")
+                    if (greaseTrapPreferredTimeStart != null && greaseTrapPreferredTimeStart != "")
                     {
-                        cmd.Parameters.AddWithValue("grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeStart.Trim());
+                        cmd.Parameters.AddWithValue("grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, greaseTrapPreferredTimeStart.Trim());
                     }
-                    if (insertgreaseTrapPreferredTimeEnd != null && insertgreaseTrapPreferredTimeEnd != "")
+                    if (greaseTrapPreferredTimeEnd != null && greaseTrapPreferredTimeEnd != "")
                     {
-                        cmd.Parameters.AddWithValue("grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, insertgreaseTrapPreferredTimeEnd.Trim());
+                        cmd.Parameters.AddWithValue("grease_trap_preferred_time_end", NpgsqlTypes.NpgsqlDbType.Time, greaseTrapPreferredTimeEnd.Trim());
                     }
                     if (address != null && address != "")
                     {
@@ -329,75 +332,75 @@ namespace RouteNavigation
 
         protected void SortByLocationId_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "id");
+            LocationSort(sender, "id");
         }
 
         protected void SortByaccount_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "account");
+            LocationSort(sender, "account");
         }
 
         protected void SortByDistanceFromDepot_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "distance_from_source");
+            LocationSort(sender, "distance_from_source");
         }
 
         protected void SortByAddress_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "address");
+            LocationSort(sender, "address");
         }
 
         protected void SortByPickupInterval_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "oil_pickup_schedule");
+            LocationSort(sender, "oil_pickup_schedule");
         }
 
         protected void SortByLastVisited_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "last_visited");
+            LocationSort(sender, "last_visited");
         }
 
         protected void SortBygreaseTrapPreferredTimeStart_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "grease_trap_preferred_time_start");
+            LocationSort(sender, "grease_trap_preferred_time_start");
         }
 
         protected void SortBygreaseTrapPreferredTimeEnd_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "grease_trap_preferred_time_end");
+            LocationSort(sender, "grease_trap_preferred_time_end");
         }
 
         protected void SortByCapacity_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "oil_tank_size");
+            LocationSort(sender, "oil_tank_size");
         }
 
         protected void SortByVehicleSize_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "vehicle_size");
+            LocationSort(sender, "vehicle_size");
         }
 
         protected void SortByContactName_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "contact_name");
+            LocationSort(sender, "contact_name");
         }
 
         protected void SortByContactEmail_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "contact_email");
+            LocationSort(sender, "contact_email");
         }
 
         protected void SortByType_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "type");
+            LocationSort(sender, "type");
         }
 
         protected void SortByDaysUntilDue_Click(object sender, ImageClickEventArgs e)
         {
-            locationSort(sender, "days_until_due");
+            LocationSort(sender, "days_until_due");
         }
 
-        private void locationSort(object sender, string sortProperty)
+        private void LocationSort(object sender, string sortProperty)
         {
             ImageButton image = (ImageButton)sender;
             bool sortAsc = true;
@@ -428,58 +431,7 @@ namespace RouteNavigation
 
         }
 
-        protected void BtnImportCsv_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Stream stream = fileUpload.FileContent;
-                StreamReader reader = new StreamReader(stream);
-                char delimiter = ',';
 
-                List<List<string>> fileLines = new List<List<string>>();
-                while (reader.Peek() >= 0)
-                {
-                    string line = reader.ReadLine();
-                    List<string> splitLine = line.Split(delimiter).ToList();
-                    fileLines.Add(splitLine);
-                }
-
-                if (!(fileLines.Count > 0))
-                {
-                    dataValidation.IsValid = false;
-                    dataValidation.ErrorMessage = "Upload File is blank.  Please select a file to upload before clicking upload.";
-                    return;
-                }
-
-                string[] expectedHeaders = { "last_visited", "client_priority", "address", "account", "oil_tank_size", "coordinates_latitude", "coordinates_longitude", "days_until_due", "oil_pickup_schedule", "distance_from_source", "contact_name", "contact_email", "vehicle_size", "grease_trap_preferred_time_end", "grease_trap_preferred_time_start", "location_type", "oil_pickup_next_date", "oil_pickup_customer", "grease_trap_customer" };
-
-                fileLines = updateHeaderDataForPostgreImport(expectedHeaders, fileLines);
-
-                string updatedCsvContent = convertLinesToCSV(fileLines);
-                string updatedCsvHeader = String.Join(",", fileLines.First());
-
-                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location;"))
-                    DataAccess.RunSqlCommandText(cmd);
-                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
-                    DataAccess.RunSqlCommandText(cmd);
-                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM location;"))
-                    DataAccess.RunSqlCommandText(cmd);
-
-                DataAccess.RunPostgreImport(String.Format("location ({0}) ", updatedCsvHeader), updatedCsvContent);
-                if (Config.Features.locationsJettingRemoveOnImport)
-                {
-                    DataAccess.deleteLocationsWildCardSearch("jetting");
-                    DataAccess.deleteLocationsWildCardSearch("install");
-                }
-                BindListView();
-            }
-            catch (Exception exception)
-            {
-                dataValidation.IsValid = false;
-                dataValidation.ErrorMessage = "Error Loading CSV" + "<br>" + exception.Message;
-                Logger.Error(exception);
-            }
-        }
 
         protected void BtnExportCsv_Click(object sender, EventArgs e)
         {
@@ -510,6 +462,7 @@ namespace RouteNavigation
             BindListView();
         }
 
+
         private void BindListView(string columnFilterName = null, string filterString = null, string columnSortName = null, bool ascending = true)
         {
             //This applies to a filtered search.  In other cases, a default of account is passed in, or a column sort columnName is passed in
@@ -534,48 +487,196 @@ namespace RouteNavigation
 
             filterString = TxtSearchFilter.Text;
             DataAccess.GetLocationData(dataTable, columnFilterName, filterString, columnSortName, ascending);
-            extensions.RoundDataTable(dataTable, 2);
+            Extensions.RoundDataTable(dataTable, 2);
             LocationsListView.DataSource = dataTable;
             LocationsListView.ItemPlaceholderID = "itemPlaceHolder";
             LocationsListView.DataBind();
         }
 
 
-        private List<List<string>> updateHeaderDataForPostgreImport(string[] expectedHeaders, List<List<string>> fileLines, char delimiter = ',')
+        private class ConvertUsingClassMap : ClassMap<Location>
         {
-            List<string> headers = fileLines.First();
-            List<string> expectedHeadersList = new List<string>(expectedHeaders);
-            List<int> indexesToRemove = new List<int>();
-
-            if (headers.Contains("TrackingNumber"))
+            public ConvertUsingClassMap()
             {
-                if (headers.IndexOf("AddressFullOneLine") != -1)
-                    headers[headers.IndexOf("AddressFullOneLine")] = "address";
-                if (headers.IndexOf("Account") != -1)
-                    headers[headers.IndexOf("Account")] = "account";
-                if (headers.IndexOf("OilPickup_Customer") != -1)
-                    headers[headers.IndexOf("OilPickup_Customer")] = "oil_pickup_customer";
-                if (headers.IndexOf("GreaseTrap_Customer") != -1)
-                    headers[headers.IndexOf("GreaseTrap_Customer")] = "grease_trap_customer";
+                AutoMap();
+                Map(m => m.Address).Name("AddressFullOneLine");
             }
-
-            //remove columns in reverse order so the array size doesn't shift to the left as we are indexing through
-            for (int x = headers.Count() - 1; x >= 0; x--)
-                if (!(expectedHeadersList.Contains(headers[x])))
-                    for (int y = 0; y < fileLines.Count; y++)
-                        fileLines[y].RemoveAt(x);
-            /*
-            for (int x = 0; x < headers.Count(); x++)
-            {
-                if ((headers[x] == "oil_pickup_customer" || headers[x] == "grease_trap_customer"))
-                    for (int y = 0; y < fileLines.Count; y++)
-                         if (fileLines[y].IndexOf("oil_pickup_customer") != -1 && fileLines[y][fileLines[y].IndexOf("oil_pickup_customer")] == "")
-                            fileLines[y][x] = "false";
-            }*/
-            return fileLines;
         }
 
-        private string convertLinesToCSV(List<List<string>> fileLines, char delimiter = ',')
+        private class CustomBooleanTypeConverterCache : ITypeConverter
+        {
+            public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+            {
+                if (text.ToLower() == "yes")
+                    return true;
+
+                else if (text.ToLower() == "no")
+                    return false;
+
+                else if (string.IsNullOrEmpty(text))
+                    return false;
+                try
+                {
+                    return bool.Parse(text);
+                }
+                catch
+                {
+                    Logger.Error(String.Format("Failed to parse Bool with input text: {0} on line {1} of CSV", text, row.Context.Row));
+                }
+                return text;
+            }
+
+            public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+            {
+                return value.ToString();
+            }
+        }
+
+        private class CustomIntTypeConverterCache : ITypeConverter
+        {
+            public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+            {
+                if (!string.IsNullOrEmpty(text))
+                    try
+                    {
+                        return int.Parse(text);
+                    }
+                    catch 
+                    {
+                        Logger.Error(String.Format("Failed to parse Int with input text: {0} on line {1} of CSV", text, row.Context.Row));
+                    }
+
+                return default(int);
+            }
+
+            public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+            {
+                return value.ToString();
+            }
+        }
+
+        private class CustomDoubleTypeConverterCache : ITypeConverter
+        {
+            public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+            {
+                if (!string.IsNullOrEmpty(text))
+                    try
+                    {
+                        return double.Parse(text);
+                    }
+                    catch
+                    {
+                        Logger.Error(String.Format("Failed to parse Double with input text: {0} on line {1} of CSV", text, row.Context.Row));
+                    }
+
+                return default(double);
+            }
+
+            public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+            {
+                return value.ToString();
+            }
+        }
+
+        private class CustomDateTimeTypeConverterCache : ITypeConverter
+        {
+            public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+            {
+                if (!string.IsNullOrEmpty(text))
+                    try
+                    {
+                        return DateTime.Parse(text);
+                    }
+                    catch
+                    {
+                        Logger.Error(String.Format("Failed to parse DateTime with input text: {0} on line {1} of CSV", text,row.Context.Row));
+                    }
+
+                return text;
+            }
+
+            public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+            {
+                return value.ToString();
+            }
+        }
+
+        private class CustomTimeSpanTypeConverterCache : ITypeConverter
+        {
+            public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+            {
+
+                if (!string.IsNullOrEmpty(text))
+                    try
+                    {
+                        return TimeSpan.Parse(text);
+                    }
+                    catch
+                    {
+                        Logger.Error(String.Format("Failed to parse TimeSpan with input text: {0} on line {1} of CSV", text, row.Context.Row));
+                    }
+
+                return text;
+            }
+
+            public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+            {
+                return value.ToString();
+            }
+        }
+
+        protected void BtnImportCsv_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Stream stream = fileUpload.FileContent;
+                StreamReader reader = new StreamReader(stream);
+                List<Location> locations = new List<Location>();
+                using (CsvReader csv = new CsvReader(reader))
+                {
+                    csv.Configuration.TypeConverterCache.RemoveConverter<bool>();
+                    csv.Configuration.TypeConverterCache.RemoveConverter<TimeSpan>();
+                    csv.Configuration.TypeConverterCache.RemoveConverter<DateTime>();
+                    csv.Configuration.TypeConverterCache.AddConverter<bool>(new CustomBooleanTypeConverterCache());
+                    csv.Configuration.TypeConverterCache.AddConverter<int>(new CustomIntTypeConverterCache());
+                    csv.Configuration.TypeConverterCache.AddConverter<double>(new CustomDoubleTypeConverterCache());
+                    csv.Configuration.TypeConverterCache.AddConverter<TimeSpan>(new CustomTimeSpanTypeConverterCache());
+                    csv.Configuration.TypeConverterCache.AddConverter<DateTime>(new CustomDateTimeTypeConverterCache());
+
+                    //remove underscores from header names\
+                    csv.Configuration.HeaderValidated = null;
+                    csv.Configuration.MissingFieldFound = null;
+                    csv.Configuration.PrepareHeaderForMatch = (header, index) => Regex.Replace(header, "_", string.Empty).ToLower();
+                    csv.Configuration.RegisterClassMap<ConvertUsingClassMap>();
+                    locations = csv.GetRecords<Location>().ToList();
+                }
+                /*
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route_location;"))
+                    DataAccess.RunSqlCommandText(cmd);
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM route;"))
+                    DataAccess.RunSqlCommandText(cmd);
+                using (NpgsqlCommand cmd = new NpgsqlCommand("delete FROM location;"))
+                    DataAccess.RunSqlCommandText(cmd);
+                */
+
+                DataAccess.InsertLocations(locations);
+
+                if (Config.Features.locationsJettingRemoveOnImport)
+                {
+                    DataAccess.DeleteLocationsWildCardSearch("jetting");
+                    DataAccess.DeleteLocationsWildCardSearch("install");
+                }
+                BindListView();
+            }
+            catch (Exception exception)
+            {
+                dataValidation.IsValid = false;
+                dataValidation.ErrorMessage = "Error Loading CSV" + "<br>" + exception.Message;
+                Logger.Error(exception);
+            }
+        }
+
+        private string ConvertLinesToCSV(List<List<string>> fileLines, char delimiter = ',')
         {
             string updatedContent = null;
             foreach (List<string> line in fileLines)

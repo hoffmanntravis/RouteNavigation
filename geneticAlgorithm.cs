@@ -79,9 +79,9 @@ namespace RouteNavigation
                     return false;
                 foreach (Location location in locations)
                 {
-                    if (location.address is null)
+                    if (location.Address is null)
                         return false;
-                    if (location.neighbors.Count == 0)
+                    if (location.Neighbors.Count == 0)
                         return false;
                 }
             }
@@ -104,7 +104,7 @@ namespace RouteNavigation
                 {
                     iterations = Config.GeneticAlgorithm.Iterations;
 
-                    DataAccess.updateIteration(0, iterations);
+                    DataAccess.UpdateIteration(0, iterations);
 
                     populationSize = Config.GeneticAlgorithm.PopulationSize;
                     neighborCount = Config.GeneticAlgorithm.NeighborCount;
@@ -144,23 +144,23 @@ namespace RouteNavigation
 
                     Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.", allLocations.Count));
                     //Update the grease cutoff window to whatever is in the config for all locations
-                    DataAccess.updateGreaseCutoffToConfigValue();
+                    DataAccess.UpdateGreaseCutoffToConfigValue();
                     //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
                     availableVehicles = DataAccess.GetVehicles().Where(v => v.operational == true).ToList();
                     if (availableVehicles.Count <= 0)
                         throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
 
                     possibleLocations = allLocations.ToList();
-                    possibleLocations.ForEach(l => l.distanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
-                    possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.coordinates.lat is double.NaN || a.coordinates.lng is double.NaN)).ToList();
+                    possibleLocations.ForEach(l => l.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
+                    possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat is double.NaN || a.Coordinates.Lng is double.NaN)).ToList();
                     possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                     //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
                     possibleLocations.Remove(Config.Calculation.origin);
 
                     if (Config.Features.locationsJettingExcludeFromCalc)
                     {
-                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.account.ToLower().Contains("jetting"))).ToList();
-                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.account.ToLower().Contains("install"))).ToList();
+                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("jetting"))).ToList();
+                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("install"))).ToList();
                     }
 
                     Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));
@@ -194,7 +194,7 @@ namespace RouteNavigation
 
                     for (uint i = 0; i < iterations; i++)
                     {
-                        if (DataAccess.getCancellationStatus() is true)
+                        if (DataAccess.GetCancellationStatus() is true)
                             break;
 
                         Logger.Info(string.Format("Beginning iteration {0}", i + 1));
@@ -206,7 +206,7 @@ namespace RouteNavigation
                         emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
                         Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
                         Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
-                        DataAccess.updateIteration(currentIteration, iterations);
+                        DataAccess.UpdateIteration(currentIteration, iterations);
                     }
 
                     //fully optimized the GA selected route with 3opt swap
@@ -214,10 +214,10 @@ namespace RouteNavigation
                     //foreach (Route route in bestCalc.routes)
                     //    bestCalc.calculateTSPRouteTwoOpt(route);
 
-                    DataAccess.insertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
+                    DataAccess.InsertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                     DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
-                    DataAccess.updateIteration(0, 0);
+                    DataAccess.UpdateIteration(0, 0);
                     
                     Logger.Info("Finished calculations.");
                 }
@@ -519,8 +519,8 @@ namespace RouteNavigation
         public List<Location> GeneticCrossoverEdgeRecombine(List<Location> parentALocations, List<Location> parentBLocations)
         {
             //Get Neighbors for the purposes of edge recombination.  Only assign neighbors here since we don't need them elsewhere.
-            parentALocations.Where(a => a.neighbors.Count != neighborCount).ToList().ForEach(a => a.neighbors = RouteCalculator.FindNeighbors(a, parentALocations, neighborCount));
-            parentBLocations.Where(a => a.neighbors.Count != neighborCount).ToList().ForEach(a => a.neighbors = RouteCalculator.FindNeighbors(a, parentBLocations, neighborCount));
+            parentALocations.Where(a => a.Neighbors.Count != neighborCount).ToList().ForEach(a => a.Neighbors = RouteCalculator.FindNeighbors(a, parentALocations, neighborCount));
+            parentBLocations.Where(a => a.Neighbors.Count != neighborCount).ToList().ForEach(a => a.Neighbors = RouteCalculator.FindNeighbors(a, parentBLocations, neighborCount));
             Logger.Trace("Performing genetic crossover from parents");
             /*
 
@@ -556,20 +556,20 @@ namespace RouteNavigation
                 //need to break if we hit our target count so we don't index into lists that are empty
                 if (child.Count == targetRouteCount)
                     break;
-                x.neighbors.Remove(x);
+                x.Neighbors.Remove(x);
                 remainingLocations.Remove(x);
-                remainingLocations.ForEach(a => a.neighbors.Remove(x));
+                remainingLocations.ForEach(a => a.Neighbors.Remove(x));
 
                 //If x's neighbor list is empty, grab a random node from an intact locations list (ParentALocations) that is not already in child
-                if (x.neighbors.Count == 0)
+                if (x.Neighbors.Count == 0)
                 {
                     z = remainingLocations[rng.Next(remainingLocations.Count)];
                 }
                 else
                 {
-                    x.neighbors.Sort((n1, n2) => n1.neighbors.Count.CompareTo(n2.neighbors.Count));
+                    x.Neighbors.Sort((n1, n2) => n1.Neighbors.Count.CompareTo(n2.Neighbors.Count));
                     //Get a random neighbor that hs the same quantity of neighbors as the first element randomely.  In many cases, this will be the first element, but this is a tie breaker mechanism
-                    List<Location> leastNeighborList = x.neighbors.Where(a => a.neighbors.Count == x.neighbors.First().neighbors.Count).ToList();
+                    List<Location> leastNeighborList = x.Neighbors.Where(a => a.Neighbors.Count == x.Neighbors.First().Neighbors.Count).ToList();
                     z = leastNeighborList[rng.Next(leastNeighborList.Count)];
                 }
                 x = z;
@@ -660,9 +660,9 @@ namespace RouteNavigation
             {
                 List<Location> locationsCopy = new List<Location>(locations);
                 string concat = "";
-                locationsCopy.Sort((a, b) => a.address.CompareTo(b.address));
+                locationsCopy.Sort((a, b) => a.Address.CompareTo(b.Address));
                 foreach (Location location in locationsCopy)
-                    concat += location.address;
+                    concat += location.Address;
 
                 hash = concat.GetHashCode();
             }

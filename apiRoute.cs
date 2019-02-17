@@ -46,8 +46,8 @@ namespace RouteNavigation
                     foreach (Step step in leg.Steps)
                     {
                         Location stepLocation = new Location();
-                        stepLocation.coordinates.lat = step.End_location.Lat;
-                        stepLocation.coordinates.lng = step.End_location.Lng;
+                        stepLocation.Coordinates.Lat = step.End_location.Lat;
+                        stepLocation.Coordinates.Lng = step.End_location.Lng;
                         waypoints.Add(stepLocation);
                     }
                 }
@@ -63,7 +63,7 @@ namespace RouteNavigation
             mapsUrl = mapsBaseUrl;
             if (route.allLocations.Count > 0)
                 foreach (Location waypoint in route.allLocations)
-                    mapsUrl += waypoint.address + "/";
+                    mapsUrl += waypoint.Address + "/";
 
             //make the url google friendly.  Remove illegal characters and replace them with spaces.
             mapsUrl = mapsUrl.Replace(" ", "+");
@@ -79,15 +79,15 @@ namespace RouteNavigation
             Api googleApi = new Api();
 
             directionsApiUrl = directionsApiUrl + "?optimize:true";
-            directionsApiUrl = directionsApiUrl + "&origin=" + route.origin.address;
+            directionsApiUrl = directionsApiUrl + "&origin=" + route.origin.Address;
 
             if (waypoints.Count > 0)
             {
                 directionsApiUrl = directionsApiUrl + "&waypoints=";
                 foreach (Location waypoint in route.waypoints)
-                    directionsApiUrl = directionsApiUrl + waypoint.address + "|";
+                    directionsApiUrl = directionsApiUrl + waypoint.Address + "|";
             }
-            directionsApiUrl = directionsApiUrl + "&destination=" + route.origin.address;
+            directionsApiUrl = directionsApiUrl + "&destination=" + route.origin.Address;
             directionsApiUrl = directionsApiUrl + "&key=" + apiKey;
             directionsApiUrl = directionsApiUrl.Replace(" ", "+");
             directionsApiUrl = ReplaceIllegalCharaters(directionsApiUrl);

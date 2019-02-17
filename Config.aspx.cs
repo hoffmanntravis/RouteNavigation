@@ -38,15 +38,15 @@ namespace RouteNavigation
 
                 if (Config.Calculation.origin != null)
                 {
-                    txtOriginLocationId.Text = Config.Calculation.origin.id.ToString();
-                    txtOriginName.Text = Config.Calculation.origin.account;
-                    txtOriginAddress.Text = Config.Calculation.origin.address;
+                    txtOriginLocationId.Text = Config.Calculation.origin.Id.ToString();
+                    txtOriginName.Text = Config.Calculation.origin.Account;
+                    txtOriginAddress.Text = Config.Calculation.origin.Address;
                 }
 
                 txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
                 txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
                 txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
-                txtMinimumDaysUntilPickup.Text = Config.Calculation.minimDaysUntilPickup.ToString();
+                txtMinimumDaysUntilPickup.Text = Config.Calculation.minimumDaysUntilPickup.ToString();
                 txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
 
                 
@@ -58,7 +58,7 @@ namespace RouteNavigation
                 if (Config.Calculation.greaseTrapCutoffTime != DateTime.MinValue)
                 {
                     txtGreaseTrapCutoffTime.Text = Config.Calculation.greaseTrapCutoffTime.TimeOfDay.ToString();
-                    DataAccess.updateGreaseCutoffToConfigValue();
+                    DataAccess.UpdateGreaseCutoffToConfigValue();
                 }
 
                 txtMaxDistanceFromDepot.Text = Config.Calculation.maxDistanceFromDepot.ToString();
@@ -140,9 +140,9 @@ namespace RouteNavigation
                 if (!(String.IsNullOrEmpty(txtMaximumDaysOverdue.Text)))
                     cmd.Parameters.AddWithValue("p_maximum_days_overdue", NpgsqlTypes.NpgsqlDbType.Integer, txtMaximumDaysOverdue.Text);
                 if (!(String.IsNullOrEmpty(txtWorkDayStart.Text)))
-                    cmd.Parameters.AddWithValue("p_workday_start_time", NpgsqlTypes.NpgsqlDbType.Date, txtWorkDayStart.Text);
+                    cmd.Parameters.AddWithValue("p_workday_start_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayStart.Text);
                 if (!(String.IsNullOrEmpty(txtWorkDayEnd.Text)))
-                    cmd.Parameters.AddWithValue("p_workday_end_time", NpgsqlTypes.NpgsqlDbType.Date, txtWorkDayEnd.Text);
+                    cmd.Parameters.AddWithValue("p_workday_end_time", NpgsqlTypes.NpgsqlDbType.Time, txtWorkDayEnd.Text);
                 if (!(String.IsNullOrEmpty(txtGreaseTrapCutoffTime.Text)))
                     cmd.Parameters.AddWithValue("p_grease_pickup_time_cutoff", NpgsqlTypes.NpgsqlDbType.Time, txtGreaseTrapCutoffTime.Text);
                 if (!(String.IsNullOrEmpty(txtOilPickupAverageDuration.Text)))

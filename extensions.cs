@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace RouteNavigation
 {
-    public static class extensions
+    public static class Extensions
     {
         public static IList<T> Shuffle<T>(this IList<T> list, Random rng)
         {

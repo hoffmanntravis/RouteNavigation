@@ -84,7 +84,7 @@ namespace RouteNavigation
                 }
                 else
                 {
-                    DataAccess.updateCancellationStatus();
+                    DataAccess.UpdateCancellationStatus();
                     while (!(Monitor.TryEnter(calcLock)))
                     {
                         Thread.Sleep(100);
@@ -137,7 +137,7 @@ namespace RouteNavigation
                     activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows select dr["activity_id"]).FirstOrDefault().ToString();
                 }
                 RoutesListView.DataSource = dataTable;
-                extensions.RoundDataTable(dataTable, 2);
+                Extensions.RoundDataTable(dataTable, 2);
                 RoutesListView.ItemPlaceholderID = "itemPlaceHolder";
                 RoutesListView.DataBind();
             }

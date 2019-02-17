@@ -55,12 +55,12 @@ namespace RouteNavigation
                 int routeId = int.Parse(((TextBox)RouteDetailsListView.EditItem.FindControl("txtRouteId")).Text.Trim());
                 int order = int.Parse(((TextBox)RouteDetailsListView.EditItem.FindControl("lblOrder")).Text.Trim());
 
-                if (locationId == Config.Calculation.origin.id)
+                if (locationId == Config.Calculation.origin.Id)
                 {
                     Exception exception = new Exception(String.Format("Cannot move location with Id of {0}, since it is the depot and must be both the start and end of the route.", locationId));
                     throw exception;
                 }
-                DataAccess.updateRouteLocation(locationId, routeId, order);
+                DataAccess.UpdateRouteLocation(locationId, routeId, order);
                 RouteDetailsListView.EditIndex = -1;
 
                 BindListView();

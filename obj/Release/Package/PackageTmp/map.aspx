@@ -30,7 +30,7 @@
                 //shadowSize: [21, 21], // size of the shadow
                 iconAnchor: [9.375, 30], // point of the icon which will correspond to marker's location
                 //shadowAnchor: [0, 0],  // the same for the shadow
-                //popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
+                //popupAnchor: [-3, -76] // point from which the popup should open reLative to the iconAnchor
             });
 
 
@@ -40,7 +40,7 @@
                     var location = routes[i].allLocations[j];
                     var accountText = "Name: " + location.account
                     var locationAddressText = "Address: " + location.address
-                    var locationCoordinates = "Coordinates: " + "(Lat: " + location.coordinates.lat + ",Lng: " + location.coordinates.lng + ")";
+                    var locationCoordinates = "Coordinates: " + "(Lat: " + location.coordinates.Lat + ",Lng: " + location.coordinates.Lng + ")";
                     var locationLastVisited = "Last Visited: " + parseJsonDate(location.lastVisited);
                     var locationDaysUntilDue = "Days Until Due: " + location.daysUntilDue;
                     var locationDistanceFromDepot = "Distance From Depot: " + location.distanceFromDepot + " miles";
@@ -48,7 +48,7 @@
                     var locationGrease = "Grease: " + location.greaseTrapCustomer;
                     var popup = L.popup().setContent(accountText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" +  locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot + "<br>" + locationLastVisited);
 
-                    var marker = L.marker([routes[i].allLocations[j].coordinates.lat, routes[i].allLocations[j].coordinates.lng], { icon: iconImage })
+                    var marker = L.marker([routes[i].allLocations[j].coordinates.Lat, routes[i].allLocations[j].coordinates.Lng], { icon: iconImage })
                     marker.bindTooltip(routes[i].allLocations[j].account);
                     marker.bindPopup(popup);
                     locationMarkers.push(marker);
@@ -89,8 +89,8 @@
             for (i = 0; i < routes.length; i++) {
                 var points = [[]];
                 for (j = 0; j < routes[i].allLocations.length - 1; j++) {
-                    var pointA = new L.LatLng(routes[i].allLocations[j].coordinates.lat, routes[i].allLocations[j].coordinates.lng);
-                    var pointB = new L.LatLng(routes[i].allLocations[j + 1].coordinates.lat, routes[i].allLocations[j + 1].coordinates.lng);
+                    var pointA = new L.LatLng(routes[i].allLocations[j].coordinates.Lat, routes[i].allLocations[j].coordinates.Lng);
+                    var pointB = new L.LatLng(routes[i].allLocations[j + 1].coordinates.Lat, routes[i].allLocations[j + 1].coordinates.Lng);
                     points.push([pointA, pointB]);
                 }
                 var color = "rgb(" + routes[i].color.R + " ," + routes[i].color.G + "," + routes[i].color.B + ")";

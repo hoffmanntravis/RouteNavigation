@@ -289,7 +289,6 @@
     </Compile>
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="ColorManagement.cs" />
-    <Compile Include="Logger.cs" />
     <Compile Include="data.cs" />
     <Compile Include="extensions.cs" />
     <Compile Include="geneticAlgorithm.cs" />
