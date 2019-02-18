@@ -52,7 +52,7 @@ namespace RouteNavigation
                     }
                     else
                     {
-                        for (double i = 0; i < 1; i += (double)((double) 1 / (double)routeCount))
+                        for (double i = 0; i < 1; i += (double)((double)1 / (double)routeCount))
                             colors.Add(HSL2RGB(i, 0.5, 0.5));
                     }
 
@@ -80,6 +80,12 @@ namespace RouteNavigation
                     routesJson = "\"\"";
 
                 Config.Calculation.origin = DataAccess.GetLocationById(Config.Calculation.origin.Id);
+                if (Config.Calculation.origin.Coordinates.Lat is null || Config.Calculation.origin.Coordinates.Lng is null)
+                {
+                    Config.Calculation.origin.Coordinates.Lat = 39.03583319;
+                    Config.Calculation.origin.Coordinates.Lng = -76.917329664;
+                }
+
                 mapXCoordinate = Config.Calculation.origin.Coordinates.Lat.Value;
                 mapYCoordinate = Config.Calculation.origin.Coordinates.Lng.Value;
 

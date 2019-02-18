@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 using System.Threading;
 using NLog;
 
-namespace RouteNavigation
+namespace Apis
 {
     public class ApiLocation
     {

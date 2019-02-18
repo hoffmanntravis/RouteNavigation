@@ -17,7 +17,7 @@ namespace RouteNavigation
 
         public Vehicle AssignedVehicle { get; set; }
         public double CurrentGallonsEstimate { get; set; }
-        public DateTime? intendedPickupDate { get; set; } = default(DateTime);
+        public DateTime? intendedPickupDate { get; set; }
 
         public int? TrackingNumber { get; set; }
         public int RouteId { get; set; }
@@ -56,18 +56,33 @@ namespace RouteNavigation
         public double? Lat { get; set; }
         public double? Lng { get; set; }
         //created a default constructor for dapper to pass in null class objects and create a default object
-        public Coordinates() {}
-        public Coordinates(Coordinates c) {}
+        public Coordinates() { }
+        public Coordinates(Coordinates c)
+        {
+            if (c != null)
+            {
+                Lat = c.Lat;
+                Lng = c.Lng;
+            }
+        }
     }
 
     public class CartesianCoordinates
     {
-        public double X { get; set; } = Double.NaN;
-        public double Y { get; set; } = Double.NaN;
-        public double Z { get; set; } = Double.NaN;
+        public double? X { get; set; }
+        public double? Y { get; set; }
+        public double? Z { get; set; }
         //created a default constructor for dapper to pass in null class objects and create a default object
         public CartesianCoordinates() { }
-        public CartesianCoordinates(CartesianCoordinates c) { }
+        public CartesianCoordinates(CartesianCoordinates c)
+        {
+            if (c != null)
+            {
+                X = c.X;
+                Y = c.Y;
+                Z = c.Z;
+            }
+        }
     }
 
     public class CoordinatesMap : EntityMap<Coordinates>
@@ -79,13 +94,16 @@ namespace RouteNavigation
         }
     }
 
-    public class SphericalCoordinatesMap : EntityMap<CartesianCoordinates>
+    public class CartesianCoordinatesMap : EntityMap<CartesianCoordinates>
     {
-        public SphericalCoordinatesMap()
+        public CartesianCoordinatesMap()
         {
             Map(c => c.X).ToColumn("cartesian_x");
             Map(c => c.Y).ToColumn("cartesian_y");
             Map(c => c.Z).ToColumn("cartesian_z");
         }
     }
+
+
+
 }

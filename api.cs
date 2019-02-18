@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Threading;
 using NLog;
+using RouteNavigation;
 
-namespace RouteNavigation
+namespace Apis
 {
     public class Api
     {

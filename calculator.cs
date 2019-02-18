@@ -86,7 +86,9 @@ namespace RouteNavigation
                     if (postPonedLocations.Count > 0 && availableLocations.Count == 0)
                     {
                         Location firstDueLocation = postPonedLocations.OrderBy(a => a.DaysUntilDue).First();
-                        double daysElapsed = (firstDueLocation.intendedPickupDate - startDate).Value.TotalDays;
+                        double daysElapsed = 0;
+                        if (firstDueLocation.intendedPickupDate != null)
+                            daysElapsed = (firstDueLocation.intendedPickupDate - startDate).Value.TotalDays;
 
                         double daysToAdd = Config.Calculation.minimumDaysUntilPickup - daysElapsed;
                         currentVehicles = availableVehicles.ToList();
@@ -128,7 +130,7 @@ namespace RouteNavigation
 
                         Location nextLocation;
                         nextLocation = compatibleLocations.First();
-                        
+
                         if (compatibleLocations.Count > 1)
                         {
                             Location nearestLocation = FindNearestLocation(previousLocation, compatibleLocations);
@@ -197,7 +199,7 @@ namespace RouteNavigation
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.greasePickupAverageDurationMinutes);
                         }
 
-                        
+
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
                         potentialRoute.distanceMiles += nextLocationDistanceMiles;
                         //Logger.Trace(string.Format("potential route distance is {0} compared to a threshold of {1}", potentialRoute.distanceMiles, config.Calculation.routeDistanceMaxMiles));
@@ -231,7 +233,7 @@ namespace RouteNavigation
                         compatibleLocations.Remove(nextLocation);
                         //searchStart = nextLocation;
                         currentTime = potentialTime;
-                        
+
                         previousLocation = nextLocation;
                     }
 
@@ -291,7 +293,7 @@ namespace RouteNavigation
                     potentialRoute.allLocations.Add(origin);
 
                     if (potentialRoute.waypoints.Count == 0)
-                        throw new Exception("Route waypoints count is 0.  Something went wrong.");
+                        throw new InvalidOperationException("Route waypoints count is 0.  Something went wrong.  This is probably caused by invalid condidtions removing all compatible locations.  This may be a function of the data set or possibly a programming bug.  Discuss with Developer if possible.");
 
                     potentialRoute.assignedVehicle = vehicle;
                     potentialRoute.waypoints.ForEach(r => r.AssignedVehicle = vehicle);
@@ -379,6 +381,10 @@ namespace RouteNavigation
 
                 metadata.orphanedLocations = allLocations.Where(x => !metadata.processedLocations.Any(y => y.Address == x.Address)).ToList();
             }
+            catch (InvalidOperationException e)
+            {
+                throw e;
+            }
             catch (Exception e)
             {
                 Logger.Error(e);
@@ -414,7 +420,7 @@ namespace RouteNavigation
             return farthestLocation;
         }
 
-        public static double CalculateTotalDistance(List<Location> locations,bool roundTrip = false)
+        public static double CalculateTotalDistance(List<Location> locations, bool roundTrip = false)
         {
             double totalDistance = 0;
 
@@ -687,6 +693,8 @@ namespace RouteNavigation
 
         private double EstimateLocationGallons(Location location)
         {
+            if (location.DaysUntilDue == null)
+                return 0;
             double currentGallonsEstimate;
             if (location.DaysUntilDue > 0)
                 currentGallonsEstimate = ((double)location.DaysUntilDue / (double)location.OilPickupSchedule) * (double)location.OilTankSize;
@@ -775,17 +783,19 @@ namespace RouteNavigation
                     continue;
                 }
 
-                if ((DateTime.Now - location.OilPickupNextDate).Value.TotalDays > (Config.Calculation.maximumDaysOverdue) && location.OilPickupNextDate != null)
-                {
-                    Logger.Debug(String.Format("{0} is being ignored because the oil pickup next date of {1} more than {2} days overdue", location.Account, location.OilPickupNextDate, Config.Calculation.maximumDaysOverdue));
-                    continue;
-                }
+                if (location.OilPickupNextDate != null)
+                    if ((DateTime.Now - location.OilPickupNextDate).Value.TotalDays > (Config.Calculation.maximumDaysOverdue) && location.OilPickupNextDate != null)
+                    {
+                        Logger.Debug(String.Format("{0} is being ignored because the oil pickup next date of {1} is more than {2} days overdue", location.Account, location.OilPickupNextDate, Config.Calculation.maximumDaysOverdue));
+                        continue;
+                    }
 
-                if ((DateTime.Now - location.GreaseTrapPickupNextDate).Value.TotalDays > (Config.Calculation.maximumDaysOverdue) && location.GreaseTrapPickupNextDate != null)
-                {
-                    Logger.Debug(String.Format("{0} is being ignored because the grease pickup next date of {1} more than {2} days overdue", location.Account, location.GreaseTrapPickupNextDate, Config.Calculation.maximumDaysOverdue));
-                    continue;
-                }
+                if (location.GreaseTrapPickupNextDate != null)
+                    if ((DateTime.Now - location.GreaseTrapPickupNextDate).Value.TotalDays > (Config.Calculation.maximumDaysOverdue) && location.GreaseTrapPickupNextDate != null)
+                    {
+                        Logger.Debug(String.Format("{0} is being ignored because the grease pickup next date of {1} is more than {2} days overdue", location.Account, location.GreaseTrapPickupNextDate, Config.Calculation.maximumDaysOverdue));
+                        continue;
+                    }
 
                 if (location.DistanceFromDepot >= Config.Calculation.maxDistanceFromDepot)
                 {
@@ -956,7 +966,13 @@ namespace RouteNavigation
 
         public static double CalculateDistance(Location l1, Location l2)
         {
-            return Math.Sqrt(Math.Pow(l2.CartesianCoordinates.X - l1.CartesianCoordinates.X,2) + Math.Pow(l2.CartesianCoordinates.Y - l1.CartesianCoordinates.Y,2) + Math.Pow(l2.CartesianCoordinates.Z - l1.CartesianCoordinates.Z,2));
+            if (l1.CartesianCoordinates.X == null || l1.CartesianCoordinates.Y == null || l1.CartesianCoordinates.Z == null)
+                throw new Exception(String.Format("Attempting to calculate on null coordinates of a location with address {0}.  This will result in an error.", l1.Address));
+
+            if (l2.CartesianCoordinates.Y == null || l2.CartesianCoordinates.Y == null || l2.CartesianCoordinates.Z == null)
+                throw new Exception(String.Format("Attempting to calculate on null coordinates of a location with address {0}.  This will result in an error.", l2.Address));
+
+            return Math.Sqrt(Math.Pow(l2.CartesianCoordinates.X.Value - l1.CartesianCoordinates.X.Value, 2) + Math.Pow(l2.CartesianCoordinates.Y.Value - l1.CartesianCoordinates.Y.Value, 2) + Math.Pow(l2.CartesianCoordinates.Z.Value - l1.CartesianCoordinates.Z.Value, 2));
         }
 
         /*

@@ -10,9 +10,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace RouteNavigation
+namespace Apis
 {
-
     public class ApiRoute
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();

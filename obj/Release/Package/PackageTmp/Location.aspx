@@ -59,7 +59,7 @@
                             <asp:ImageButton ID="imgSortAddress" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByAddress_Click" />
                         </td>
                         <td id="tdoilPickupSchedule"  width="60" runat="server">
-                            <b>Pickup Interval Days</b>
+                            <b>Oil Schedule</b>
                             <asp:ImageButton ID="imgSortPickupInterval" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByPickupInterval_Click" />
                         </td>
                         <td id="tdgreaseTrapPreferredTimeStart" width="90" runat="server">
@@ -70,8 +70,8 @@
                             <b>Pickup Time End</b>
                             <asp:ImageButton ID="imgSortgreaseTrapPreferredTimeEnd" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortBygreaseTrapPreferredTimeEnd_Click" />
                         </td>
-                        <td id="tdLastVisited" width="160" runat="server">
-                            <b>Last Visited</b>
+                        <td id="tdGreaseTrapSchedule" width="160" runat="server">
+                            <b>Grease Schedule</b>
                             <asp:ImageButton ID="imgSortLastVisited" ImageUrl="~/images/up_arrow.svg" Height="10px" runat="server" OnClick="SortByLastVisited_Click" />
                         </td>
                         <td id="tdCapacity" runat="server">
@@ -148,7 +148,7 @@
                         <asp:Label ID="label6" runat="server" Text='<%# Eval("grease_trap_preferred_time_end") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label7" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
+                        <asp:Label ID="label7" runat="server" Text='<%# Eval("grease_trap_schedule") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label8" runat="server" Text='<%# Eval("oil_tank_size") %>'></asp:Label>
@@ -202,7 +202,7 @@
                     <asp:Label ID="label6" runat="server" Text='<%# Eval("grease_trap_preferred_time_end") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label7" runat="server" Text='<%# Eval("last_visited") %>'></asp:Label>
+                    <asp:Label ID="label7" runat="server" Text='<%# Eval("grease_trap_schedule") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label8" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:Label>
@@ -255,7 +255,7 @@
                     <asp:TextBox class="tableInput" ID="txtEditgreaseTrapPreferredTimeEnd" runat="server" Text='<%# Bind("grease_trap_preferred_time_end") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditLastVisited" runat="server" Text='<%# Bind("last_visited") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditLastVisited" runat="server" Text='<%# Bind("grease_trap_schedule") %>'></asp:TextBox>
                 </td>
                 <td>
                     <asp:TextBox class="tableInput" ID="txtEditoilTankSize" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:TextBox>
@@ -306,19 +306,19 @@
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertgreaseTrapPreferredTimeStart" placeholder="06:00" runat="server" Text='<%# Bind("grease_trap_preferred_time_start") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtgreaseTrapPreferredTimeStart" placeholder="06:00" runat="server" Text='<%# Bind("grease_trap_preferred_time_start") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
 
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertgreaseTrapPreferredTimeEnd" placeholder="16:00" runat="server" Text='<%# Bind("grease_trap_preferred_time_end") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtgreaseTrapPreferredTimeEnd" placeholder="16:00" runat="server" Text='<%# Bind("grease_trap_preferred_time_end") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
 
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertLastVisited" placeholder="01/01/2018" runat="server" Text='<%# Bind("last_visited") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtInsertLastVisited" placeholder="01/01/2018" runat="server" Text='<%# Bind("grease_trap_schedule") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
                 <td>

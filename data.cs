@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Web;
+using Apis;
 
 namespace RouteNavigation
 {
@@ -28,7 +29,7 @@ namespace RouteNavigation
             FluentMapper.Initialize(config =>
             {
                 config.AddMap(new CoordinatesMap());
-                config.AddMap(new SphericalCoordinatesMap());
+                config.AddMap(new CartesianCoordinatesMap());
             });
         }
 

@@ -9,7 +9,7 @@ using System.Web.Script.Serialization;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
-namespace WebApplication1
+namespace RouteNavigation
 {
     /// <summary>
     /// Summary description for Handler1

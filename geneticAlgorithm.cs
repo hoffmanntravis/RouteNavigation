@@ -151,8 +151,11 @@ namespace RouteNavigation
                         throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
 
                     possibleLocations = allLocations.ToList();
+                    possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
                     possibleLocations.ForEach(l => l.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
-                    possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat is double.NaN || a.Coordinates.Lng is double.NaN)).ToList();
+                    RouteCalculator.UpdateDistanceFromSource(possibleLocations);
+                    DataAccess.UpdateDaysUntilDue();
+
                     possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                     //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
                     possibleLocations.Remove(Config.Calculation.origin);
@@ -170,9 +173,6 @@ namespace RouteNavigation
                     DataAccess.InsertRouteBatch();
 
                     //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
-
-                    RouteCalculator.UpdateDistanceFromSource(allLocations);
-                    DataAccess.UpdateDaysUntilDue();
 
                     List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
 
@@ -283,23 +283,24 @@ namespace RouteNavigation
 
         public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
         {
-            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
-            foreach (List<Location> locations in locationsList)
+            try
             {
-                Thread thread = new Thread(Action =>
+                SynchronizedCollection<Task> tasks = new SynchronizedCollection<Task>();
+                foreach (List<Location> locations in locationsList)
                 {
-                    RouteCalculator c = RunCalculations(locations);
+                    Task<RouteCalculator> t = Task.Run(() => RunCalculations(locations));
                     lock (newCalcLock)
-                        calcs.Add(c);
-                });
-
-                thread.Priority = ThreadPriority.BelowNormal;
-                threads.Add(thread);
-                thread.Start();
+                        calcs.Add(t.Result);
+                    tasks.Add(t);
+                }
+            
+            foreach (Task t in tasks)
+                t.Wait();
             }
-
-            foreach (Thread t in threads)
-                t.Join();
+            catch (AggregateException ae)
+            {
+                throw ae.InnerException;
+            }
 
             return calcs;
         }
@@ -307,25 +308,23 @@ namespace RouteNavigation
         public List<List<Location>> ThreadInitialPool(uint count)
         {
             List<List<Location>> locationsList = new List<List<Location>>();
-            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
+            SynchronizedCollection<Task> tasks = new SynchronizedCollection<Task>();
+            Logger.Info("Shuffling Locations into randomized permutations");
+
             for (int x = 0; x < count; x++)
             {
-                Thread thread = new Thread(Action =>
-                {
-                    List<Location> l = new List<Location>(possibleLocations).Shuffle(rng).ToList();
-
+                Task<List<Location>> t = Task.Run(() => (possibleLocations).Shuffle(rng).ToList());
                     lock (newCalcLock)
-                        locationsList.Add(l);
-                });
+                        locationsList.Add(t.Result);
 
-                thread.Priority = ThreadPriority.BelowNormal;
-                threads.Add(thread);
-                thread.Start();
+                tasks.Add(t);
+                t.Start();
             }
 
-            foreach (Thread t in threads)
-                t.Join();
+            foreach (Task t in tasks)
+                t.Wait();
 
+            Logger.Info("Seeding Locations with some nearest neighbor genetic 'parents' of suspected high quality.  This may take some time.");
             int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * locationsList.Count, 0);
             for (int x = 0; x < seedCount; x++)
                 locationsList[x] = RouteCalculator.NearestNeighbor(locationsList[x]);

@@ -500,6 +500,8 @@ namespace RouteNavigation
             {
                 AutoMap();
                 Map(m => m.Address).Name("AddressFullOneLine");
+                Map(c => c.GreaseTrapPickupNextDate).Name("grease_trap_next_date_new");
+                Map(c => c.OilPickupNextDate).Name("oil_pickup_next_date_new");
             }
         }
 
@@ -541,7 +543,7 @@ namespace RouteNavigation
                     {
                         return int.Parse(text);
                     }
-                    catch 
+                    catch
                     {
                         Logger.Error(String.Format("Failed to parse Int with input text: {0} on line {1} of CSV", text, row.Context.Row));
                     }
@@ -589,7 +591,7 @@ namespace RouteNavigation
                     }
                     catch
                     {
-                        Logger.Error(String.Format("Failed to parse DateTime with input text: {0} on line {1} of CSV", text,row.Context.Row));
+                        Logger.Error(String.Format("Failed to parse DateTime with input text: {0} on line {1} of CSV", text, row.Context.Row));
                     }
 
                 return text;
