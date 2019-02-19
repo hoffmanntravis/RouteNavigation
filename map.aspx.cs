@@ -64,11 +64,11 @@ namespace RouteNavigation
                     foreach (var location in locationsGroup)
                     {
                         Route r = new Route();
-                        r.allLocations.AddRange(location.ToList());
+                        r.AllLocations.AddRange(location.ToList());
                         Color color = colors[colorIndex];
                         colorIndex++;
-                        r.color = color;
-                        r.id = r.allLocations[0].RouteId;
+                        r.Color = color;
+                        r.Id = r.AllLocations[0].RouteId;
                         routes.Add(r);
                     }
 

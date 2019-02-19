@@ -17,7 +17,7 @@ namespace RouteNavigation
 
         public Vehicle AssignedVehicle { get; set; }
         public double CurrentGallonsEstimate { get; set; }
-        public DateTime? intendedPickupDate { get; set; }
+        public DateTime? IntendedPickupDate { get; set; }
 
         public int? TrackingNumber { get; set; }
         public int RouteId { get; set; }
@@ -30,8 +30,14 @@ namespace RouteNavigation
         public string ContactName { get; set; }
         public string ContactEmail { get; set; }
         public double? OilTankSize { get; set; }
-        public double? DaysUntilDue { get; set; }
+        public double? OilPickupDaysUntilDue { get; set; }
         public double? DistanceFromDepot { get; set; }
+        public double? DaysUntilDue { get; set; }
+        public DateTime? OilLastVisited { get; set; }
+        public DateTime? GreaseLastVistied { get; set; }
+        public double? OilDaysElapsed { get; set; }
+        public double? GreaseDaysElapsed { get; set; }
+        public double? DaysElapsed { get; set; }
 
         public bool OilPickupCustomer { get; set; } = false;
         public bool? OilPickupSignatureRequired { get; set; }
@@ -45,6 +51,7 @@ namespace RouteNavigation
         public bool GreaseTrapCustomer { get; set; } = false;
         public string GreaseTrapServiceNotes { get; set; }
         public bool? GreaseTrapSignatureRequired { get; set; }
+        public double? GreaseTrapDaysUntilDue { get; set; }
         public int? GreaseTrapUnits { get; set; }
         public string GreaseTrapPreferredDay { get; set; }
         public int? GreaseTrapSchedule { get; set; }

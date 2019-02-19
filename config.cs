@@ -18,7 +18,7 @@ namespace RouteNavigation
             public static DateTime greaseTrapCutoffTime = DateTime.MinValue;
             public static double oilPickupAverageDurationMinutes = 30;
             public static double greasePickupAverageDurationMinutes = 30;
-            public static uint minimumDaysUntilPickup = 0;
+            public static uint MinimumDaysUntilPickup = 0;
             public static uint maximumDaysOverdue = 60;
             public static double nearbyLocationDistance = 20;
             public static double averageCityTravelSpeed = 15;

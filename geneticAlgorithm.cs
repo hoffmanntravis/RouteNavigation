@@ -59,7 +59,7 @@ namespace RouteNavigation
             //Attempt to seed some good data
             //
 
-            startingPopulation = ThreadInitialPool(populationSize);
+            startingPopulation = ThreadInitialPool((int)populationSize);
 
             //startingPopulation.Add(new List<Location>(possibleLocations).Shuffle(rng).ToList());
 
@@ -154,7 +154,8 @@ namespace RouteNavigation
                     possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
                     possibleLocations.ForEach(l => l.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
                     RouteCalculator.UpdateDistanceFromSource(possibleLocations);
-                    DataAccess.UpdateDaysUntilDue();
+                    possibleLocations = updateLocationDaysUntilDue(possibleLocations);
+                    possibleLocations = updateLocationLastVisited(possibleLocations);
 
                     possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                     //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
@@ -218,7 +219,7 @@ namespace RouteNavigation
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                     DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
                     DataAccess.UpdateIteration(0, 0);
-                    
+
                     Logger.Info("Finished calculations.");
                 }
                 finally
@@ -232,6 +233,43 @@ namespace RouteNavigation
                 Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalculate");
                 throw exception;
             }
+        }
+
+        private List<Location> updateLocationDaysUntilDue(List<Location> locations)
+        {
+            foreach (Location l in locations)
+            {
+                if (!l.OilPickupDaysUntilDue.HasValue)
+                    if (l.OilPickupSchedule.HasValue)
+                        l.OilPickupDaysUntilDue = l.OilPickupSchedule.Value;
+                if (!l.GreaseTrapDaysUntilDue.HasValue)
+                    if (l.GreaseTrapSchedule.HasValue)
+                        l.GreaseTrapDaysUntilDue = l.GreaseTrapSchedule.Value;
+
+                if (!l.OilPickupDaysUntilDue.HasValue && l.GreaseTrapDaysUntilDue.HasValue)
+                    l.DaysUntilDue = l.GreaseTrapDaysUntilDue;
+
+                else if (!l.GreaseTrapDaysUntilDue.HasValue && l.OilPickupDaysUntilDue.HasValue)
+                    l.DaysUntilDue = l.OilPickupDaysUntilDue;
+
+                else if (l.OilPickupDaysUntilDue.HasValue && l.GreaseTrapDaysUntilDue.HasValue)
+                    l.DaysUntilDue = Math.Min(l.OilPickupDaysUntilDue.Value, l.GreaseTrapDaysUntilDue.Value);
+                else
+                    throw new Exception(String.Format("{0} has a null oil pickup schedule, a null grease trap schedule, and a null next pickup date for both as well.  This will cause issues and should be corrected before proceeding with calculations so appropraite delivery dates can be calcualted.", l.Account));
+            }
+            return locations;
+        }
+
+        private List<Location> updateLocationLastVisited(List<Location> locations)
+        {
+            foreach (Location l in locations)
+            {
+                if (l.OilPickupNextDate != null && l.OilPickupSchedule != null)
+                    l.OilLastVisited = l.OilPickupNextDate.Value.AddDays(-l.OilPickupSchedule.Value);
+                if (l.GreaseTrapPickupNextDate != null && l.GreaseTrapSchedule != null)
+                    l.GreaseLastVistied = l.GreaseTrapPickupNextDate.Value.AddDays(-l.GreaseTrapSchedule.Value);
+            }
+            return locations;
         }
 
         public List<RouteCalculator> GeneticAlgorithmFitness(List<RouteCalculator> calcs)
@@ -281,26 +319,29 @@ namespace RouteNavigation
             return calc;
         }
 
+        /*
         public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
         {
+
             try
             {
-                SynchronizedCollection<Task> tasks = new SynchronizedCollection<Task>();
+                SynchronizedCollection<Task<RouteCalculator>> tasks = new SynchronizedCollection<Task<RouteCalculator>>();
                 foreach (List<Location> locations in locationsList)
                 {
-                    Task<RouteCalculator> t = Task.Run(() => RunCalculations(locations));
-                    lock (newCalcLock)
-                        calcs.Add(t.Result);
+                    Task<RouteCalculator> t = Task.Factory.StartNew(() => RunCalculations(locations));
                     tasks.Add(t);
                 }
-            
-            foreach (Task t in tasks)
-                t.Wait();
+
+                Task.WaitAll(tasks.ToArray());
+                foreach (Task<RouteCalculator> t in tasks)
+                    lock (newCalcLock)
+                        calcs.Add(t.Result);
             }
             catch (AggregateException ae)
             {
                 throw ae.InnerException;
             }
+
 
             return calcs;
         }
@@ -308,21 +349,17 @@ namespace RouteNavigation
         public List<List<Location>> ThreadInitialPool(uint count)
         {
             List<List<Location>> locationsList = new List<List<Location>>();
-            SynchronizedCollection<Task> tasks = new SynchronizedCollection<Task>();
+            SynchronizedCollection<Task<List<Location>>> tasks = new SynchronizedCollection<Task<List<Location>>>();
             Logger.Info("Shuffling Locations into randomized permutations");
 
             for (int x = 0; x < count; x++)
             {
-                Task<List<Location>> t = Task.Run(() => (possibleLocations).Shuffle(rng).ToList());
-                    lock (newCalcLock)
-                        locationsList.Add(t.Result);
-
+                Task<List<Location>> t = Task.Factory.StartNew(() => possibleLocations.Shuffle(rng).ToList());
                 tasks.Add(t);
-                t.Start();
             }
-
-            foreach (Task t in tasks)
-                t.Wait();
+            Task.WaitAll(tasks.ToArray());
+            foreach (Task<List<Location>> t in tasks)
+                locationsList.Add(t.Result);
 
             Logger.Info("Seeding Locations with some nearest neighbor genetic 'parents' of suspected high quality.  This may take some time.");
             int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * locationsList.Count, 0);
@@ -356,9 +393,57 @@ namespace RouteNavigation
             
 
             return locationsList;
-            */
+            
+        }
+        */
+
+        public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
+        {
+            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
+            foreach (List<Location> locations in locationsList)
+            {
+                Thread thread = new Thread(Action =>
+                {
+                    RouteCalculator c = RunCalculations(locations);
+                    lock (newCalcLock)
+                        calcs.Add(c);
+                });
+
+                thread.Priority = ThreadPriority.BelowNormal;
+                threads.Add(thread);
+                thread.Start();
+            }
+
+            foreach (Thread t in threads)
+                t.Join();
+
+            return calcs;
         }
 
+        public List<List<Location>> ThreadInitialPool(int count)
+        {
+            List<List<Location>> locationsList = new List<List<Location>>();
+            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
+            for (int x = 0; x < count; x++)
+            {
+                Thread thread = new Thread(Action =>
+                {
+                    List<Location> l = new List<Location>(possibleLocations).Shuffle(rng).ToList();
+                    l = RouteCalculator.NearestNeighbor(l);
+                    lock (newCalcLock)
+                        locationsList.Add(l);
+                });
+
+                thread.Priority = ThreadPriority.BelowNormal;
+                threads.Add(thread);
+                thread.Start();
+            }
+
+            foreach (Thread t in threads)
+                t.Join();
+
+            return locationsList;
+        }
 
         public List<RouteCalculator> GeneticSelection(List<RouteCalculator> parents)
         {

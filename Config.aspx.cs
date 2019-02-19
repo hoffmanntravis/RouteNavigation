@@ -46,7 +46,7 @@ namespace RouteNavigation
                 txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
                 txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
                 txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
-                txtMinimumDaysUntilPickup.Text = Config.Calculation.minimumDaysUntilPickup.ToString();
+                txtMinimumDaysUntilPickup.Text = Config.Calculation.MinimumDaysUntilPickup.ToString();
                 txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
 
                 

@@ -78,7 +78,7 @@
                         <asp:Label ID="label2" runat="server" Text='<%# Eval("model") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label3" runat="server" Text='<%# Eval("capacity_gallons") %>'></asp:Label>
+                        <asp:Label ID="label3" runat="server" Text='<%# Eval("oil_tank_size") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label4" runat="server" Text='<%# Eval("physical_size") %>'></asp:Label>
@@ -105,7 +105,7 @@
                     <asp:Label ID="label2" runat="server" Text='<%# Eval("model") %>'></asp:Label>
                 </td>
                 <td>
-                    <asp:Label ID="label3" runat="server" Text='<%# Eval("capacity_gallons") %>'></asp:Label>
+                    <asp:Label ID="label3" runat="server" Text='<%# Eval("oil_tank_size") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:Label ID="label4" runat="server" Text='<%# Eval("physical_size") %>'></asp:Label>
@@ -137,7 +137,7 @@
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnUpdate">
-                        <asp:TextBox class="tableInput" ID="txtEditCapacityGallons" runat="server" Text='<%# Bind("capacity_gallons") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtEditoilTankSize" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
                 <td>
@@ -171,7 +171,7 @@
                 </td>
                 <td>
                     <asp:Panel runat="server" DefaultButton="btnInsert">
-                        <asp:TextBox class="tableInput" ID="txtInsertCapacityGallons" placeholder="500" runat="server" Text='<%# Bind("capacity_gallons") %>'></asp:TextBox>
+                        <asp:TextBox class="tableInput" ID="txtInsertoilTankSize" placeholder="500" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:TextBox>
                     </asp:Panel>
                 </td>
                 <td>

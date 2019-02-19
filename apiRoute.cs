@@ -60,8 +60,8 @@ namespace Apis
         public string BuildMapsUrl(RouteNavigation.Route route)
         {
             mapsUrl = mapsBaseUrl;
-            if (route.allLocations.Count > 0)
-                foreach (Location waypoint in route.allLocations)
+            if (route.AllLocations.Count > 0)
+                foreach (Location waypoint in route.AllLocations)
                     mapsUrl += waypoint.Address + "/";
 
             //make the url google friendly.  Remove illegal characters and replace them with spaces.
@@ -78,15 +78,15 @@ namespace Apis
             Api googleApi = new Api();
 
             directionsApiUrl = directionsApiUrl + "?optimize:true";
-            directionsApiUrl = directionsApiUrl + "&origin=" + route.origin.Address;
+            directionsApiUrl = directionsApiUrl + "&origin=" + route.Origin.Address;
 
             if (waypoints.Count > 0)
             {
                 directionsApiUrl = directionsApiUrl + "&waypoints=";
-                foreach (Location waypoint in route.waypoints)
+                foreach (Location waypoint in route.Waypoints)
                     directionsApiUrl = directionsApiUrl + waypoint.Address + "|";
             }
-            directionsApiUrl = directionsApiUrl + "&destination=" + route.origin.Address;
+            directionsApiUrl = directionsApiUrl + "&destination=" + route.Origin.Address;
             directionsApiUrl = directionsApiUrl + "&key=" + apiKey;
             directionsApiUrl = directionsApiUrl.Replace(" ", "+");
             directionsApiUrl = ReplaceIllegalCharaters(directionsApiUrl);

@@ -8,17 +8,17 @@ namespace RouteNavigation
 {
     public class Route
     {
-        public int id;
-        public TimeSpan totalTime;
-        public DateTime date;
-        public double distanceMiles;
-        public Location origin;
-        public Color color = new Color();
-        public List<Location> waypoints = new List<Location>();
-        public string mapsUrl;
-        public Vehicle assignedVehicle;
-        public List<Location> allLocations = new List<Location>();
-        public double averageLocationDistance;
+        public int Id;
+        public TimeSpan TotalTime;
+        public DateTime Date;
+        public double DistanceMiles;
+        public Location Origin;
+        public Color Color = new Color();
+        public List<Location> Waypoints = new List<Location>();
+        public string MapsUrl;
+        public Vehicle AssignedVehicle;
+        public List<Location> AllLocations = new List<Location>();
+        public double AverageLocationDistance;
         /*
         public Route(Location o)
         {
