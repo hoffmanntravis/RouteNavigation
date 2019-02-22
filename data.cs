@@ -282,7 +282,7 @@ namespace RouteNavigation
                     l.CartesianCoordinates = new CartesianCoordinates(cartesianCoordinates);
                     return l;
                 }, splitOn: "cartesian_x,coordinates_latitude", commandType: CommandType.StoredProcedure).ToList();
-                                DataAccess.UpdateDaysUntilDue();
+            DataAccess.UpdateDaysUntilDue();
             return locations;
         }
 
@@ -587,8 +587,8 @@ namespace RouteNavigation
 
         public class IterationStatus
         {
-            public int currentIteration;
-            public int totalIterations;
+            public int? currentIteration = null;
+            public int? totalIterations = null;
         }
 
         public static IterationStatus GetCalcStatus()
@@ -748,13 +748,20 @@ namespace RouteNavigation
             return Boolean.Parse(ReadStoredProcedureAsString(cmd));
         }
 
-        public static void UpdateIteration(uint currentIteration, uint totalIterations)
+        public static void UpdateIteration(uint? currentIteration, uint? totalIterations)
         {
             try
             {
                 NpgsqlCommand cmd = new NpgsqlCommand("update_iteration");
-                cmd.Parameters.AddWithValue("p_iteration_current", NpgsqlTypes.NpgsqlDbType.Integer, currentIteration);
-                cmd.Parameters.AddWithValue("p_iteration_total", NpgsqlTypes.NpgsqlDbType.Integer, totalIterations);
+
+                if (currentIteration != null)
+                    cmd.Parameters.AddWithValue("p_iteration_current", NpgsqlTypes.NpgsqlDbType.Integer, currentIteration);
+                else
+                    cmd.Parameters.AddWithValue("p_iteration_current", NpgsqlTypes.NpgsqlDbType.Integer, DBNull.Value);
+                if (totalIterations != null)
+                    cmd.Parameters.AddWithValue("p_iteration_total", NpgsqlTypes.NpgsqlDbType.Integer, totalIterations);
+                else
+                    cmd.Parameters.AddWithValue("p_iteration_total", NpgsqlTypes.NpgsqlDbType.Integer, DBNull.Value);
                 RunStoredProcedure(cmd);
             }
             catch (Exception exception)
@@ -918,7 +925,7 @@ namespace RouteNavigation
                             p_grease_trap_signature_req = l.GreaseTrapSignatureRequired,
                             p_grease_trap_size = l.GreaseTrapSize,
                             p_grease_trap_units = l.GreaseTrapUnits,
-                            p_intended_pickup_date = l.IntendedPickupDate,
+                            p_intended_pickup_date = l.intendedPickupDate,
                             p_number_of_manholes = l.NumberOfManHoles,
                             p_oil_pickup_customer = l.OilPickupCustomer,
                             p_oil_pickup_next_date = l.OilPickupNextDate,

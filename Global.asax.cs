@@ -21,6 +21,7 @@ namespace RouteNavigation
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             DataAccess.CleanupNullBatchCalcs();
             DataAccess.PopulateConfig();
+            DataAccess.UpdateIteration(null, null);
         }
 
         void Application_Error(object sender, EventArgs e)

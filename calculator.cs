@@ -46,6 +46,7 @@ namespace RouteNavigation
             {
                 //This should get moved to the genetic algorithm as it is a static answer and recalculating is wasteful
 
+                int hash1 = GenerateRouteHash(availableLocations);
                 if (origin == null)
                 {
                     Exception exception = new Exception("Origin is null.  Please set it in the config page, or calculation will fail.");
@@ -54,8 +55,11 @@ namespace RouteNavigation
                 }
 
                 List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startTime);
-                availableLocations = availableLocations.Except(serviceNowLocations).ToList();
-                availableLocations.InsertRange(0, serviceNowLocations);
+                if (serviceNowLocations.Count > 0)
+                {
+                    availableLocations = availableLocations.Except(serviceNowLocations).ToList();
+                    availableLocations.InsertRange(0, serviceNowLocations);
+                }
 
                 //UpdateDistanceFromSource(allLocations);
 
@@ -63,6 +67,7 @@ namespace RouteNavigation
                 //availableLocations.Sort((a, b) => b.distanceFromSource.CompareTo(a.distanceFromSource));
 
                 //build routes until all locations are exhausted
+
 
                 while (availableLocations.Count > 0)
                 {
@@ -77,6 +82,7 @@ namespace RouteNavigation
                     startTime = startDate + Config.Calculation.workdayStartTime;
                     endTime = startDate + Config.Calculation.workdayEndTime;
 
+
                     //Remove any locations that would be picked up too soon to be relevent.  We'll invoke a recursive call at the end to deal with these.
                     List<Location> availableLocationsWithPostponedLocations = availableLocations.ToList();
                     List<Location> postPonedLocations = GetLaterDateLocations(availableLocations, startTime);
@@ -85,6 +91,7 @@ namespace RouteNavigation
                     //If all that is left are locations that need to be processed later, advance the date accordingly
                     if (postPonedLocations.Count > 0 && availableLocations.Count == 0)
                     {
+
                         Location firstDueLocation = postPonedLocations.OrderBy(a => a.DaysUntilDue).First();
                         double daysElapsed = firstDueLocation.DaysElapsed.Value;
                         double daysToAdd = Config.Calculation.MinimumDaysUntilPickup - daysElapsed;
@@ -94,6 +101,7 @@ namespace RouteNavigation
                         availableLocations = postPonedLocations.ToList();
                         if (startDate.DayOfWeek == DayOfWeek.Saturday || startDate.DayOfWeek == DayOfWeek.Sunday)
                             startDate = AdvanceDateToNextWeekday(startDate);
+
                         continue;
                     }
 
@@ -187,14 +195,9 @@ namespace RouteNavigation
                         }*/
 
                         if (nextLocation.OilPickupCustomer == true)
-                        {
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.oilPickupAverageDurationMinutes);
-                        }
                         if (nextLocation.GreaseTrapCustomer == true)
-                        {
                             potentialTime += TimeSpan.FromMinutes(Config.Calculation.greasePickupAverageDurationMinutes);
-                        }
-
 
                         //get the current total distance, including the trip back to the depot for comparison to max distance setting
                         potentialRoute.DistanceMiles += nextLocationDistanceMiles;
@@ -222,7 +225,7 @@ namespace RouteNavigation
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
                         if (Config.Features.vehicleFillLevel == true)
                             vehicle.currentGallons += nextLocation.CurrentGallonsEstimate;
-                        nextLocation.IntendedPickupDate = potentialTime;
+                        nextLocation.intendedPickupDate = potentialTime;
 
                         //add in the average visit time
                         potentialRoute.Waypoints.Add(nextLocation);
@@ -297,7 +300,7 @@ namespace RouteNavigation
                     currentVehicles.Remove(vehicle);
                     potentialRoute.Date = startDate;
                     potentialRoute = CalculateTSPRouteNN(potentialRoute);
-                    //potentialRoute = calculateTSPRouteTwoOpt(potentialRoute);
+                    //potentialRoute = CalculateTSPRouteTwoOpt(potentialRoute);
 
                     potentialRoute.TotalTime = currentTime - startTime;
                     //int oilLocationsCount = potentialRoute.allLocations.Where(a => a.type == "oil").ToList().Count;
@@ -715,7 +718,7 @@ namespace RouteNavigation
             List<Location> laterDateLocations = new List<Location>();
             foreach (Location l in availableLocations)
             {
-                 if (l.OilPickupNextDate != null && l.OilLastVisited != null)
+                if (l.OilPickupNextDate != null && l.OilLastVisited != null)
                     l.OilDaysElapsed = (currentDate - l.OilLastVisited.Value).TotalDays;
                 if (l.GreaseTrapPickupNextDate != null && l.GreaseLastVistied != null)
                     l.GreaseDaysElapsed = (currentDate - l.GreaseLastVistied.Value).TotalDays;
@@ -747,10 +750,6 @@ namespace RouteNavigation
             List<Location> serviceNowLocations = new List<Location>();
             foreach (Location l in availableLocations)
             {
-                if (l.IntendedPickupDate == null)
-                    l.IntendedPickupDate = currentDate;
-
-                //Set interval days to interval days -1 so we can be 'on time' instead of late
                 if (currentDate >= l.OilPickupNextDate)
                     serviceNowLocations.Add(l);
                 else if (currentDate >= l.GreaseTrapPickupNextDate)
@@ -794,7 +793,7 @@ namespace RouteNavigation
 
             foreach (Location location in locations)
             {
-                if (location.VehicleSize <= smallestVehicle)
+                if (location.VehicleSize < smallestVehicle)
                 {
                     Logger.Debug(String.Format("{0} is being ignored because it's size of {1} is smaller than the smallest vehicle size of {2}", location.Account, location.VehicleSize, smallestVehicle));
                     //if we find a vehicle that works with the location, add the location to the list of possible locations and break out to the next location
@@ -883,7 +882,7 @@ namespace RouteNavigation
 
         public static List<Location> GetHighestPrioritylocations(List<Location> locations, int count)
         {
-            locations.Sort((a, b) =>a.DaysUntilDue.Value.CompareTo(b.DaysUntilDue.Value));
+            locations.Sort((a, b) => a.DaysUntilDue.Value.CompareTo(b.DaysUntilDue.Value));
             List<Location> highestPrioritylocations = locations.Take(count).ToList();
             Logger.Trace("Got highest priority locations: " + highestPrioritylocations.ToList().ToString());
             return highestPrioritylocations;

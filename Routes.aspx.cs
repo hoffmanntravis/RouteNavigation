@@ -133,9 +133,8 @@ namespace RouteNavigation
             {
                 dataTable = DataAccess.GetRouteInformationData();
                 if (dataTable.Rows.Count != 0)
-                {
                     activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows select dr["activity_id"]).FirstOrDefault().ToString();
-                }
+
                 RoutesListView.DataSource = dataTable;
                 Extensions.RoundDataTable(dataTable, 2);
                 RoutesListView.ItemPlaceholderID = "itemPlaceHolder";

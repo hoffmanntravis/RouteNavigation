@@ -36,20 +36,21 @@
 
 
             for (i = 0; i < routes.length; i++) {
-                for (j = 0; j < routes[i].allLocations.length; j++) {
-                    var location = routes[i].allLocations[j];
-                    var accountText = "Name: " + location.account
-                    var locationAddressText = "Address: " + location.address
-                    var locationCoordinates = "Coordinates: " + "(Lat: " + location.coordinates.Lat + ",Lng: " + location.coordinates.Lng + ")";
-                    var locationLastVisited = "Last Visited: " + parseJsonDate(location.lastVisited);
-                    var locationDaysUntilDue = "Days Until Due: " + location.daysUntilDue;
-                    var locationDistanceFromDepot = "Distance From Depot: " + location.distanceFromDepot + " miles";
-                    var locationOil = "Oil: " + location.oilPickupCustomer;
-                    var locationGrease = "Grease: " + location.greaseTrapCustomer;
-                    var popup = L.popup().setContent(accountText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" +  locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot + "<br>" + locationLastVisited);
+                for (j = 0; j < routes[i].AllLocations.length; j++) {
+                    var location = routes[i].AllLocations[j];
+                    var accountText = "Name: " + location.Account
+                    var locationAddressText = "Address: " + location.Address
+                    var locationCoordinates = "Coordinates: " + "(Lat: " + location.Coordinates.Lat + ",Lng: " + location.Coordinates.Lng + ")";
+                    //If you want to add these, need to postback to database location properties with updated info / add to route details
+                    //var locationLastVisited = "Intended Visit Date: " + parseJsonDate(location.IntendedPickupDate);
+                    var locationDaysUntilDue = "Days Until Due: " + location.DaysUntilDue;
+                    var locationDistanceFromDepot = "Distance From Depot: " + location.DistanceFromDepot + " miles";
+                    var locationOil = "Oil: " + location.OilPickupCustomer;
+                    var locationGrease = "Grease: " + location.GreaseTrapCustomer;
+                    var popup = L.popup().setContent(accountText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" +  locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot);
 
-                    var marker = L.marker([routes[i].allLocations[j].coordinates.Lat, routes[i].allLocations[j].coordinates.Lng], { icon: iconImage })
-                    marker.bindTooltip(routes[i].allLocations[j].account);
+                    var marker = L.marker([routes[i].AllLocations[j].Coordinates.Lat, routes[i].AllLocations[j].Coordinates.Lng], { icon: iconImage })
+                    marker.bindTooltip(routes[i].AllLocations[j].Account);
                     marker.bindPopup(popup);
                     locationMarkers.push(marker);
                 }
@@ -88,13 +89,13 @@
             var routeUrls = [];
             for (i = 0; i < routes.length; i++) {
                 var points = [[]];
-                for (j = 0; j < routes[i].allLocations.length - 1; j++) {
-                    var pointA = new L.LatLng(routes[i].allLocations[j].coordinates.Lat, routes[i].allLocations[j].coordinates.Lng);
-                    var pointB = new L.LatLng(routes[i].allLocations[j + 1].coordinates.Lat, routes[i].allLocations[j + 1].coordinates.Lng);
+                for (j = 0; j < routes[i].AllLocations.length - 1; j++) {
+                    var pointA = new L.LatLng(routes[i].AllLocations[j].Coordinates.Lat, routes[i].AllLocations[j].Coordinates.Lng);
+                    var pointB = new L.LatLng(routes[i].AllLocations[j + 1].Coordinates.Lat, routes[i].AllLocations[j + 1].Coordinates.Lng);
                     points.push([pointA, pointB]);
                 }
-                var color = "rgb(" + routes[i].color.R + " ," + routes[i].color.G + "," + routes[i].color.B + ")";
-                var routeUrl = "/routeDetails?routeId=" + routes[i].id;
+                var color = "rgb(" + routes[i].Color.R + " ," + routes[i].Color.G + "," + routes[i].Color.B + ")";
+                var routeUrl = "/routeDetails?routeId=" + routes[i].Id;
                 var multiPolyLine = new L.polygon(points, {
                     color: color,
                     weight: 4,

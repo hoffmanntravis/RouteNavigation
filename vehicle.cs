@@ -5,6 +5,7 @@ using System.Web;
 
 namespace RouteNavigation
 {
+    [Serializable]
     public class Vehicle
     {
         public int id;

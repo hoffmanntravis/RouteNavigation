@@ -19,11 +19,5 @@ namespace RouteNavigation
         public Vehicle AssignedVehicle;
         public List<Location> AllLocations = new List<Location>();
         public double AverageLocationDistance;
-        /*
-        public Route(Location o)
-        {
-            origin = o;
-        }
-        */
     }
 }

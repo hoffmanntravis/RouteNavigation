@@ -4,11 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Web;
 
 namespace RouteNavigation
 {
+    [Serializable]
     public class Location
     {
         public Coordinates Coordinates { get; set; } = new Coordinates();
@@ -17,7 +20,7 @@ namespace RouteNavigation
 
         public Vehicle AssignedVehicle { get; set; }
         public double CurrentGallonsEstimate { get; set; }
-        public DateTime? IntendedPickupDate { get; set; }
+        public DateTime? intendedPickupDate { get; set; }
 
         public int? TrackingNumber { get; set; }
         public int RouteId { get; set; }
@@ -56,8 +59,20 @@ namespace RouteNavigation
         public string GreaseTrapPreferredDay { get; set; }
         public int? GreaseTrapSchedule { get; set; }
         public int? NumberOfManHoles { get; set; }
-    }
 
+        public static T DeepClone<T>(T obj)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, obj);
+                ms.Position = 0;
+
+                return (T)formatter.Deserialize(ms);
+            }
+        }
+    }
+    [Serializable]
     public class Coordinates
     {
         public double? Lat { get; set; }
@@ -73,7 +88,7 @@ namespace RouteNavigation
             }
         }
     }
-
+    [Serializable]
     public class CartesianCoordinates
     {
         public double? X { get; set; }
@@ -91,7 +106,7 @@ namespace RouteNavigation
             }
         }
     }
-
+    [Serializable]
     public class CoordinatesMap : EntityMap<Coordinates>
     {
         public CoordinatesMap()
@@ -100,7 +115,7 @@ namespace RouteNavigation
             Map(c => c.Lng).ToColumn("coordinates_longitude");
         }
     }
-
+    [Serializable]
     public class CartesianCoordinatesMap : EntityMap<CartesianCoordinates>
     {
         public CartesianCoordinatesMap()

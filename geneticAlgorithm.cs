@@ -59,33 +59,11 @@ namespace RouteNavigation
             //Attempt to seed some good data
             //
 
-            startingPopulation = ThreadInitialPool((int)populationSize);
+            startingPopulation = ThreadInitialPool(populationSize);
 
             //startingPopulation.Add(new List<Location>(possibleLocations).Shuffle(rng).ToList());
 
             return startingPopulation;
-        }
-
-        public bool TestInitializePopulation()
-        {
-            uint unitPopulation = 5;
-            List<List<Location>> testPopulation = InitializePopulation(unitPopulation);
-            if (testPopulation.Count != unitPopulation)
-                return false;
-
-            foreach (List<Location> locations in testPopulation)
-            {
-                if (locations.Count != unitPopulation)
-                    return false;
-                foreach (Location location in locations)
-                {
-                    if (location.Address is null)
-                        return false;
-                    if (location.Neighbors.Count == 0)
-                        return false;
-                }
-            }
-            return true;
         }
 
         public void DetectDuplicates(List<RouteCalculator> calcs)
@@ -104,7 +82,7 @@ namespace RouteNavigation
                 {
                     iterations = Config.GeneticAlgorithm.Iterations;
 
-                    DataAccess.UpdateIteration(0, iterations);
+                    DataAccess.UpdateIteration(null, iterations);
 
                     populationSize = Config.GeneticAlgorithm.PopulationSize;
                     neighborCount = Config.GeneticAlgorithm.NeighborCount;
@@ -152,7 +130,7 @@ namespace RouteNavigation
 
                     possibleLocations = allLocations.ToList();
                     possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
-                    possibleLocations.ForEach(l => l.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
+                    Parallel.ForEach(possibleLocations, l => l.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
                     RouteCalculator.UpdateDistanceFromSource(possibleLocations);
                     possibleLocations = updateLocationDaysUntilDue(possibleLocations);
                     possibleLocations = updateLocationLastVisited(possibleLocations);
@@ -212,13 +190,13 @@ namespace RouteNavigation
 
                     //fully optimized the GA selected route with 3opt swap
                     bestCalc = fitnessCalcs.First();
-                    //foreach (Route route in bestCalc.routes)
-                    //    bestCalc.calculateTSPRouteTwoOpt(route);
+                    Parallel.ForEach (bestCalc.routes, r =>
+                        bestCalc.CalculateTSPRouteTwoOpt(r));
 
                     DataAccess.InsertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
                     DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
-                    DataAccess.UpdateIteration(0, 0);
+                    DataAccess.UpdateIteration(null, null);
 
                     Logger.Info("Finished calculations.");
                 }
@@ -226,12 +204,6 @@ namespace RouteNavigation
                 {
                     Monitor.Exit(calcLock);
                 }
-
-            }
-            else
-            {
-                Exception exception = new Exception("Calculations are already running.  Please check the batch table and wait until the current calculations are completed, and then recalculate");
-                throw exception;
             }
         }
 
@@ -295,6 +267,7 @@ namespace RouteNavigation
             Logger.Trace(string.Format("running potential mutation of {0} offspring", offspring.Count));
 
             offspring = GeneticMutation(offspring);
+
             calcs = ThreadCalculations(offspring, calcs);
 
             //add elites into the list since lower performing items will be removed in place of them
@@ -319,13 +292,11 @@ namespace RouteNavigation
             return calc;
         }
 
-        /*
         public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
         {
-
             try
             {
-                SynchronizedCollection<Task<RouteCalculator>> tasks = new SynchronizedCollection<Task<RouteCalculator>>();
+                List<Task<RouteCalculator>> tasks = new List<Task<RouteCalculator>>();
                 foreach (List<Location> locations in locationsList)
                 {
                     Task<RouteCalculator> t = Task.Factory.StartNew(() => RunCalculations(locations));
@@ -334,14 +305,12 @@ namespace RouteNavigation
 
                 Task.WaitAll(tasks.ToArray());
                 foreach (Task<RouteCalculator> t in tasks)
-                    lock (newCalcLock)
-                        calcs.Add(t.Result);
+                    calcs.Add(t.Result);
             }
             catch (AggregateException ae)
             {
                 throw ae.InnerException;
             }
-
 
             return calcs;
         }
@@ -349,101 +318,29 @@ namespace RouteNavigation
         public List<List<Location>> ThreadInitialPool(uint count)
         {
             List<List<Location>> locationsList = new List<List<Location>>();
-            SynchronizedCollection<Task<List<Location>>> tasks = new SynchronizedCollection<Task<List<Location>>>();
+            List<Task<List<Location>>> tasks = new List<Task<List<Location>>>();
             Logger.Info("Shuffling Locations into randomized permutations");
 
             for (int x = 0; x < count; x++)
             {
-                Task<List<Location>> t = Task.Factory.StartNew(() => possibleLocations.Shuffle(rng).ToList());
+                //ToList before shuffle is important to shuffle a list copy and make it threadsafe
+                Task<List<Location>> t = Task.Factory.StartNew(() => possibleLocations.ToList().Shuffle(rng).ToList());
                 tasks.Add(t);
             }
+
             Task.WaitAll(tasks.ToArray());
             foreach (Task<List<Location>> t in tasks)
                 locationsList.Add(t.Result);
 
             Logger.Info("Seeding Locations with some nearest neighbor genetic 'parents' of suspected high quality.  This may take some time.");
             int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * locationsList.Count, 0);
-            for (int x = 0; x < seedCount; x++)
-                locationsList[x] = RouteCalculator.NearestNeighbor(locationsList[x]);
+            Parallel.For(0, seedCount, l =>
+               locationsList[l] = RouteCalculator.NearestNeighbor(locationsList[l].ToList()));
 
-            return locationsList;
-
-            /*
-            int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * possibleLocations.Count, 0);
-            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
-            for (int x = 0; x < seedCount; x++)
-            {
-                Location startingLocation = possibleLocations[x];
-                List<Location> locationsTemp = new List<Location>(possibleLocations);
-                Thread thread = new Thread(Action =>
-                {
-                    List<Location> l = RouteCalculator.NearestNeighbor(locationsTemp, startingLocation);
-                    lock (newCalcLock)
-                        locationsList.Add(l);
-                });
-
-                thread.Priority = ThreadPriority.BelowNormal;
-                threads.Add(thread);
-                thread.Start();
-            }
-
-            foreach (Thread t in threads)
-                t.Join();
-
-            
-
-            return locationsList;
-            
-        }
-        */
-
-        public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
-        {
-            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
-            foreach (List<Location> locations in locationsList)
-            {
-                Thread thread = new Thread(Action =>
-                {
-                    RouteCalculator c = RunCalculations(locations);
-                    lock (newCalcLock)
-                        calcs.Add(c);
-                });
-
-                thread.Priority = ThreadPriority.BelowNormal;
-                threads.Add(thread);
-                thread.Start();
-            }
-
-            foreach (Thread t in threads)
-                t.Join();
-
-            return calcs;
+            return locationsList.ToList();
         }
 
-        public List<List<Location>> ThreadInitialPool(int count)
-        {
-            List<List<Location>> locationsList = new List<List<Location>>();
-            SynchronizedCollection<Thread> threads = new SynchronizedCollection<Thread>();
-            for (int x = 0; x < count; x++)
-            {
-                Thread thread = new Thread(Action =>
-                {
-                    List<Location> l = new List<Location>(possibleLocations).Shuffle(rng).ToList();
-                    l = RouteCalculator.NearestNeighbor(l);
-                    lock (newCalcLock)
-                        locationsList.Add(l);
-                });
 
-                thread.Priority = ThreadPriority.BelowNormal;
-                threads.Add(thread);
-                thread.Start();
-            }
-
-            foreach (Thread t in threads)
-                t.Join();
-
-            return locationsList;
-        }
 
         public List<RouteCalculator> GeneticSelection(List<RouteCalculator> parents)
         {
@@ -459,12 +356,13 @@ namespace RouteNavigation
             while (breeders.Count < breedersCount)
             {
                 List<RouteCalculator> contestants = new List<RouteCalculator>();
-                for (int x = 0; x < tournamentSizeCount; x++)
+                Parallel.For(0, tournamentSizeCount, x =>
                 {
                     int randomIndex = rng.Next(parents.Count);
                     RouteCalculator contestant = parents[randomIndex];
-                    contestants.Add(contestant);
-                }
+                    lock (newCalcLock)
+                        contestants.Add(contestant);
+                });
                 List<RouteCalculator> winners = RunTournament(contestants);
                 foreach (RouteCalculator winner in winners)
                     breeders.Add(winner);
@@ -488,9 +386,7 @@ namespace RouteNavigation
             {
                 //Check to ensure there are breeders left in the pool to create offspring, otherwise reset to the original list
                 if (breeders.Count == 0)
-                {
                     breeders = breedersoriginal.ToList();
-                }
 
                 //distribute the next selected index with a growth bias towards lower distance values as sorted above.  That is, put bias of reproduction towards strong breeders.
                 int randomIndex = Convert.ToInt32(rng.Next(breeders.Count));
@@ -508,9 +404,7 @@ namespace RouteNavigation
                 double crossoverChance = crossoverProbability * GrowthFunction();
                 Logger.Trace(String.Format("Crossover chance is {0}", crossoverChance));
                 if (GrowthFunction() * rng.Next(101) <= crossoverChance * 100)
-                {
                     offspring.Add(GeneticCrossoverEdgeRecombine(parentALocations, parentBLocations));
-                }
                 else
                 {
                     //flip a coin and add one of the parents without crossover
@@ -702,16 +596,16 @@ namespace RouteNavigation
 
                     int mutationGeneQuantity = rng.Next(1, Math.Max(1, upperBound));
                     Logger.Trace(String.Format("mutation gene quantity is {0}", mutationGeneQuantity));
-                    for (int y = 0; y < mutationGeneQuantity; y++)
-                    {
-                        int displacedGeneIndex = rng.Next(mutateLocations.Count);
-                        Location displacedGene = mutateLocations[displacedGeneIndex];
-                        mutateLocations.RemoveAt(displacedGeneIndex);
+                    Parallel.For(0, mutationGeneQuantity, g =>
+                   {
+                       int displacedGeneIndex = rng.Next(mutateLocations.Count);
+                       Location displacedGene = mutateLocations[displacedGeneIndex];
+                       mutateLocations.RemoveAt(displacedGeneIndex);
 
-                        int insertGeneIndex = rng.Next(mutateLocations.Count);
-                        mutateLocations.Insert(insertGeneIndex, displacedGene);
-
-                    }
+                       int insertGeneIndex = rng.Next(mutateLocations.Count);
+                       lock (newCalcLock)
+                           mutateLocations.Insert(insertGeneIndex, displacedGene);
+                   });
                 }
             }
 
@@ -728,9 +622,7 @@ namespace RouteNavigation
 
             Logger.Trace(string.Format("Tournament produced {0} winners", contestants.Count));
             foreach (RouteCalculator contestant in contestants)
-            {
                 Logger.Trace(string.Format("Contestant winner had distance of {0} miles", contestant.metadata.routesLengthMiles));
-            }
 
             //foreach (RouteCalculator contestant in contestants)
             //logLocations(contestant.metadata.processedLocations);

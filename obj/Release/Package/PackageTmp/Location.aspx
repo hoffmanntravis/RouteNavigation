@@ -169,7 +169,7 @@
                         <asp:CheckBox ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>' Enabled="false" />
                     </td>
                     <td>
-                        <asp:Label ID="labe13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
+                        <asp:Label ID="labe13" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:LinkButton ID="btnEdit" Text="Edit" runat="server" CommandName="Edit" />
@@ -223,7 +223,7 @@
                     <asp:CheckBox  ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>'  />
                 </td>
                 <td>
-                    <asp:Label ID="label13" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
+                    <asp:Label ID="label13" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:LinkButton ID="btnEdit2" Text="Edit" runat="server" CommandName="Edit" />
@@ -276,7 +276,7 @@
                     <asp:CheckBox class="tableInput" ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>'  />
                 </td>
                 <td>
-                    <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("days_until_due") %>'></asp:Label>
+                    <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
                 </td>
                 <td>
                     <asp:LinkButton ID="btnCancel" Text="Cancel" runat="server" CommandName="Cancel" />
@@ -347,7 +347,6 @@
                 <td>
                     <asp:CheckBox  ID="chkgreaseTrapCustomer" runat="server" Checked='<%# Convert.ToBoolean(Eval("grease_trap_customer")) %>'  />
                 </td>
-                <td></td>
                 <td></td>
                 <td>
                     <asp:LinkButton ID="btnInsert" Text="Insert" runat="server" CommandName="Insert" />
