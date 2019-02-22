@@ -130,7 +130,6 @@ namespace RouteNavigation
 
                     possibleLocations = allLocations.ToList();
                     possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
-                    Parallel.ForEach(possibleLocations, l => l.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, l));
                     RouteCalculator.UpdateDistanceFromSource(possibleLocations);
                     possibleLocations = updateLocationDaysUntilDue(possibleLocations);
                     possibleLocations = updateLocationLastVisited(possibleLocations);
@@ -236,10 +235,24 @@ namespace RouteNavigation
         {
             foreach (Location l in locations)
             {
-                if (l.OilPickupNextDate != null && l.OilPickupSchedule != null)
-                    l.OilLastVisited = l.OilPickupNextDate.Value.AddDays(-l.OilPickupSchedule.Value);
-                if (l.GreaseTrapPickupNextDate != null && l.GreaseTrapSchedule != null)
-                    l.GreaseLastVistied = l.GreaseTrapPickupNextDate.Value.AddDays(-l.GreaseTrapSchedule.Value);
+                try
+                {
+                    if (l.OilPickupNextDate != null && l.OilPickupSchedule != null)
+                        l.OilLastVisited = l.OilPickupNextDate.Value.AddDays(-l.OilPickupSchedule.Value);
+                }
+                catch
+                {
+                    Logger.Error(String.Format("Unable to parse OilPickupNextDate for location {0}, tracking number {1}.  Assigning null.", l.Account, l.TrackingNumber));
+                }
+                try
+                {
+                    if (l.GreaseTrapPickupNextDate != null && l.GreaseTrapSchedule != null)
+                        l.GreaseLastVistied = l.GreaseTrapPickupNextDate.Value.AddDays(-l.GreaseTrapSchedule.Value);
+                }
+                catch
+                {
+                    Logger.Error(String.Format("Unable to parse GreaseTrapPickupNextDate for location {0}, tracking number {1}.  Assigning null.", l.Account, l.TrackingNumber));
+                }
             }
             return locations;
         }

@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Threading;
 using System.Web;
 using Apis;
+using System.Threading.Tasks;
 
 namespace RouteNavigation
 {
@@ -58,9 +59,14 @@ namespace RouteNavigation
 
             foreach (Location location in locations)
             {
-                UpdateGpsCoordinates(location.Address, location.Id);
-                //Google API calls will fail if called too rapidly
-                Thread.Sleep(2000);
+                if (String.IsNullOrEmpty(location.Address))
+                    Logger.Error(String.Format("Address is null or empty for account {0} with tracking number {1}.  Please update it in the locations table or fix it in the locations CSV and re-import.", location.Account, location.TrackingNumber));
+                else
+                {
+                    UpdateGpsCoordinates(location.Address, location.Id);
+                    //Google API calls will fail if called too rapidly
+                    Thread.Sleep(2000);
+                }
             }
         }
 
@@ -684,12 +690,12 @@ namespace RouteNavigation
 
         public static void UpdateDistanceFromSource(List<Location> locations)
         {
-            foreach (Location location in locations)
-                UpdateDistanceFromSource(location);
+            Parallel.ForEach(locations, l => UpdateDistanceFromSource(l));
         }
 
         public static void UpdateDistanceFromSource(Location location)
         {
+            location.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, location);
             try
             {
                 NpgsqlCommand cmd = new NpgsqlCommand("update_location");
@@ -703,7 +709,6 @@ namespace RouteNavigation
                 Logger.Error(exception);
             }
         }
-
 
         public static void UpdateFeature(string name, bool enabled)
         {
@@ -742,6 +747,7 @@ namespace RouteNavigation
             cmd.Parameters.AddWithValue("p_cancellation_request", NpgsqlTypes.NpgsqlDbType.Boolean, cancel);
             RunStoredProcedure(cmd);
         }
+
         public static Boolean GetCancellationStatus()
         {
             NpgsqlCommand cmd = new NpgsqlCommand("get_route_batch_cancellation_status");

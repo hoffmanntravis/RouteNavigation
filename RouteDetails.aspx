@@ -94,7 +94,7 @@
                         <asp:Label ID="label4" runat="server" Text='<%# Eval("intended_pickup_date") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label5" runat="server" Text='<%# Eval("oil_days_until_due") %>'></asp:Label>
+                        <asp:Label ID="label5" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
                     </td>
                     <td>
                         <asp:Label ID="label7" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
