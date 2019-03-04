@@ -106,7 +106,7 @@ namespace RouteNavigation
         {
             string csvData = "";
 
-            int latestBatchId = DataAccess.GetLatestBatchId();
+            int latestBatchId = DataAccess.LatestBatchId();
 
             try
             {
@@ -131,7 +131,7 @@ namespace RouteNavigation
         {
             try
             {
-                dataTable = DataAccess.GetRouteInformationData();
+                dataTable = DataAccess.RouteInformationData();
                 if (dataTable.Rows.Count != 0)
                     activityId.Text = "ActivityId: " + (from DataRow dr in dataTable.Rows select dr["activity_id"]).FirstOrDefault().ToString();
 

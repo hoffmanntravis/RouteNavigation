@@ -85,7 +85,7 @@ namespace RouteNavigation
 
         protected DropDownList PopulateLocationTypeDropDown(DropDownList ddlLocationType)
         {
-            DataTable dt = DataAccess.GetLocationTypes();
+            DataTable dt = DataAccess.LocationTypes;
 
             ddlLocationType.DataSource = dt;
             ddlLocationType.DataTextField = "type";
@@ -128,16 +128,15 @@ namespace RouteNavigation
                 int id = int.Parse(e.Keys["id"].ToString());
                 //string clientPriority = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientPriority")).Text;
                 string account = ((TextBox)LocationsListView.EditItem.FindControl("txtEditClientName")).Text;
-                string oilPickupSchedule = ((TextBox)LocationsListView.EditItem.FindControl("txtEditoilPickupSchedule")).Text;
-                string greaseTrapPreferredTimeStart = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeStart")).Text;
-                string greaseTrapPreferredTimeEnd = ((TextBox)LocationsListView.EditItem.FindControl("txtEditgreaseTrapPreferredTimeEnd")).Text;
-                string lastVisisted = ((TextBox)LocationsListView.EditItem.FindControl("txtEditLastVisited")).Text;
+                string oilPickupSchedule = ((TextBox)LocationsListView.EditItem.FindControl("txtEditOilPickupSchedule")).Text;
+                string greaseTrapSchedule = ((TextBox)LocationsListView.EditItem.FindControl("txtEditGreaseTrapSchedule")).Text;
+                string greaseTrapPreferredTimeStart = ((TextBox)LocationsListView.EditItem.FindControl("txtEditGreaseTrapPreferredTimeStart")).Text;
+                string greaseTrapPreferredTimeEnd = ((TextBox)LocationsListView.EditItem.FindControl("txtEditGreaseTrapPreferredTimeEnd")).Text;
+                //string lastVisisted = ((TextBox)LocationsListView.EditItem.FindControl("txtEditLastVisited")).Text;
+
                 string address = ((TextBox)LocationsListView.EditItem.FindControl("txtEditAddress")).Text;
-                string oilTankSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditoilTankSize")).Text;
-
-                //string contactName = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactName")).Text;
-                //string contactEmail = ((TextBox)LocationsListView.EditItem.FindControl("txtEditContactEmail")).Text;
-
+                string oilTankSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditOilTankSize")).Text;
+                string greaseTrapSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditGreaseTrapSize")).Text;
                 string vehicleSize = ((TextBox)LocationsListView.EditItem.FindControl("txtEditVehicleSize")).Text;
                 bool oilPickupCustomer = ((CheckBox)LocationsListView.EditItem.FindControl("chkOilPickupCustomer")).Checked;
                 bool greaseTrapCustomer = ((CheckBox)LocationsListView.EditItem.FindControl("chkGreaseTrapCustomer")).Checked;
@@ -155,6 +154,9 @@ namespace RouteNavigation
                 if (!string.IsNullOrEmpty(oilPickupSchedule))
                     cmd.Parameters.AddWithValue("p_oil_pickup_schedule", NpgsqlTypes.NpgsqlDbType.Integer, oilPickupSchedule.Trim());
 
+                if (!string.IsNullOrEmpty(oilPickupSchedule))
+                    cmd.Parameters.AddWithValue("p_grease_trap_schedule", NpgsqlTypes.NpgsqlDbType.Integer, oilPickupSchedule.Trim());
+
                 if (!string.IsNullOrEmpty(greaseTrapPreferredTimeStart))
                     cmd.Parameters.AddWithValue("p_grease_trap_preferred_time_start", NpgsqlTypes.NpgsqlDbType.Time, greaseTrapPreferredTimeStart.Trim());
 
@@ -167,12 +169,15 @@ namespace RouteNavigation
                 if (!string.IsNullOrEmpty(address))
                 {
                     cmd.Parameters.AddWithValue("p_address", NpgsqlTypes.NpgsqlDbType.Varchar, address.Trim());
-                    DataAccess.UpdateDistanceFromSource(DataAccess.GetLocationById(id));
+                    DataAccess.UpdateDistanceFromSource(DataAccess.LocationById(id));
                     DataAccess.UpdateGpsCoordinates(address, id);
                 }
 
                 if (!string.IsNullOrEmpty(oilTankSize))
                     cmd.Parameters.AddWithValue("p_oil_tank_size", NpgsqlTypes.NpgsqlDbType.Integer, oilTankSize.Trim());
+
+                if (!string.IsNullOrEmpty(oilTankSize))
+                    cmd.Parameters.AddWithValue("p_grease_trap_size", NpgsqlTypes.NpgsqlDbType.Integer, oilTankSize.Trim());
 
                 /*
                 if (!string.IsNullOrEmpty(contactName))
@@ -499,7 +504,7 @@ namespace RouteNavigation
             }
 
             filterString = TxtSearchFilter.Text;
-            DataAccess.GetLocationData(dataTable, columnFilterName, filterString, columnSortName, ascending);
+            DataAccess.LocationData(dataTable, columnFilterName, filterString, columnSortName, ascending);
             Extensions.RoundDataTable(dataTable, 2);
             LocationsListView.DataSource = dataTable;
             LocationsListView.ItemPlaceholderID = "itemPlaceHolder";
@@ -538,7 +543,7 @@ namespace RouteNavigation
                 {
                     Logger.Error(String.Format("Failed to parse Bool with input text: {0} on line {1} of CSV", text, row.Context.Row));
                 }
-                return default(bool);
+                return text;
             }
 
             public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
@@ -561,7 +566,7 @@ namespace RouteNavigation
                         Logger.Error(String.Format("Failed to parse Int with input text: {0} on line {1} of CSV", text, row.Context.Row));
                     }
 
-                return default(int);
+                return null;
             }
 
             public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
@@ -584,7 +589,7 @@ namespace RouteNavigation
                         Logger.Error(String.Format("Failed to parse Double with input text: {0} on line {1} of CSV", text, row.Context.Row));
                     }
 
-                return default(double);
+                return null;
             }
 
             public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
@@ -607,7 +612,7 @@ namespace RouteNavigation
                         Logger.Error(String.Format("Failed to parse DateTime with input text: {0} on line {1} of CSV", text, row.Context.Row));
                     }
 
-                return default(DateTime);
+                return null;
             }
 
             public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
@@ -631,7 +636,7 @@ namespace RouteNavigation
                         Logger.Error(String.Format("Failed to parse TimeSpan with input text: {0} on line {1} of CSV", text, row.Context.Row));
                     }
 
-                return text;
+                return null;
             }
 
             public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
@@ -650,8 +655,12 @@ namespace RouteNavigation
                 using (CsvReader csv = new CsvReader(reader))
                 {
                     csv.Configuration.TypeConverterCache.RemoveConverter<bool>();
+                    csv.Configuration.TypeConverterCache.RemoveConverter<int>();
+                    csv.Configuration.TypeConverterCache.RemoveConverter<double>();
                     csv.Configuration.TypeConverterCache.RemoveConverter<TimeSpan>();
                     csv.Configuration.TypeConverterCache.RemoveConverter<DateTime>();
+
+
                     csv.Configuration.TypeConverterCache.AddConverter<bool>(new CustomBooleanTypeConverterCache());
                     csv.Configuration.TypeConverterCache.AddConverter<int>(new CustomIntTypeConverterCache());
                     csv.Configuration.TypeConverterCache.AddConverter<double>(new CustomDoubleTypeConverterCache());
@@ -659,9 +668,10 @@ namespace RouteNavigation
                     csv.Configuration.TypeConverterCache.AddConverter<DateTime>(new CustomDateTimeTypeConverterCache());
                     csv.Configuration.HeaderValidated = null;
                     csv.Configuration.MissingFieldFound = null;
+
                     //remove underscores and spaces from the header names
-                    csv.Configuration.PrepareHeaderForMatch = (header, index) => Regex.Replace(header, "_", string.Empty).ToLower();
-                    csv.Configuration.PrepareHeaderForMatch = (header, index) => Regex.Replace(header, " ", string.Empty).ToLower();
+                    csv.Configuration.PrepareHeaderForMatch = (header, index) => Regex.Replace(header, "[_' ']", string.Empty).ToLower();
+
                     csv.Configuration.RegisterClassMap<ConvertUsingClassMap>();
                     locations = csv.GetRecords<Location>().ToList();
                 }
@@ -681,6 +691,12 @@ namespace RouteNavigation
                     DataAccess.DeleteLocationsWildCardSearch("jetting");
                     DataAccess.DeleteLocationsWildCardSearch("install");
                 }
+
+                List<Location> dbLocations = DataAccess.Locations();
+                List<Location> orphanedLocations = dbLocations.Where(d => !locations.Any(l => d.TrackingNumber == l.TrackingNumber)).ToList();
+                orphanedLocations.RemoveAll(o => o.Id == Config.Calculation.origin.Id);
+                Logger.Info("test");
+                orphanedLocations.ForEach(o => DataAccess.DeleteLocation(o));
                 BindListView();
             }
             catch (Exception exception)

@@ -33,11 +33,11 @@ namespace RouteNavigation
                 DataTable dtRoute;
                 int routeId;
                 if (Request.QueryString["routeId"] == null)
-                    dtRoute = DataAccess.GetRouteDetailsData(true);
+                    dtRoute = DataAccess.RouteDetailsData(true);
                 else
                 {
                     routeId = int.Parse(Request.QueryString["routeId"]);
-                    dtRoute = DataAccess.GetRouteDetailsData(routeId);
+                    dtRoute = DataAccess.RouteDetailsData(routeId);
                 }
 
                 if (!(dtRoute is null))
@@ -79,7 +79,7 @@ namespace RouteNavigation
                 if (routesJson is null)
                     routesJson = "\"\"";
 
-                Config.Calculation.origin = DataAccess.GetLocationById(Config.Calculation.origin.Id);
+                Config.Calculation.origin = DataAccess.LocationById(Config.Calculation.origin.Id);
                 if (Config.Calculation.origin.Coordinates.Lat is null || Config.Calculation.origin.Coordinates.Lng is null)
                 {
                     Config.Calculation.origin.Coordinates.Lat = 39.03583319;

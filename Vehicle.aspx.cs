@@ -208,7 +208,7 @@ namespace RouteNavigation
 
         private void BindListView(string columnName = "name", string filterString = null)
         {
-            DataTable table = DataAccess.GetVehicleData(columnName, filterString);
+            DataTable table = DataAccess.VehicleData(columnName, filterString);
             VehiclesListView.DataSource = table;
             VehiclesListView.ItemPlaceholderID = "itemPlaceHolder";
             VehiclesListView.DataBind();

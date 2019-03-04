@@ -20,7 +20,7 @@ namespace RouteNavigation
         protected void Page_Load(object sender, EventArgs e)
         {
             //Response.Write(status);
-            DataAccess.IterationStatus iterationStatus = DataAccess.GetCalcStatus();
+            DataAccess.IterationStatus iterationStatus = DataAccess.CalcStatus();
             string jsonStatus = Newtonsoft.Json.JsonConvert.SerializeObject(iterationStatus);
             Response.Write(jsonStatus);
             /*if (status == true)

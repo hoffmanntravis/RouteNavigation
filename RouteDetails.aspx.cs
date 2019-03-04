@@ -40,7 +40,7 @@ namespace RouteNavigation
         {
             string queryStringId = Request.QueryString["routeId"];
             int routeId = int.Parse(queryStringId);
-            table = DataAccess.GetRouteDetailsData(routeId);
+            table = DataAccess.RouteDetailsData(routeId);
             RouteDetailsListView.DataSource = table;
             RouteDetailsListView.DataBind();
         }

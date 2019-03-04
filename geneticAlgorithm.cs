@@ -31,14 +31,14 @@ namespace RouteNavigation
         bool toggleIterationsExponent;
         static private uint currentIteration = 0;
 
-        static private List<Location> allLocations = DataAccess.GetLocations();
+        static private List<Location> allLocations = DataAccess.Locations();
         static private List<Location> possibleLocations;
-        static private List<Vehicle> allVehicles = DataAccess.GetVehicles();
+        static private List<Vehicle> allVehicles = DataAccess.Vehicles();
         List<Vehicle> availableVehicles;
         static private object newCalcLock = new object();
         static private object calcLock = new object();
         static private Random rng = new Random();
-        private int batchId = DataAccess.GetNextRouteBatchId();
+        private int batchId = DataAccess.NextRouteBatchId();
         private RouteCalculator bestCalc;
         public List<List<Location>> InitializePopulation(uint populationSize)
         {
@@ -124,7 +124,7 @@ namespace RouteNavigation
                     //Update the grease cutoff window to whatever is in the config for all locations
                     DataAccess.UpdateGreaseCutoffToConfigValue();
                     //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
-                    availableVehicles = DataAccess.GetVehicles().Where(v => v.operational == true).ToList();
+                    availableVehicles = DataAccess.Vehicles().Where(v => v.operational == true).ToList();
                     if (availableVehicles.Count <= 0)
                         throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
 
@@ -134,9 +134,9 @@ namespace RouteNavigation
                     possibleLocations = updateLocationDaysUntilDue(possibleLocations);
                     possibleLocations = updateLocationLastVisited(possibleLocations);
 
-                    possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
+                    possibleLocations = RouteCalculator.PossibleLocations(availableVehicles, possibleLocations);
                     //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
-                    possibleLocations.Remove(Config.Calculation.origin);
+                    possibleLocations = possibleLocations.Where(l => l.Id != Config.Calculation.origin.Id).ToList();
 
                     if (Config.Features.locationsJettingExcludeFromCalc)
                     {
@@ -172,7 +172,7 @@ namespace RouteNavigation
 
                     for (uint i = 0; i < iterations; i++)
                     {
-                        if (DataAccess.GetCancellationStatus() is true)
+                        if (DataAccess.CancellationStatus() is true)
                             break;
 
                         Logger.Info(string.Format("Beginning iteration {0}", i + 1));
@@ -189,8 +189,8 @@ namespace RouteNavigation
 
                     //fully optimized the GA selected route with 3opt swap
                     bestCalc = fitnessCalcs.First();
-                    Parallel.ForEach (bestCalc.routes, r =>
-                        bestCalc.CalculateTSPRouteTwoOpt(r));
+                    Parallel.ForEach(bestCalc.routes, r =>
+                       bestCalc.CalculateTSPRouteTwoOpt(r));
 
                     DataAccess.InsertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
@@ -210,12 +210,15 @@ namespace RouteNavigation
         {
             foreach (Location l in locations)
             {
-                if (!l.OilPickupDaysUntilDue.HasValue)
-                    if (l.OilPickupSchedule.HasValue)
-                        l.OilPickupDaysUntilDue = l.OilPickupSchedule.Value;
-                if (!l.GreaseTrapDaysUntilDue.HasValue)
-                    if (l.GreaseTrapSchedule.HasValue)
-                        l.GreaseTrapDaysUntilDue = l.GreaseTrapSchedule.Value;
+                if (l.OilPickupNextDate.HasValue)
+                    l.OilPickupDaysUntilDue = (l.OilPickupNextDate.Value - DateTime.Now).TotalDays;
+                else
+                    l.OilPickupDaysUntilDue = l.OilPickupSchedule.Value;
+
+                if (l.GreaseTrapPickupNextDate.HasValue)
+                    l.GreaseTrapDaysUntilDue = (l.GreaseTrapPickupNextDate.Value - DateTime.Now).TotalDays;
+                else
+                    l.GreaseTrapDaysUntilDue = l.GreaseTrapSchedule.Value;
 
                 if (!l.OilPickupDaysUntilDue.HasValue && l.GreaseTrapDaysUntilDue.HasValue)
                     l.DaysUntilDue = l.GreaseTrapDaysUntilDue;
@@ -226,7 +229,7 @@ namespace RouteNavigation
                 else if (l.OilPickupDaysUntilDue.HasValue && l.GreaseTrapDaysUntilDue.HasValue)
                     l.DaysUntilDue = Math.Min(l.OilPickupDaysUntilDue.Value, l.GreaseTrapDaysUntilDue.Value);
                 else
-                    throw new Exception(String.Format("{0} has a null oil pickup schedule, a null grease trap schedule, and a null next pickup date for both as well.  This will cause issues and should be corrected before proceeding with calculations so appropraite delivery dates can be calcualted.", l.Account));
+                    throw new Exception(String.Format("{0} has a null oil pickup schedule, a null grease trap schedule, and a null next pickup date for both as well.  This will cause issues and should be corrected before proceeding with calculations so appropraite delivery dates can be calculated.", l.Account));
             }
             return locations;
         }
@@ -247,12 +250,23 @@ namespace RouteNavigation
                 try
                 {
                     if (l.GreaseTrapPickupNextDate != null && l.GreaseTrapSchedule != null)
-                        l.GreaseLastVistied = l.GreaseTrapPickupNextDate.Value.AddDays(-l.GreaseTrapSchedule.Value);
+                        l.GreaseLastVisited = l.GreaseTrapPickupNextDate.Value.AddDays(-l.GreaseTrapSchedule.Value);
                 }
                 catch
                 {
-                    Logger.Error(String.Format("Unable to parse GreaseTrapPickupNextDate for location {0}, tracking number {1}.  Assigning null.", l.Account, l.TrackingNumber));
+                    l.GreaseLastVisited = DateTime.Now;
+                    l.OilLastVisited = DateTime.Now;
+                    Logger.Error(String.Format("Unable to parse GreaseTrapPickupNextDate for location {0}, tracking number {1}.  Assigning todays date.", l.Account, l.TrackingNumber));
                 }
+                if (l.OilLastVisited > DateTime.Now)
+                {
+                    Logger.Error(String.Format("Last visited date is in the future for location {0}, tracking number {1},based on a scheduled next visit of {2} and an oil pickup schedule of {3} days", l.Account, l.TrackingNumber, l.OilPickupNextDate.Value, l.OilPickupSchedule.Value));
+                }
+                if (l.GreaseLastVisited > DateTime.Now)
+                {
+                    Logger.Error(String.Format("Last visited date is in the future for location {0}, tracking number {1},based on a scheduled next visit of {2} and a grease pickup schedule of {3} days", l.Account, l.TrackingNumber, l.GreaseTrapPickupNextDate.Value, l.GreaseTrapSchedule.Value));
+                }
+
             }
             return locations;
         }

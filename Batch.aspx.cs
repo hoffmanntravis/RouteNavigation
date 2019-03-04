@@ -33,7 +33,7 @@ namespace RouteNavigation
 
         private void BindListView()
         {
-            table = DataAccess.GetRouteBatchData();
+            table = DataAccess.RouteBatchData();
             BatchListView.DataSource = table;
             BatchListView.ItemPlaceholderID = "itemPlaceHolder";
             BatchListView.DataBind();

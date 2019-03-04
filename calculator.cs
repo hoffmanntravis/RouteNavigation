@@ -54,12 +54,14 @@ namespace RouteNavigation
                     throw exception;
                 }
 
+                /*
                 List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startTime);
                 if (serviceNowLocations.Count > 0)
                 {
                     availableLocations = availableLocations.Except(serviceNowLocations).ToList();
                     availableLocations.InsertRange(0, serviceNowLocations);
                 }
+                */
 
                 //UpdateDistanceFromSource(allLocations);
 
@@ -96,8 +98,14 @@ namespace RouteNavigation
                         double daysElapsed = firstDueLocation.DaysElapsed.Value;
                         double daysToAdd = Config.Calculation.MinimumDaysUntilPickup - daysElapsed;
                         currentVehicles = availableVehicles.ToList();
+                        try
+                        {
+                            startDate = startDate.AddDays((uint)daysToAdd);
+                        }
+                        catch
+                        {
 
-                        startDate = startDate.AddDays((uint)daysToAdd);
+                        }
                         availableLocations = postPonedLocations.ToList();
                         if (startDate.DayOfWeek == DayOfWeek.Saturday || startDate.DayOfWeek == DayOfWeek.Sunday)
                             startDate = AdvanceDateToNextWeekday(startDate);
@@ -105,9 +113,12 @@ namespace RouteNavigation
                         continue;
                     }
 
-                    serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startTime);
-                    availableLocations = availableLocations.Except(serviceNowLocations).ToList();
-                    availableLocations.InsertRange(0, serviceNowLocations);
+                    List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startTime);
+                    if (serviceNowLocations.Count > 0)
+                    {
+                        availableLocations = availableLocations.Except(serviceNowLocations).ToList();
+                        availableLocations.InsertRange(0, serviceNowLocations);
+                    }
 
                     //sort vehicles by size descending.  We do this to ensure that large vehicles are handled first since they have a limited location list available to them.
                     currentVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
@@ -129,9 +140,13 @@ namespace RouteNavigation
                         DateTime potentialTime = currentTime;
                         double potentialDistance = currentDistance;
 
+                        /*
                         serviceNowLocations = GetRequireServiceNowLocations(compatibleLocations, potentialTime);
-                        compatibleLocations = compatibleLocations.Except(serviceNowLocations).ToList();
-                        compatibleLocations.InsertRange(0, serviceNowLocations);
+                        if (serviceNowLocations.Count > 0)
+                        {
+                            compatibleLocations = compatibleLocations.Except(serviceNowLocations).ToList();
+                            compatibleLocations.InsertRange(0, serviceNowLocations);
+                        }*/
 
                         Location nextLocation;
                         nextLocation = compatibleLocations.First();
@@ -225,7 +240,7 @@ namespace RouteNavigation
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
                         if (Config.Features.vehicleFillLevel == true)
                             vehicle.currentGallons += nextLocation.CurrentGallonsEstimate;
-                        nextLocation.intendedPickupDate = potentialTime;
+                        nextLocation.IntendedPickupDate = potentialTime;
 
                         //add in the average visit time
                         potentialRoute.Waypoints.Add(nextLocation);
@@ -720,8 +735,8 @@ namespace RouteNavigation
             {
                 if (l.OilPickupNextDate != null && l.OilLastVisited != null)
                     l.OilDaysElapsed = (currentDate - l.OilLastVisited.Value).TotalDays;
-                if (l.GreaseTrapPickupNextDate != null && l.GreaseLastVistied != null)
-                    l.GreaseDaysElapsed = (currentDate - l.GreaseLastVistied.Value).TotalDays;
+                if (l.GreaseTrapPickupNextDate != null && l.GreaseLastVisited != null)
+                    l.GreaseDaysElapsed = (currentDate - l.GreaseLastVisited.Value).TotalDays;
 
                 if (l.OilDaysElapsed != null && l.GreaseDaysElapsed != null)
                     l.DaysElapsed = Math.Max(l.OilDaysElapsed.Value, l.GreaseDaysElapsed.Value);
@@ -786,7 +801,7 @@ namespace RouteNavigation
             return compatibleLocations;
         }
 
-        public static List<Location> GetPossibleLocations(List<Vehicle> vehicles, List<Location> locations)
+        public static List<Location> PossibleLocations(List<Vehicle> vehicles, List<Location> locations)
         {
             List<Location> possibleLocations = new List<Location>();
             double smallestVehicle = vehicles.Min(v => v.physicalSize);

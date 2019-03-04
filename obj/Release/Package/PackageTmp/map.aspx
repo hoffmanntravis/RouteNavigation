@@ -43,11 +43,12 @@
                     var locationCoordinates = "Coordinates: " + "(Lat: " + location.Coordinates.Lat + ",Lng: " + location.Coordinates.Lng + ")";
                     //If you want to add these, need to postback to database location properties with updated info / add to route details
                     //var locationLastVisited = "Intended Visit Date: " + parseJsonDate(location.IntendedPickupDate);
-                    var locationDaysUntilDue = "Days Until Due: " + location.DaysUntilDue;
+                    var locationOilPickupDaysUntilDue = "Oil Days Until Due: " + location.OilPickupDaysUntilDue;
+                    var locationGreaseTrapDaysUntilDue = "G.T. Days Until Due: " + location.GreaseTrapDaysUntilDue;
                     var locationDistanceFromDepot = "Distance From Depot: " + location.DistanceFromDepot + " miles";
                     var locationOil = "Oil: " + location.OilPickupCustomer;
                     var locationGrease = "Grease: " + location.GreaseTrapCustomer;
-                    var popup = L.popup().setContent(accountText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" +  locationCoordinates + "<br>" + locationDaysUntilDue + "<br>" + locationDistanceFromDepot);
+                    var popup = L.popup().setContent(accountText + "<br>" + locationAddressText + "<br>" + locationOil + "<br>" + locationGrease + "<br>" + locationCoordinates + "<br>" + locationOilPickupDaysUntilDue + "<br>" + locationGreaseTrapDaysUntilDue + "<br>" + locationDistanceFromDepot);
 
                     var marker = L.marker([routes[i].AllLocations[j].Coordinates.Lat, routes[i].AllLocations[j].Coordinates.Lng], { icon: iconImage })
                     marker.bindTooltip(routes[i].AllLocations[j].Account);

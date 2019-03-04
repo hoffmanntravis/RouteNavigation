@@ -96,7 +96,7 @@ namespace RouteNavigation
 
         protected void BindListView()
         {
-            table = DataAccess.GetRouteDetailsData();
+            table = DataAccess.RouteDetailsData();
             RouteDetailsListView.DataSource = table;
 
             //panelFullRoute.ViewStateMode = ViewStateMode.Disabled;

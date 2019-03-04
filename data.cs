@@ -53,9 +53,9 @@ namespace RouteNavigation
         {
             List<Location> locations;
             if (fillEmptyOnly)
-                locations = GetLocations().Where(l => l.Coordinates.Lat is null || l.Coordinates.Lng is null).ToList();
+                locations = Locations().Where(l => l.Coordinates.Lat is null || l.Coordinates.Lng is null).ToList();
             else
-                locations = GetLocations();
+                locations = Locations();
 
             foreach (Location location in locations)
             {
@@ -70,7 +70,7 @@ namespace RouteNavigation
             }
         }
 
-        public static int GetNextRouteId()
+        public static int NextRouteId()
         {
             int id;
             using (NpgsqlCommand cmd = new NpgsqlCommand("select_next_route_id"))
@@ -78,7 +78,7 @@ namespace RouteNavigation
             return id;
         }
 
-        public static int GetNextRouteBatchId()
+        public static int NextRouteBatchId()
         {
             int id;
             using (NpgsqlCommand cmd = new NpgsqlCommand("select_next_route_batch_id"))
@@ -202,7 +202,7 @@ namespace RouteNavigation
             }
         }
 
-        public static DataTable GetVehicleData(string columnName = "name", string filterString = null)
+        public static DataTable VehicleData(string columnName = "name", string filterString = null)
         {
             DataTable dataTable = new DataTable();
             try
@@ -224,13 +224,13 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        public static int GetLatestBatchId()
+        public static int LatestBatchId()
         {
-            int id = GetNextRouteBatchId() - 1;
+            int id = NextRouteBatchId() - 1;
             return id;
         }
 
-        public static DataTable GetLocationData(DataTable dataTable, string filterColumnName = null, string filterString = null, string columnSortString = null, bool ascending = true)
+        public static DataTable LocationData(DataTable dataTable, string filterColumnName = null, string filterString = null, string columnSortString = null, bool ascending = true)
         {
             try
             {
@@ -266,7 +266,7 @@ namespace RouteNavigation
             return dataTable;
         }
 
-        static string GetDescriptionFromAttribute(MemberInfo member)
+        static string DescriptionFromAttribute(MemberInfo member)
         {
             if (member == null) return null;
 
@@ -274,9 +274,8 @@ namespace RouteNavigation
             return attrib?.Description;
         }
 
-        public static List<Location> GetLocations()
+        public static List<Location> Locations()
         {
-            DataAccess.UpdateDaysUntilDue();
             List<Location> locations = new List<Location>();
             using (var connection = new Npgsql.NpgsqlConnection(conString))
                 //return connection.Query<Location>("select_location", commandType: CommandType.StoredProcedure).ToList();
@@ -292,140 +291,7 @@ namespace RouteNavigation
             return locations;
         }
 
-        public static DataTable GetLocationTypes()
-        {
-            UpdateDaysUntilDue();
-            DataTable dataTable = new DataTable();
-            try
-            {
-                NpgsqlCommand cmd = new NpgsqlCommand("select_location_types");
-                ReadStoredProcedureIntoDataTable(cmd, dataTable);
-            }
-            catch (Exception exception)
-            {
-                Logger.Error(exception);
-            }
-            return dataTable;
-        }
-
-        public static DataTable GetLocationData(int id)
-        {
-            UpdateDaysUntilDue();
-            DataTable dataTable = new DataTable();
-            try
-            {
-                NpgsqlCommand cmd = new NpgsqlCommand("select_location_by_id");
-
-                cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
-                ReadStoredProcedureIntoDataTable(cmd, dataTable);
-            }
-            catch (Exception exception)
-            {
-                Logger.Error(exception);
-            }
-            return dataTable;
-        }
-
-        public static DataTable GetConfigData()
-        {
-            DataTable dataTable = new DataTable();
-            try
-            {
-                NpgsqlCommand cmd = new NpgsqlCommand("select_config");
-                ReadStoredProcedureIntoDataTable(cmd, dataTable);
-            }
-            catch (Exception exception)
-            {
-                Logger.Error(exception);
-            }
-            return dataTable;
-        }
-
-        public static DataTable GetFeaturesData()
-        {
-            DataTable dataTable = new DataTable();
-            try
-            {
-                NpgsqlCommand cmd = new NpgsqlCommand("select_features");
-                ReadStoredProcedureIntoDataTable(cmd, dataTable);
-            }
-            catch (Exception exception)
-            {
-                Logger.Error(exception);
-            }
-            return dataTable;
-        }
-
-        public static DataTable GetRouteInformationData()
-        {
-            DataTable dataTable = new DataTable();
-            NpgsqlCommand cmd = new NpgsqlCommand("select_route_information");
-            ReadStoredProcedureIntoDataTable(cmd, dataTable);
-
-            return dataTable;
-        }
-
-        public static DataTable GetRouteBatchData()
-        {
-            DataTable dataTable = new DataTable();
-            NpgsqlCommand cmd = new NpgsqlCommand("select_route_batch");
-            ReadStoredProcedureIntoDataTable(cmd, dataTable);
-            return dataTable;
-        }
-
-        public static DataTable GetRouteDetailsData(int routeId, bool excludeOrigin = false)
-        {
-            DataTable dataTable = new DataTable();
-
-            NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
-            cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
-            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
-            ReadStoredProcedureIntoDataTable(cmd, dataTable);
-
-            return dataTable;
-        }
-
-        public static void UpdateRouteLocation(int locationId, int routeId, int order)
-        {
-            NpgsqlCommand cmd = new NpgsqlCommand("update_route_location");
-
-            cmd.Parameters.AddWithValue("p_location_id", NpgsqlTypes.NpgsqlDbType.Integer, locationId);
-            cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
-            cmd.Parameters.AddWithValue("p_order", NpgsqlTypes.NpgsqlDbType.Integer, order);
-
-            RunStoredProcedure(cmd);
-        }
-
-        public static DataTable GetRouteDetailsData(bool excludeOrigin = false)
-        {
-            DataTable dataTable = new DataTable();
-
-            NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
-            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
-            ReadStoredProcedureIntoDataTable(cmd, dataTable);
-
-            return dataTable;
-        }
-
-        public static DataTable GetRouteData(int id)
-        {
-            DataTable dataTable = new DataTable();
-            NpgsqlCommand cmd = new NpgsqlCommand("select_route_by_id");
-            cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Integer, id);
-            ReadStoredProcedureIntoDataTable(cmd, dataTable);
-
-            return dataTable;
-        }
-
-        public static void PopulateConfig()
-        {
-            DataTable configsDataTable = GetConfigData();
-            DataTable featuresDataTable = GetFeaturesData();
-
-            ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
-        }
-
-        public static Location GetLocationById(int id)
+        public static Location LocationById(int id)
         {
             UpdateDaysUntilDue();
             Location location;
@@ -449,13 +315,151 @@ namespace RouteNavigation
             }
         }
 
+        public static DataTable LocationTypes
+        {
+            get
+            {
+                UpdateDaysUntilDue();
+                DataTable dataTable = new DataTable();
+                try
+                {
+                    NpgsqlCommand cmd = new NpgsqlCommand("select_location_types");
+                    ReadStoredProcedureIntoDataTable(cmd, dataTable);
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error(exception);
+                }
+                return dataTable;
+            }
+        }
+
+        public static DataTable LocationData(int id)
+        {
+            UpdateDaysUntilDue();
+            DataTable dataTable = new DataTable();
+            try
+            {
+                NpgsqlCommand cmd = new NpgsqlCommand("select_location_by_id");
+
+                cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, id);
+                ReadStoredProcedureIntoDataTable(cmd, dataTable);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception);
+            }
+            return dataTable;
+        }
+
+        public static DataTable ConfigData()
+        {
+            DataTable dataTable = new DataTable();
+            try
+            {
+                NpgsqlCommand cmd = new NpgsqlCommand("select_config");
+                ReadStoredProcedureIntoDataTable(cmd, dataTable);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception);
+            }
+            return dataTable;
+        }
+
+        public static DataTable FeaturesData()
+        {
+            DataTable dataTable = new DataTable();
+            try
+            {
+                NpgsqlCommand cmd = new NpgsqlCommand("select_features");
+                ReadStoredProcedureIntoDataTable(cmd, dataTable);
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception);
+            }
+            return dataTable;
+        }
+
+        public static DataTable RouteInformationData()
+        {
+            DataTable dataTable = new DataTable();
+            NpgsqlCommand cmd = new NpgsqlCommand("select_route_information");
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+
+            return dataTable;
+        }
+
+        public static DataTable RouteBatchData()
+        {
+            DataTable dataTable = new DataTable();
+            NpgsqlCommand cmd = new NpgsqlCommand("select_route_batch");
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+            return dataTable;
+        }
+
+        public static DataTable RouteDetailsData(int routeId, bool excludeOrigin = false)
+        {
+            DataTable dataTable = new DataTable();
+
+            NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
+            cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
+            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+
+            return dataTable;
+        }
+
+        public static void UpdateRouteLocation(int locationId, int routeId, int order)
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand("update_route_location");
+
+            cmd.Parameters.AddWithValue("p_location_id", NpgsqlTypes.NpgsqlDbType.Integer, locationId);
+            cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
+            cmd.Parameters.AddWithValue("p_order", NpgsqlTypes.NpgsqlDbType.Integer, order);
+
+            RunStoredProcedure(cmd);
+        }
+
+        public static DataTable RouteDetailsData(bool excludeOrigin = false)
+        {
+            DataTable dataTable = new DataTable();
+
+            NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
+            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+
+            return dataTable;
+        }
+
+        public static DataTable RouteData(int id)
+        {
+            DataTable dataTable = new DataTable();
+            NpgsqlCommand cmd = new NpgsqlCommand("select_route_by_id");
+            cmd.Parameters.AddWithValue("p_filter_string", NpgsqlTypes.NpgsqlDbType.Integer, id);
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+
+            return dataTable;
+        }
+
+        public static void PopulateConfig()
+        {
+            DataTable configsDataTable = ConfigData();
+            DataTable featuresDataTable = FeaturesData();
+
+            ConvertDataTablesToConfig(configsDataTable, featuresDataTable);
+        }
+
+
+
         public static void SetOrigin(int id)
         {
-            DataTable configsDataTable = GetConfigData();
+            DataTable configsDataTable = ConfigData();
 
             foreach (DataRow row in configsDataTable.Rows)
             {
-                Config.Calculation.origin = GetLocationById(id);
+                Config.Calculation.origin = LocationById(id);
 
                 if (Config.Calculation.origin == null)
                 {
@@ -552,6 +556,13 @@ namespace RouteNavigation
             cmd.Parameters.AddWithValue("p_string", NpgsqlTypes.NpgsqlDbType.Varchar, searchString);
             RunStoredProcedure(cmd);
         }
+
+        internal static void DeleteLocation(Location location)
+        {
+            NpgsqlCommand cmd = new NpgsqlCommand("delete_location");
+            cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.Id);
+            RunStoredProcedure(cmd);
+        }
         internal static void UpdateGreaseCutoffToConfigValue()
         {
             NpgsqlCommand cmd = new NpgsqlCommand("update_grease_cutoff_to_config_value");
@@ -597,7 +608,7 @@ namespace RouteNavigation
             public int? totalIterations = null;
         }
 
-        public static IterationStatus GetCalcStatus()
+        public static IterationStatus CalcStatus()
         {
             DataTable dataTable = new DataTable();
 
@@ -616,9 +627,9 @@ namespace RouteNavigation
         }
 
 
-        public static List<Vehicle> GetVehicles(string columnName = "name", string filterString = null)
+        public static List<Vehicle> Vehicles(string columnName = "name", string filterString = null)
         {
-            DataTable dataTable = GetVehicleData(columnName, filterString);
+            DataTable dataTable = VehicleData(columnName, filterString);
             List<Vehicle> vehicles = ConvertDataTableToVehiclesList(dataTable);
             return vehicles;
         }
@@ -647,7 +658,7 @@ namespace RouteNavigation
             return vehicles;
         }
 
-        public static string GetAddressByCoordinates(double lat, double lng)
+        public static string AddressByCoordinates(double lat, double lng)
         {
             string address = "";
             using (var connection = new Npgsql.NpgsqlConnection(conString))
@@ -748,7 +759,7 @@ namespace RouteNavigation
             RunStoredProcedure(cmd);
         }
 
-        public static Boolean GetCancellationStatus()
+        public static Boolean CancellationStatus()
         {
             NpgsqlCommand cmd = new NpgsqlCommand("get_route_batch_cancellation_status");
             return Boolean.Parse(ReadStoredProcedureAsString(cmd));
@@ -859,7 +870,7 @@ namespace RouteNavigation
         {
             foreach (Route route in routes)
             {
-                route.Id = GetNextRouteId();
+                route.Id = NextRouteId();
                 try
                 {
                     //ApiRoute apiRoute = new ApiRoute(route);
@@ -931,7 +942,7 @@ namespace RouteNavigation
                             p_grease_trap_signature_req = l.GreaseTrapSignatureRequired,
                             p_grease_trap_size = l.GreaseTrapSize,
                             p_grease_trap_units = l.GreaseTrapUnits,
-                            p_intended_pickup_date = l.intendedPickupDate,
+                            p_intended_pickup_date = l.IntendedPickupDate,
                             p_number_of_manholes = l.NumberOfManHoles,
                             p_oil_pickup_customer = l.OilPickupCustomer,
                             p_oil_pickup_next_date = l.OilPickupNextDate,

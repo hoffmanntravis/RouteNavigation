@@ -260,10 +260,10 @@
                     <asp:TextBox class="tableInput" ID="txtEditAddress" runat="server" Text='<%# Bind("address") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditoilPickupSchedule" runat="server" Text='<%# Bind("oil_pickup_schedule") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditOilPickupSchedule" runat="server" Text='<%# Bind("oil_pickup_schedule") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditLastVisited" runat="server" Text='<%# Bind("grease_trap_schedule") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditGreaseTrapSchedule" runat="server" Text='<%# Bind("grease_trap_schedule") %>'></asp:TextBox>
                 </td>
                 <td>
                     <asp:TextBox class="tableInput" ID="txtEditGreaseTrapPreferredTimeStart" runat="server" Text='<%# Bind("grease_trap_preferred_time_start") %>'></asp:TextBox>
@@ -272,7 +272,7 @@
                     <asp:TextBox class="tableInput" ID="txtEditGreaseTrapPreferredTimeEnd" runat="server" Text='<%# Bind("grease_trap_preferred_time_end") %>'></asp:TextBox>
                 </td>
                 <td>
-                    <asp:TextBox class="tableInput" ID="txtEditoilTankSize" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:TextBox>
+                    <asp:TextBox class="tableInput" ID="txtEditOilTankSize" runat="server" Text='<%# Bind("oil_tank_size") %>'></asp:TextBox>
                 </td>
                 <td>
                     <asp:TextBox class="tableInput" ID="txtEditGreaseTrapSize" runat="server" Text='<%# Eval("grease_trap_size") %>'></asp:TextBox>

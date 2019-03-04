@@ -28,7 +28,7 @@ namespace RouteNavigation
             {
                 int routeId = int.Parse(queryStringId);
 
-                table = DataAccess.GetLocationData(routeId);
+                table = DataAccess.LocationData(routeId);
 
                 jsonResponse = DataTableToJSONWithJavaScriptSerializer(table);
             }

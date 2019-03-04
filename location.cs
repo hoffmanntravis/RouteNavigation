@@ -20,13 +20,13 @@ namespace RouteNavigation
 
         public Vehicle AssignedVehicle { get; set; }
         public double CurrentGallonsEstimate { get; set; }
-        public DateTime? intendedPickupDate { get; set; }
+        public DateTime? IntendedPickupDate { get; set; }
 
         public int? TrackingNumber { get; set; }
         public int RouteId { get; set; }
         public int Id { get; set; } = int.MinValue;
         public int? ClientPriority { get; set; } = 1;
-        public int? OilPickupSchedule { get; set; }
+        public int? OilPickupSchedule { get; set; } = 30;
         public int? VehicleSize { get; set; }
         public string Account { get; set; }
         public string Address { get; set; }
@@ -37,7 +37,7 @@ namespace RouteNavigation
         public double? DistanceFromDepot { get; set; }
         public double? DaysUntilDue { get; set; }
         public DateTime? OilLastVisited { get; set; }
-        public DateTime? GreaseLastVistied { get; set; }
+        public DateTime? GreaseLastVisited { get; set; }
         public double? OilDaysElapsed { get; set; }
         public double? GreaseDaysElapsed { get; set; }
         public double? DaysElapsed { get; set; }
@@ -57,7 +57,7 @@ namespace RouteNavigation
         public double? GreaseTrapDaysUntilDue { get; set; }
         public int? GreaseTrapUnits { get; set; }
         public string GreaseTrapPreferredDay { get; set; }
-        public int? GreaseTrapSchedule { get; set; }
+        public int? GreaseTrapSchedule { get; set; } = 30;
         public int? NumberOfManHoles { get; set; }
 
         public static T DeepClone<T>(T obj)
