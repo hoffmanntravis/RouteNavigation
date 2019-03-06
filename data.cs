@@ -49,6 +49,18 @@ namespace RouteNavigation
             }
         }
 
+        public static void RefreshApiCache(Location location)
+        {
+            if (String.IsNullOrEmpty(location.Address))
+                Logger.Error(String.Format("Address is null or empty for account {0} with tracking number {1}.  Please update it in the locations table or fix it in the locations CSV and re-import.", location.Account, location.TrackingNumber));
+            else
+            {
+                UpdateGpsCoordinates(location.Address, location.Id);
+                //Google API calls will fail if called too rapidly
+                Thread.Sleep(2000);
+            }
+        }
+
         public static void RefreshApiCache(bool fillEmptyOnly = true)
         {
             List<Location> locations;
@@ -481,9 +493,9 @@ namespace RouteNavigation
             foreach (DataRow row in configs.Rows)
             {
                 if (row["origin_location_id"] != DBNull.Value)
-                {
                     SetOrigin(int.Parse(row["origin_location_id"].ToString()));
-                }
+                else
+                    throw new Exception("Origin location is null.  Please set on the config page before proceeding.");
 
                 if (row["minimum_days_until_pickup"] != DBNull.Value)
                     Config.Calculation.MinimumDaysUntilPickup = uint.Parse(row["minimum_days_until_pickup"].ToString());
@@ -932,6 +944,7 @@ namespace RouteNavigation
                             p_oil_pickup_days_until_due = l.OilPickupDaysUntilDue,
                             p_distance_from_source = l.DistanceFromDepot,
                             p_grease_trap_customer = l.GreaseTrapCustomer,
+                            p_grease_trap_last_scheduled_service = l.GreaseTrapLastScheduledService,
                             p_grease_trap_days_until_due = l.GreaseTrapDaysUntilDue,
                             p_grease_trap_pickup_next_date = l.GreaseTrapPickupNextDate,
                             p_grease_trap_preferred_day = l.GreaseTrapPreferredDay,
@@ -945,6 +958,7 @@ namespace RouteNavigation
                             p_intended_pickup_date = l.IntendedPickupDate,
                             p_number_of_manholes = l.NumberOfManHoles,
                             p_oil_pickup_customer = l.OilPickupCustomer,
+                            p_oil_pickup_last_scheduled_service = l.OilPickupLastScheduledService,
                             p_oil_pickup_next_date = l.OilPickupNextDate,
                             p_oil_pickup_schedule = l.OilPickupSchedule,
                             p_oil_pickup_service_notes = l.OilPickupServiceNotes,

@@ -36,8 +36,8 @@ namespace RouteNavigation
         public double? OilPickupDaysUntilDue { get; set; }
         public double? DistanceFromDepot { get; set; }
         public double? DaysUntilDue { get; set; }
-        public DateTime? OilLastVisited { get; set; }
-        public DateTime? GreaseLastVisited { get; set; }
+        public DateTime? OilPickupLastScheduledService { get; set; }
+        public DateTime? GreaseTrapLastScheduledService { get; set; }
         public double? OilDaysElapsed { get; set; }
         public double? GreaseDaysElapsed { get; set; }
         public double? DaysElapsed { get; set; }

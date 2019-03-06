@@ -13,8 +13,8 @@ namespace RouteNavigation
         {
             public static Location origin;
             public static double currentFillLevelErrorMarginPercent = 0;
-            public static TimeSpan workdayStartTime = TimeSpan.MinValue;
-            public static TimeSpan workdayEndTime = TimeSpan.MaxValue;
+            public static TimeSpan workdayStartTime = TimeSpan.Parse("06:00:00");
+            public static TimeSpan workdayEndTime = TimeSpan.Parse("20:00:00");
             public static DateTime greaseTrapCutoffTime = DateTime.MinValue;
             public static double oilPickupAverageDurationMinutes = 30;
             public static double greasePickupAverageDurationMinutes = 30;

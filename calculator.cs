@@ -170,7 +170,6 @@ namespace RouteNavigation
                         }
 
                         double nextLocationDistanceMiles = CalculateDistance(previousLocation, nextLocation);
-
                         double distanceTolerance = (double)nextLocation.DistanceFromDepot * (Config.Calculation.searchRadiusFraction);
 
                         if (potentialRoute.Waypoints.Count > 0)
@@ -733,10 +732,10 @@ namespace RouteNavigation
             List<Location> laterDateLocations = new List<Location>();
             foreach (Location l in availableLocations)
             {
-                if (l.OilPickupNextDate != null && l.OilLastVisited != null)
-                    l.OilDaysElapsed = (currentDate - l.OilLastVisited.Value).TotalDays;
-                if (l.GreaseTrapPickupNextDate != null && l.GreaseLastVisited != null)
-                    l.GreaseDaysElapsed = (currentDate - l.GreaseLastVisited.Value).TotalDays;
+                if (l.OilPickupNextDate != null && l.OilPickupLastScheduledService != null)
+                    l.OilDaysElapsed = (currentDate - l.OilPickupLastScheduledService.Value).TotalDays;
+                if (l.GreaseTrapPickupNextDate != null && l.GreaseTrapLastScheduledService != null)
+                    l.GreaseDaysElapsed = (currentDate - l.GreaseTrapLastScheduledService.Value).TotalDays;
 
                 if (l.OilDaysElapsed != null && l.GreaseDaysElapsed != null)
                     l.DaysElapsed = Math.Max(l.OilDaysElapsed.Value, l.GreaseDaysElapsed.Value);

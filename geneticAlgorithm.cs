@@ -241,7 +241,7 @@ namespace RouteNavigation
                 try
                 {
                     if (l.OilPickupNextDate != null && l.OilPickupSchedule != null)
-                        l.OilLastVisited = l.OilPickupNextDate.Value.AddDays(-l.OilPickupSchedule.Value);
+                        l.OilPickupLastScheduledService = l.OilPickupNextDate.Value.AddDays(-l.OilPickupSchedule.Value);
                 }
                 catch
                 {
@@ -250,19 +250,19 @@ namespace RouteNavigation
                 try
                 {
                     if (l.GreaseTrapPickupNextDate != null && l.GreaseTrapSchedule != null)
-                        l.GreaseLastVisited = l.GreaseTrapPickupNextDate.Value.AddDays(-l.GreaseTrapSchedule.Value);
+                        l.GreaseTrapLastScheduledService = l.GreaseTrapPickupNextDate.Value.AddDays(-l.GreaseTrapSchedule.Value);
                 }
                 catch
                 {
-                    l.GreaseLastVisited = DateTime.Now;
-                    l.OilLastVisited = DateTime.Now;
+                    l.GreaseTrapLastScheduledService = DateTime.Now;
+                    l.OilPickupLastScheduledService = DateTime.Now;
                     Logger.Error(String.Format("Unable to parse GreaseTrapPickupNextDate for location {0}, tracking number {1}.  Assigning todays date.", l.Account, l.TrackingNumber));
                 }
-                if (l.OilLastVisited > DateTime.Now)
+                if (l.OilPickupLastScheduledService > DateTime.Now)
                 {
                     Logger.Error(String.Format("Last visited date is in the future for location {0}, tracking number {1},based on a scheduled next visit of {2} and an oil pickup schedule of {3} days", l.Account, l.TrackingNumber, l.OilPickupNextDate.Value, l.OilPickupSchedule.Value));
                 }
-                if (l.GreaseLastVisited > DateTime.Now)
+                if (l.GreaseTrapLastScheduledService > DateTime.Now)
                 {
                     Logger.Error(String.Format("Last visited date is in the future for location {0}, tracking number {1},based on a scheduled next visit of {2} and a grease pickup schedule of {3} days", l.Account, l.TrackingNumber, l.GreaseTrapPickupNextDate.Value, l.GreaseTrapSchedule.Value));
                 }

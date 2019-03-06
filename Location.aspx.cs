@@ -309,7 +309,7 @@ namespace RouteNavigation
                     Logger.Error(exception);
                 }
 
-                DataAccess.RefreshApiCache();
+                DataAccess.RefreshApiCache(DataAccess.LocationById(id));
             }
             catch (Exception exception)
             {
