@@ -13,11 +13,11 @@
 
     <div class="divHeader">
         <asp:Button CssClass="headerRowRight" ID="BtnExportCsv" runat="server" Text="Export data to .CSV" Style="float: right;" OnClick="BtnExportCsv_Click" />
-        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes"  OnClientClick="this.value = 'Cancel Calculations';checkCalcStatus();" UseSubmitBehavior="false" OnClick="BtnCalculateRoutes_Click" Text="Recalculate Routes" ToolTip="Use this button to recalculate routes based on latest location and vehicle data." runat="server" Style="float: left;" />
+        <asp:Button CssClass="headerRowLeft" ID="BtnCalculateRoutes" OnClientClick="this.value = 'Cancel Calculations';checkCalcStatus();" UseSubmitBehavior="false" OnClick="BtnCalculateRoutes_Click" Text="Recalculate Routes" ToolTip="Use this button to recalculate routes based on latest location and vehicle data." runat="server" Style="float: left;" />
     </div>
     <div></div>
     <asp:Panel ID="calculatingPanel" UpdateMode="Conditional" runat="server">
-        <asp:Label ID ="lblIterationStatus" runat="server" />
+        <asp:Label ID="lblIterationStatus" runat="server" />
     </asp:Panel>
 
     <asp:ListView ID="RoutesListView" runat="server"
@@ -138,7 +138,7 @@
         </SelectedItemTemplate>
     </asp:ListView>
     <asp:Label ID="activityId" runat="server" Text='<%# Eval("activity_id") %>'> </asp:Label>
-    
+
     <script>
         function checkCalcStatus() {
             var pnl = document.getElementById("<%= calculatingPanel.ClientID %>");
@@ -155,24 +155,29 @@
                     else {
                         console.log("Calc status is: " + data);
                         iterationStatus = $.parseJSON(data);
-                        currentIteration = iterationStatus['currentIteration'] + 1;
+                        currentIteration = iterationStatus['currentIteration'];
                         totalIterations = iterationStatus['totalIterations'];
-                        if (totalIterations > 0) {
-                            lblIterationStatus.textContent = "Calculating:" + currentIteration + "/" + totalIterations;
-                        }
-                        else {
-                            lblIterationStatus.textContent = "Calculating:";
-                        }
 
+                        if (currentIteration == null && totalIterations == null) {
+                        }
+                        else if (totalIterations > 0 && currentIteration == null) {
+                            lblIterationStatus.textContent = "Threading randomized calcs. This may take some time.";
+                        }
+                        else if (totalIterations > 0 && currentIteration > 0) {
+                            lblIterationStatus.textContent = "Calculating:" + (currentIteration + 1) + "/" + totalIterations;
+                        }
                     };
                 },
-                failure: function () {console.log("CalcStatus.aspx returned an error");},
+                failure: function () { console.log("CalcStatus.aspx returned an error"); },
                 timeout: 2000
             }).then(function () {
-                setTimeout(checkCalcStatus, 1000);
+                    setTimeout(checkCalcStatus, 1000);
             });
         }
-        
+        (function selfInvokeCalcStatus() {
+            checkCalcStatus();
+        })();
+
 
     </script>
 </asp:Content>

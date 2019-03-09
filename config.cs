@@ -43,7 +43,7 @@ namespace RouteNavigation
             public static double MutationProbability = .05;
             public static uint MutationAlleleMax = 1;
             public static double GrowthDecayExponent = 1;
-            public static double seedRatioNearestNeighbor = .05;
+            public static double seedRatioNearestNeighbor = .20;
         }
 
         public static class Features

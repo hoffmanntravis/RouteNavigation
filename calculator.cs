@@ -16,17 +16,14 @@ namespace RouteNavigation
 
         public Metadata metadata = new Metadata();
         public List<Route> routes = new List<Route>();
-        public Guid activityId = new Guid();
-        [ThreadStatic] static List<Location> _availableLocations;
-        [ThreadStatic] static List<Vehicle> _availableVehicles;
-        [ThreadStatic] static List<Vehicle> _currentVehicles;
-        [ThreadStatic] static List<Location> _orphanedLocations;
-        [ThreadStatic] static DateTime _startDate;
-        [ThreadStatic] static Guid _activityId;
-
+        public List<Location> availableLocations;
+        public List<Vehicle> availableVehicles;
+        public List<Vehicle> currentVehicles;
+        public List<Location> orphanedLocations = new List<Location>();
+        public DateTime startDate = AdvanceDateToNextWeekday(System.DateTime.Now.Date);
+        public Guid activityId;
 
         public uint neighborCount = 60;
-
         private static object addLock = new object();
 
         public RouteCalculator(List<Location> locations, List<Vehicle> vehicles)
@@ -36,18 +33,14 @@ namespace RouteNavigation
 
         private void CalculateRoutes(List<Location> locations, List<Vehicle> vehicles)
         {
-            _orphanedLocations = new List<Location>();
-            _startDate = AdvanceDateToNextWeekday(System.DateTime.Now.Date);
-            _availableLocations = new List<Location>(locations);
-            _availableVehicles = new List<Vehicle>(vehicles);
-            _currentVehicles = new List<Vehicle>(vehicles);
-
+            availableLocations = new List<Location>(locations);
+            availableVehicles = new List<Vehicle>(vehicles);
+            currentVehicles = new List<Vehicle>(vehicles);
             Trace.CorrelationManager.ActivityId = Guid.NewGuid();
-
-            _activityId = Trace.CorrelationManager.ActivityId;
-            metadata.intakeLocations = _availableLocations.ToList();
-            DateTime startTime = _startDate + Config.Calculation.workdayStartTime;
-            DateTime endTime = _startDate + Config.Calculation.workdayEndTime;
+            activityId = Trace.CorrelationManager.ActivityId;
+            metadata.intakeLocations = availableLocations.ToList();
+            DateTime startTime = startDate + Config.Calculation.workdayStartTime;
+            DateTime endTime = startDate + Config.Calculation.workdayEndTime;
 
             try
             {
@@ -61,63 +54,60 @@ namespace RouteNavigation
                     throw exception;
                 }
 
-                while (_availableLocations.Count > 0)
+                while (availableLocations.Count > 0)
                 {
-                    if (_currentVehicles.Count == 0)
+                    if (currentVehicles.Count == 0)
                     {
                         //get some more vehicles and start a new day, with new routes
                         lock (addLock)
-                            _currentVehicles = _availableVehicles.ToList();
-                        _startDate = AdvanceDateToNextWeekday(_startDate);
+                            currentVehicles = availableVehicles.ToList();
+                        startDate = AdvanceDateToNextWeekday(startDate);
                     }
-                    Logger.Trace("startdate is {0}", _startDate);
+                    Logger.Trace("startdate is {0}", startDate);
                     lock (addLock)
-                        startTime = _startDate + Config.Calculation.workdayStartTime;
+                        startTime = startDate + Config.Calculation.workdayStartTime;
                     lock (addLock)
-                        endTime = _startDate + Config.Calculation.workdayEndTime;
+                        endTime = startDate + Config.Calculation.workdayEndTime;
 
 
                     //Remove any locations that would be picked up too soon to be relevent.  We'll invoke a recursive call at the end to deal with these.
 
-                    List<Location> availableLocationsWithPostponedLocations = _availableLocations.ToList();
-                    List<Location> postPonedLocations = GetLaterDateLocations(_availableLocations, startTime).ToList();
+                    List<Location> availableLocationsWithPostponedLocations = availableLocations.ToList();
+                    List<Location> postPonedLocations = GetLaterDateLocations(availableLocations, startTime).ToList();
 
-                    _availableLocations = _availableLocations.Except(postPonedLocations).ToList();
+                    availableLocations = availableLocations.Except(postPonedLocations).ToList();
 
                     //If all that is left are locations that need to be processed later, advance the date accordingly
-                    if (postPonedLocations.Count > 0 && _availableLocations.Count == 0)
+                    if (postPonedLocations.Count > 0 && availableLocations.Count == 0)
                     {
                         Location firstDueLocation;
                         lock (addLock)
                             firstDueLocation = postPonedLocations.OrderBy(a => a.DaysUntilDue).First();
                         double daysElapsed = firstDueLocation.DaysElapsed.Value;
                         double daysToAdd = Config.Calculation.MinimumDaysUntilPickup - daysElapsed;
-                        _currentVehicles = _availableVehicles.ToList();
+                        currentVehicles = availableVehicles.ToList();
                         lock (addLock)
-                            _startDate = _startDate.AddDays(daysToAdd);
+                            startDate = startDate.AddDays(daysToAdd);
 
-                        _availableLocations = postPonedLocations.ToList();
-                        if (_startDate.DayOfWeek == DayOfWeek.Saturday || _startDate.DayOfWeek == DayOfWeek.Sunday)
-                            _startDate = AdvanceDateToNextWeekday(_startDate);
+                        availableLocations = postPonedLocations.ToList();
+                        if (startDate.DayOfWeek == DayOfWeek.Saturday || startDate.DayOfWeek == DayOfWeek.Sunday)
+                            startDate = AdvanceDateToNextWeekday(startDate);
 
                         continue;
                     }
 
-                    List<Location> serviceNowLocations = GetRequireServiceNowLocations(_availableLocations, startTime);
+                    List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations, startTime);
                     if (serviceNowLocations.Count > 0)
                     {
-                        _availableLocations = _availableLocations.Except(serviceNowLocations).ToList();
-                        _availableLocations.InsertRange(0, serviceNowLocations);
+                        availableLocations = availableLocations.Except(serviceNowLocations).ToList();
+                        availableLocations.InsertRange(0, serviceNowLocations);
                     }
 
                     //sort vehicles by size descending.  We do this to ensure that large vehicles are handled first since they have a limited location list available to them.
 
-                    _currentVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
-                    Vehicle vehicle = _currentVehicles.First();
-
-                    List<Location> compatibleLocations = GetCompatibleLocations(vehicle, _availableLocations);
-                    //Find the highest priority location that the truck can serve
-                    //List<Location> highestPriorityLocations = GetHighestPrioritylocations(compatibleLocations, 1);
+                    currentVehicles.Sort((a, b) => b.physicalSize.CompareTo(a.physicalSize));
+                    Vehicle vehicle = currentVehicles.First();
+                    List<Location> compatibleLocations = GetCompatibleLocations(vehicle, availableLocations);
 
                     Route potentialRoute = new Route();
 
@@ -218,7 +208,7 @@ namespace RouteNavigation
 
                         potentialRoute.Waypoints.Add(nextLocation);
 
-                        _availableLocations.Remove(nextLocation);
+                        availableLocations.Remove(nextLocation);
 
                         compatibleLocations.Remove(nextLocation);
 
@@ -246,11 +236,11 @@ namespace RouteNavigation
 
                     potentialRoute.Waypoints.ForEach(r => r.AssignedVehicle = vehicle);
 
-                    _currentVehicles.Remove(vehicle);
+                    currentVehicles.Remove(vehicle);
                     lock (addLock)
-                        potentialRoute.Date = _startDate;
+                        potentialRoute.Date = startDate;
 
-                    //potentialRoute = CalculateTSPRouteNN(potentialRoute);
+                    potentialRoute = CalculateTSPRouteNN(potentialRoute);
                     //potentialRoute = CalculateTSPRouteTwoOpt(potentialRoute);
 
                     potentialRoute.TotalTime = currentTime - startTime;
@@ -265,7 +255,7 @@ namespace RouteNavigation
                     lock (addLock)
                         routes.Add(potentialRoute);
 
-                    _availableLocations = availableLocationsWithPostponedLocations.Except(potentialRoute.Waypoints).ToList();
+                    availableLocations = availableLocationsWithPostponedLocations.Except(potentialRoute.Waypoints).ToList();
                 }
 
                 foreach (Route route in routes)
@@ -297,7 +287,7 @@ namespace RouteNavigation
                 {
                     Logger.Error("Unable to create any routes.");
                 }
-                    metadata.orphanedLocations = _availableLocations.Where(x => !metadata.processedLocations.Any(y => y.Address == x.Address)).ToList();
+                metadata.orphanedLocations = availableLocations.Where(x => !metadata.processedLocations.Any(y => y.Address == x.Address)).ToList();
             }
             catch (Exception e)
             {
@@ -572,37 +562,41 @@ namespace RouteNavigation
 
         public static List<Location> NearestNeighbor(List<Location> route, Location firstNode = null)
         {
+            if (route.Count == 1)
+                return route;
+
+            List<Location> nearestNeighborRoute = new List<Location>();
+            List<Location> unVisitedNodes = new List<Location>(route);
+            Location nearest;
             lock (addLock)
             {
-                if (route.Count == 1)
-                    return route;
-
-                List<Location> nearestNeighborRoute = new List<Location>();
-                List<Location> unVisitedNodes = new List<Location>(route);
-                Location nearest;
                 if (firstNode == null)
-
                     nearest = unVisitedNodes.First();
+
                 else
                     nearest = firstNode;
+            }
+            lock (addLock)
                 nearestNeighborRoute.Add(nearest);
+            lock (addLock)
                 unVisitedNodes.Remove(nearest);
 
 
-                while (unVisitedNodes.Count > 0)
-                {
+            while (unVisitedNodes.Count > 0)
+            {
+                lock (addLock)
                     nearest = FindNearestLocation(nearest, unVisitedNodes);
+                lock (addLock)
                     nearestNeighborRoute.Add(nearest);
+                lock (addLock)
                     unVisitedNodes.Remove(nearest);
-                }
-
-                //if (routeHashStart != GenerateRouteHash(nearestNeighborRoute))
-                //    throw new Exception("hashes do not match!");
-
-                route = nearestNeighborRoute;
-                return route;
-
             }
+
+            //if (routeHashStart != GenerateRouteHash(nearestNeighborRoute))
+            //    throw new Exception("hashes do not match!");
+
+            route = nearestNeighborRoute;
+            return route;
         }
 
         public double CalculateAverageRouteDistance(List<Route> routes)
