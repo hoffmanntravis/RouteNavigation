@@ -6,49 +6,101 @@ using System.Security.Cryptography;
 using System.Data;
 using NLog;
 using System.Diagnostics;
+using System.Collections;
 
 namespace RouteNavigation
 {
     public static class Extensions
     {
+        private static object listLocker = new object();
         public static IList<T> Shuffle<T>(this IList<T> list, Random rng)
         {
-            int n = list.Count;
-
-            while (n > 1)
+            lock (listLocker)
             {
-                int k = (rng.Next(0, n) % n);
-                n--;
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                int n = list.Count;
+
+                while (n > 1)
+                {
+                    int k = (rng.Next(0, n) % n);
+                    n--;
+                    T value = list[k];
+                    list[k] = list[n];
+                    list[n] = value;
+                }
+                return list;
             }
-            return list;
         }
 
+        /*public static IList<T> Clone<T>(this IList<T> list)
+        {
+            lock (listLocker)
+            {
+                List<T> listCopy = new List<T>();
+                foreach (var l in list)
+                    listCopy.Add(l);
+                return listCopy;
+            }
+        }
+
+        public static List<T> Clone<T>(this List<T> list)
+        {
+            lock (listLocker)
+            {
+                List<T> listCopy = new List<T>();
+
+                foreach (var l in list)
+                    listCopy.Add(l);
+                return listCopy;
+            }
+        }
+
+        public static List<T> Clone<T>(this IEnumerable<T> list)
+        {
+            lock (listLocker)
+            {
+                List<T> listCopy = new List<T>();
+
+                foreach (var l in list)
+                    listCopy = list.ToList();
+                return listCopy;
+            }
+        }
+        */
         public static List<RouteCalculator> SortByDistanceAsc(this List<RouteCalculator> list)
         {
-            list.Sort((x, y) => x.metadata.routesLengthMiles.CompareTo(y.metadata.routesLengthMiles));
-            return list;
+            lock (listLocker)
+            {
+                list.Sort((x, y) => x.metadata.routesLengthMiles.CompareTo(y.metadata.routesLengthMiles));
+                return list;
+            }
         }
 
         public static List<RouteCalculator> SortByDistanceDesc(this List<RouteCalculator> list)
         {
-            list.Sort((x, y) => y.metadata.routesLengthMiles.CompareTo(x.metadata.routesLengthMiles));
-            return list;
+            lock (listLocker)
+            {
+                list.Sort((x, y) => y.metadata.routesLengthMiles.CompareTo(x.metadata.routesLengthMiles));
+                return list;
+            }
         }
 
 
         public static List<RouteCalculator> SortByFitnessAsc(this List<RouteCalculator> list)
         {
-            list.Sort((x, y) => x.metadata.fitnessScore.CompareTo(y.metadata.fitnessScore));
-            return list;
+            lock (listLocker)
+            {
+                list.Sort((x, y) => x.metadata.fitnessScore.CompareTo(y.metadata.fitnessScore));
+                return list;
+            }
         }
 
         public static List<RouteCalculator> SortByFitnessDesc(this List<RouteCalculator> list)
         {
-            list.Sort((x, y) => y.metadata.fitnessScore.CompareTo(x.metadata.fitnessScore));
-            return list;
+            lock (listLocker)
+            {
+                list.Sort((x, y) => y.metadata.fitnessScore.CompareTo(x.metadata.fitnessScore));
+                return list;
+            }
         }
 
 

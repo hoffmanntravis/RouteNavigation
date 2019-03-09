@@ -137,13 +137,16 @@ namespace RouteNavigation
             }
         }
 
-        public static void InsertRouteLocation(int locationId, int insertOrder, int routeId)
+        public static void InsertRouteLocation(int locationId, int insertOrder, int routeId, DateTime? intendedPickupDate = null)
         {
             using (NpgsqlCommand cmd = new NpgsqlCommand("insert_route_location"))
             {
                 cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
                 cmd.Parameters.AddWithValue("p_location_id", NpgsqlTypes.NpgsqlDbType.Integer, locationId);
                 cmd.Parameters.AddWithValue("p_insert_order", NpgsqlTypes.NpgsqlDbType.Integer, insertOrder);
+
+                if (intendedPickupDate != null)
+                    cmd.Parameters.AddWithValue("p_intended_pickup_date", NpgsqlTypes.NpgsqlDbType.Timestamp, intendedPickupDate);
                 RunStoredProcedure(cmd);
             }
         }
@@ -303,6 +306,22 @@ namespace RouteNavigation
             return locations;
         }
 
+        public static List<Route> RouteDetails(int routeId, bool excludeOrigin = false)
+        {
+            List<Route> routes = new List<Route>();
+            using (var connection = new Npgsql.NpgsqlConnection(conString))
+                routes = connection.Query<Route>("select_route_details", new { p_exclude_origin = excludeOrigin }, commandType: CommandType.StoredProcedure).ToList();
+            return routes;
+        }
+
+        public static List<Route> RouteDetails(bool excludeOrigin = false)
+        {
+            List<Route> routes = new List<Route>();
+            using (var connection = new Npgsql.NpgsqlConnection(conString))
+                routes = connection.Query<Route>("select_route_details", new { p_exclude_origin = excludeOrigin }, commandType: CommandType.StoredProcedure).ToList();
+            return routes;
+        }
+
         public static Location LocationById(int id)
         {
             UpdateDaysUntilDue();
@@ -423,6 +442,17 @@ namespace RouteNavigation
             return dataTable;
         }
 
+        public static DataTable RouteDetailsData(bool excludeOrigin = false)
+        {
+            DataTable dataTable = new DataTable();
+
+            NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
+            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
+            ReadStoredProcedureIntoDataTable(cmd, dataTable);
+
+            return dataTable;
+        }
+
         public static void UpdateRouteLocation(int locationId, int routeId, int order)
         {
             NpgsqlCommand cmd = new NpgsqlCommand("update_route_location");
@@ -434,16 +464,7 @@ namespace RouteNavigation
             RunStoredProcedure(cmd);
         }
 
-        public static DataTable RouteDetailsData(bool excludeOrigin = false)
-        {
-            DataTable dataTable = new DataTable();
 
-            NpgsqlCommand cmd = new NpgsqlCommand("select_route_details");
-            cmd.Parameters.AddWithValue("p_exclude_origin", NpgsqlTypes.NpgsqlDbType.Boolean, excludeOrigin);
-            ReadStoredProcedureIntoDataTable(cmd, dataTable);
-
-            return dataTable;
-        }
 
         public static DataTable RouteData(int id)
         {
@@ -914,7 +935,7 @@ namespace RouteNavigation
                     InsertRouteLocation(Config.Calculation.origin.Id, insertOrder += 1, route.Id);
 
                     foreach (Location waypoint in route.Waypoints)
-                        InsertRouteLocation(waypoint.Id, insertOrder += 1, route.Id);
+                        InsertRouteLocation(waypoint.Id, insertOrder += 1, route.Id, waypoint.IntendedPickupDate.Value);
 
                     //insert the route origin since every route returns to HQ
                     InsertRouteLocation(Config.Calculation.origin.Id, insertOrder += 1, route.Id);

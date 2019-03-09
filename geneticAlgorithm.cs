@@ -29,15 +29,15 @@ namespace RouteNavigation
         uint mutationAlleleMax;
         double growthDecayExponent;
         bool toggleIterationsExponent;
-        static private uint currentIteration = 0;
+        private uint currentIteration = 0;
 
-        static private List<Location> allLocations = DataAccess.Locations();
-        static private List<Location> possibleLocations;
-        static private List<Vehicle> allVehicles = DataAccess.Vehicles();
+        private List<Location> allLocations = DataAccess.Locations();
+        private List<Location> possibleLocations;
+        private List<Vehicle> allVehicles = DataAccess.Vehicles();
         List<Vehicle> availableVehicles;
-        static private object newCalcLock = new object();
-        static private object calcLock = new object();
-        static private Random rng = new Random();
+        private object newCalcLock = new object();
+        private object calcLock = new object();
+        private Random rng = new Random();
         private int batchId = DataAccess.NextRouteBatchId();
         private RouteCalculator bestCalc;
         public List<List<Location>> InitializePopulation(uint populationSize)
@@ -130,11 +130,11 @@ namespace RouteNavigation
 
                     possibleLocations = allLocations.ToList();
                     possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
-                    RouteCalculator.UpdateDistanceFromSource(possibleLocations);
+                    DataAccess.UpdateDistanceFromSource(possibleLocations);
                     possibleLocations = updateLocationDaysUntilDue(possibleLocations);
                     possibleLocations = updateLocationLastVisited(possibleLocations);
 
-                    possibleLocations = RouteCalculator.PossibleLocations(availableVehicles, possibleLocations);
+                    possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
                     //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
                     possibleLocations = possibleLocations.Where(l => l.Id != Config.Calculation.origin.Id).ToList();
 
@@ -189,8 +189,8 @@ namespace RouteNavigation
 
                     //fully optimized the GA selected route with 3opt swap
                     bestCalc = fitnessCalcs.First();
-                    Parallel.ForEach(bestCalc.routes, r =>
-                       bestCalc.CalculateTSPRouteTwoOpt(r));
+                    //Parallel.ForEach(bestCalc.routes, r =>
+                    //   bestCalc.CalculateTSPRouteTwoOpt(r));
 
                     DataAccess.InsertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
@@ -313,9 +313,7 @@ namespace RouteNavigation
 
         public RouteCalculator RunCalculations(List<Location> list)
         {
-            RouteCalculator calc = new RouteCalculator(allLocations, availableVehicles);
-            calc.neighborCount = neighborCount;
-            calc.CalculateRoutes(list);
+            RouteCalculator calc = new RouteCalculator(list, availableVehicles);
             return calc;
         }
 

@@ -49,7 +49,7 @@
                                     <b>Address</b>
                                 </td>
                                 <td id="td6" runat="server">
-                                    <b>Last Visited</b>
+                                    <b>Intended Pickup Date</b>
                                 </td>
                                 <td id="td7" runat="server">
                                     <b>Days Until Due</b>

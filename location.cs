@@ -11,7 +11,6 @@ using System.Web;
 
 namespace RouteNavigation
 {
-    [Serializable]
     public class Location
     {
         public Coordinates Coordinates { get; set; } = new Coordinates();
@@ -72,7 +71,7 @@ namespace RouteNavigation
             }
         }
     }
-    [Serializable]
+ 
     public class Coordinates
     {
         public double? Lat { get; set; }
@@ -88,7 +87,7 @@ namespace RouteNavigation
             }
         }
     }
-    [Serializable]
+
     public class CartesianCoordinates
     {
         public double? X { get; set; }
@@ -106,7 +105,7 @@ namespace RouteNavigation
             }
         }
     }
-    [Serializable]
+
     public class CoordinatesMap : EntityMap<Coordinates>
     {
         public CoordinatesMap()
@@ -115,7 +114,7 @@ namespace RouteNavigation
             Map(c => c.Lng).ToColumn("coordinates_longitude");
         }
     }
-    [Serializable]
+
     public class CartesianCoordinatesMap : EntityMap<CartesianCoordinates>
     {
         public CartesianCoordinatesMap()
