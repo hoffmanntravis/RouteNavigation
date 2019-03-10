@@ -13,6 +13,7 @@ namespace RouteNavigation
 {
     public class Location
     {
+        
         public Coordinates Coordinates { get; set; } = new Coordinates();
         public CartesianCoordinates CartesianCoordinates { get; set; } = new CartesianCoordinates();
         public List<Location> Neighbors { get; set; } = new List<Location>();

@@ -313,7 +313,7 @@ namespace RouteNavigation
 
         public RouteCalculator RunCalculations(List<Location> list)
         {
-            RouteCalculator calc = new RouteCalculator(list, availableVehicles);
+            RouteCalculator calc = new RouteCalculator(list.ToList(), availableVehicles.ToList());
             return calc;
         }
 
@@ -324,7 +324,7 @@ namespace RouteNavigation
                 List<Task<RouteCalculator>> tasks = new List<Task<RouteCalculator>>();
                 foreach (List<Location> locations in locationsList)
                 {
-                    Task<RouteCalculator> t = Task.Factory.StartNew(() => RunCalculations(locations));
+                    Task<RouteCalculator> t = Task.Factory.StartNew(() => RunCalculations(locations.ToList()));
                     tasks.Add(t);
                 }
 
@@ -357,11 +357,11 @@ namespace RouteNavigation
             foreach (Task<List<Location>> t in tasks)
                 locationsList.Add(t.Result);
 
-            Logger.Info("Seeding Locations with some nearest neighbor genetic 'parents' of suspected high quality.  This may take some time.");
+            /*Logger.Info("Seeding Locations with some nearest neighbor genetic 'parents' of suspected high quality.  This may take some time.");
             int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * locationsList.Count, 0);
             Parallel.For(0, seedCount, l =>
                locationsList[l] = RouteCalculator.NearestNeighbor(locationsList[l].ToList()));
-
+            */
             return locationsList.ToList();
         }
 
