@@ -288,17 +288,17 @@ namespace RouteNavigation
 
         public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<Vehicle> availableVehicles)
         {
-            List<RouteCalculator> calcs = new List<RouteCalculator>();
-            foreach (List<Location> locations in locationsList)
-            {
-                RouteCalculator c = new RouteCalculator(locations, availableVehicles.ToList());
-                calcs.Add(c);
-            }
+                List<RouteCalculator> calcs = new List<RouteCalculator>();
+                foreach (List<Location> locations in locationsList)
+                {
+                    RouteCalculator c = new RouteCalculator(locations, availableVehicles.ToList());
+                    calcs.Add(c);
+                }
 
-            foreach (RouteCalculator c in calcs)
-                c.Wait();
+                foreach (RouteCalculator c in calcs)
+                    c.Wait();
 
-            return calcs;
+                return calcs;
         }
 
         public List<List<Location>> ThreadInitialPool(uint count)

@@ -15,32 +15,7 @@ namespace RouteNavigation
         private static Logger Logger = LogManager.GetCurrentClassLogger();
         public Metadata metadata = new Metadata();
         public List<Route> routes = new List<Route>();
-        /*
-        private List<Vehicle> currentVehicles;
-        private List<Location> orphanedLocations;
-        private List<Location> serviceNowLocations;
-        private List<Location> compatibleLocations;
-        private Route potentialRoute;
-        private DateTime currentTime;
-        private DateTime potentialTime;
-        private Location previousLocation;
-        private Location nextLocation;
-        private Vehicle vehicle;
-        private Location nearestLocation;
-        private List<Location> availableLocationsWithPostponedLocations;
-        private List<Location> postPonedLocations;
-        private Location firstDueLocation;
-        private double currentDistance;
-        private double potentialDistance;
-        private DateTime startTime;
-        private DateTime endTime;
-
-        private double nextLocationDistanceMiles;
-        private double distanceTolerance;
-        private double distanceToDepotFromLastWaypoint;
-        private TimeSpan travelTimeBackToDepot;
-        private TimeSpan travelTime;
-        */
+        
 
         private Task task;
         public Guid activityId;
@@ -60,6 +35,13 @@ namespace RouteNavigation
             }
         }
 
+        public bool IsFinished()
+        {
+            if (task.Status == TaskStatus.RanToCompletion)
+                return true;
+            else
+                return false;
+        }
 
         public void Wait()
         {
@@ -91,11 +73,10 @@ namespace RouteNavigation
                     Logger.Error(exception);
                     throw exception;
                 }
-
-
+                DateTime currentTime = startTime;
                 while (availableLocations.Count > 0)
                 {
-                    DateTime currentTime = startTime;
+                    currentTime = currentTime.Date + Config.Calculation.workdayStartTime;
                     Route potentialRoute = new Route();
                     if (currentVehicles.Count == 0)
                     {
@@ -111,6 +92,7 @@ namespace RouteNavigation
                     availableLocations = availableLocations.Except(postPonedLocations).ToList();
 
                     //If all that is left are locations that need to be processed later, advance the date accordingly
+
                     if (postPonedLocations.Count > 0 && availableLocations.Count == 0)
                     {
                         Location firstDueLocation = postPonedLocations.OrderBy(a => a.DaysUntilDue).First();
@@ -214,7 +196,7 @@ namespace RouteNavigation
                         if (potentialRoute.Waypoints.Count > 0)
                         {
                             //if the location is within a certain radius, even if it means the day length being exceeded
-                            if (potentialTime > endTime)
+                            if (potentialTime.TimeOfDay > endTime.TimeOfDay)
                             {
                                 Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.Account, potentialTime, endTime));
                                 continue;
@@ -246,7 +228,7 @@ namespace RouteNavigation
                     potentialRoute.AssignedVehicle = vehicle;
                     potentialRoute.Waypoints.ForEach(r => r.AssignedVehicle = vehicle);
                     currentVehicles.Remove(vehicle);
-                    potentialRoute.Date = startDate;
+                    potentialRoute.Date = currentTime;
 
 
                     potentialRoute.TotalTime = currentTime - startTime;

@@ -1,18 +1,11 @@
 ﻿using NLog;
-using Npgsql;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
-
 
 namespace RouteNavigation
 {
