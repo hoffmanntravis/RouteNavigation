@@ -76,7 +76,8 @@ namespace RouteNavigation
                 DateTime currentTime = startTime;
                 while (availableLocations.Count > 0)
                 {
-                    currentTime = currentTime.Date + Config.Calculation.workdayStartTime;
+                    startTime = currentTime.Date + Config.Calculation.workdayStartTime;
+                    currentTime = startTime;
                     Route potentialRoute = new Route();
                     if (currentVehicles.Count == 0)
                     {
