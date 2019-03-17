@@ -625,7 +625,7 @@ namespace RouteNavigation
                 if (row["coordinates_longitude"] != DBNull.Value)
                     location.Coordinates.Lng = double.Parse(row["coordinates_longitude"].ToString());
                 if (row["distance_from_source"] != DBNull.Value)
-                    location.DistanceFromDepot = double.Parse(row["distance_from_source"].ToString());
+                    location.DistanceFromSource = double.Parse(row["distance_from_source"].ToString());
                 if (row["oil_pickup_customer"] != DBNull.Value)
                     location.OilPickupCustomer = (bool)row["oil_pickup_customer"];
                 if (row["grease_trap_customer"] != DBNull.Value)
@@ -739,12 +739,12 @@ namespace RouteNavigation
 
         public static void UpdateDistanceFromSource(Location location)
         {
-            location.DistanceFromDepot = RouteCalculator.CalculateDistance(Config.Calculation.origin, location);
+            location.DistanceFromSource = RouteCalculator.CalculateDistance(Config.Calculation.origin, location);
             try
             {
                 NpgsqlCommand cmd = new NpgsqlCommand("update_location");
                 cmd.Parameters.AddWithValue("p_id", NpgsqlTypes.NpgsqlDbType.Integer, location.Id);
-                cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.DistanceFromDepot);
+                cmd.Parameters.AddWithValue("p_distance_from_source", NpgsqlTypes.NpgsqlDbType.Double, location.DistanceFromSource);
                 RunStoredProcedure(cmd);
             }
             catch (Exception exception)
@@ -937,6 +937,7 @@ namespace RouteNavigation
                     foreach (Location waypoint in route.Waypoints)
                         InsertRouteLocation(waypoint.Id, insertOrder += 1, route.Id, waypoint.IntendedPickupDate.Value);
 
+
                     //insert the route origin since every route returns to HQ
                     InsertRouteLocation(Config.Calculation.origin.Id, insertOrder += 1, route.Id);
                 }
@@ -963,7 +964,7 @@ namespace RouteNavigation
                             p_contact_email = l.ContactEmail,
                             p_contact_name = l.ContactName,
                             p_oil_pickup_days_until_due = l.OilPickupDaysUntilDue,
-                            p_distance_from_source = l.DistanceFromDepot,
+                            p_distance_from_source = l.DistanceFromSource,
                             p_grease_trap_customer = l.GreaseTrapCustomer,
                             p_grease_trap_last_scheduled_service = l.GreaseTrapLastScheduledService,
                             p_grease_trap_days_until_due = l.GreaseTrapDaysUntilDue,

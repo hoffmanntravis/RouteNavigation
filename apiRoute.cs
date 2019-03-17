@@ -14,7 +14,7 @@ namespace Apis
 {
     public class ApiRoute
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         public string mapsUrl;
         public List<Location> waypoints = new List<Location>();
         public TimeSpan duration;

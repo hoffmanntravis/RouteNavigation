@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 using System.Web;
 using NLog;
 
@@ -13,7 +13,7 @@ namespace RouteNavigation
 {
     public class GeneticAlgorithm
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         private uint iterations;
         private uint populationSize;
         private uint tournamentSize;
@@ -42,16 +42,6 @@ namespace RouteNavigation
         private RouteCalculator bestCalc;
         public List<List<Location>> InitializePopulation(uint populationSize)
         {
-            if (populationSize < 2)
-            {
-                Exception exception = new Exception("Population Size must be at least two.  Otherwise, genetic operations and crossover are not possible.  Please increase the value of this parameter.");
-                throw exception;
-            }
-            if (breedersCount < 2)
-            {
-                Exception exception = new Exception("Breeders Count must be at least two.  Otherwise, genetic operations and crossover are not possible.  Please increase the value of this parameter.");
-                throw exception;
-            }
             List<List<Location>> startingPopulation = new List<List<Location>>();
             Logger.Info("Creating a randomized starting Population of locations, pool size:" + populationSize);
 
@@ -81,10 +71,11 @@ namespace RouteNavigation
                 try
                 {
                     iterations = Config.GeneticAlgorithm.Iterations;
-
+                    
                     DataAccess.UpdateIteration(null, iterations);
 
                     populationSize = Config.GeneticAlgorithm.PopulationSize;
+                    
                     neighborCount = Config.GeneticAlgorithm.NeighborCount;
                     tournamentSize = Config.GeneticAlgorithm.TournamentSize;
                     tournamentWinnerCount = Config.GeneticAlgorithm.TournamentWinnerCount;
@@ -97,7 +88,7 @@ namespace RouteNavigation
                     mutationAlleleMax = Config.GeneticAlgorithm.MutationAlleleMax;
                     growthDecayExponent = Config.GeneticAlgorithm.GrowthDecayExponent;
                     toggleIterationsExponent = Config.Features.geneticAlgorithmGrowthDecayExponent;
-
+                    /*
                     Logger.Info(String.Format("Iterations: {0}", iterations));
                     Logger.Info(String.Format("Population Size: {0}", populationSize));
                     Logger.Info(String.Format("Neighbor Count: {0}", neighborCount));
@@ -122,13 +113,18 @@ namespace RouteNavigation
 
                     Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.", allLocations.Count));
                     //Update the grease cutoff window to whatever is in the config for all locations
+                    */
                     DataAccess.UpdateGreaseCutoffToConfigValue();
                     //Calcualte the distance from source to depot for every instance.  This will not change, so do it ahead of time.  Can probably be moved into the constructor.
+                    
                     availableVehicles = DataAccess.Vehicles().Where(v => v.operational == true).ToList();
+                    /*
                     if (availableVehicles.Count <= 0)
                         throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
+                        */
 
                     possibleLocations = allLocations.ToList();
+                    /*
                     possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
                     DataAccess.UpdateDistanceFromSource(possibleLocations);
                     possibleLocations = updateLocationDaysUntilDue(possibleLocations);
@@ -145,21 +141,21 @@ namespace RouteNavigation
                     }
 
                     Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));
-
+                    */
                     List<List<Location>> startingPopulation = InitializePopulation(populationSize);
                     //create a batch id for identifying a series of routes calculated together
                     DataAccess.InsertRouteBatch();
 
                     //spin up a single calc to update the data in the database.  We don't want to do this in the GA thread farm since it will cause blocking and is pointless to perform the update that frequently
-
+                    
                     List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
 
                     Logger.Info("Threading intialized locations pool into calculation class instances");
-
-                    fitnessCalcs = ThreadCalculations(startingPopulation, fitnessCalcs);
-                    Logger.Info("location count at after threading is {0}", fitnessCalcs[0].metadata.processedLocations.Count);
-                    Logger.Info("Created random locations pool");
-
+                    
+                    fitnessCalcs = ThreadCalculations(startingPopulation, availableVehicles);
+                    //Logger.Info("location count at after threading is {0}", fitnessCalcs[0].metadata.processedLocations.Count);
+                    //Logger.Info("Created random locations pool");
+                    /*
                     fitnessCalcs.SortByFitnessAsc();
                     double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
 
@@ -170,27 +166,33 @@ namespace RouteNavigation
                     //DataAccess.insertRoutes(batchId, fitnessCalcs.First().routes, fitnessCalcs.First().activityId);
                     //DataAccess.UpdateRouteMetadata(batchId, fitnessCalcs.First().metadata);
 
+
                     for (uint i = 0; i < iterations; i++)
                     {
+
                         if (DataAccess.CancellationStatus() is true)
                             break;
 
                         Logger.Info(string.Format("Beginning iteration {0}", i + 1));
                         currentIteration = i;
-                        fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
+                        //if (populationSize >= 2 && breedersCount >= 2)
+                        //fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
 
                         fitnessCalcs.SortByFitnessAsc();
                         double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
                         emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
                         Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
                         Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
+
                         DataAccess.UpdateIteration(currentIteration, iterations);
                     }
 
                     //fully optimized the GA selected route with 3opt swap
+                    */
                     bestCalc = fitnessCalcs.First();
                     //Parallel.ForEach(bestCalc.routes, r =>
                     //   bestCalc.CalculateTSPRouteTwoOpt(r));
+                    
 
                     DataAccess.InsertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
                     Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
@@ -294,8 +296,7 @@ namespace RouteNavigation
             Logger.Trace(string.Format("running potential mutation of {0} offspring", offspring.Count));
 
             offspring = GeneticMutation(offspring);
-
-            calcs = ThreadCalculations(offspring, calcs);
+            calcs = ThreadCalculations(offspring, availableVehicles);
 
             //add elites into the list since lower performing items will be removed in place of them
             elites.ForEach(a => calcs.Add(a));
@@ -308,34 +309,22 @@ namespace RouteNavigation
                 calcs.Remove(calcs.First());
 
             Logger.Trace(String.Format("Pool size is: {0}", calcs.Count));
+
             return calcs;
         }
 
-        public RouteCalculator RunCalculations(List<Location> list)
+        public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList,  List<Vehicle> availableVehicles)
         {
-            RouteCalculator calc = new RouteCalculator(list.ToList(), availableVehicles.ToList());
-            return calc;
-        }
+            List<RouteCalculator> calcs = new List<RouteCalculator>();
 
-        public List<RouteCalculator> ThreadCalculations(List<List<Location>> locationsList, List<RouteCalculator> calcs)
-        {
-            try
+            foreach (List<Location> locations in locationsList)
             {
-                List<Task<RouteCalculator>> tasks = new List<Task<RouteCalculator>>();
-                foreach (List<Location> locations in locationsList)
-                {
-                    Task<RouteCalculator> t = Task.Factory.StartNew(() => RunCalculations(locations.ToList()));
-                    tasks.Add(t);
-                }
+                RouteCalculator c = new RouteCalculator(locations, availableVehicles.ToList());
+                calcs.Add(c);
+            }
 
-                Task.WaitAll(tasks.ToArray());
-                foreach (Task<RouteCalculator> t in tasks)
-                    calcs.Add(t.Result);
-            }
-            catch (AggregateException ae)
-            {
-                throw ae.InnerException;
-            }
+            //foreach (RouteCalculator c in calcs)
+            //   c.Stop();
 
             return calcs;
         }
@@ -343,19 +332,22 @@ namespace RouteNavigation
         public List<List<Location>> ThreadInitialPool(uint count)
         {
             List<List<Location>> locationsList = new List<List<Location>>();
-            List<Task<List<Location>>> tasks = new List<Task<List<Location>>>();
+            //List<Task<List<Location>>> tasks = new List<Task<List<Location>>>();
             Logger.Info("Shuffling Locations into randomized permutations");
 
             for (int x = 0; x < count; x++)
             {
                 //ToList before shuffle is important to shuffle a list copy and make it threadsafe
-                Task<List<Location>> t = Task.Factory.StartNew(() => possibleLocations.ToList().Shuffle(rng).ToList());
-                tasks.Add(t);
+                List<Location> t = possibleLocations.ToList().Shuffle(rng).ToList();
+                locationsList.Add(t);
             }
 
-            Task.WaitAll(tasks.ToArray());
+            /*
             foreach (Task<List<Location>> t in tasks)
+            {
+                t.Wait();
                 locationsList.Add(t.Result);
+            }*/
 
             /*Logger.Info("Seeding Locations with some nearest neighbor genetic 'parents' of suspected high quality.  This may take some time.");
             int seedCount = (int)Math.Round(Config.GeneticAlgorithm.seedRatioNearestNeighbor * locationsList.Count, 0);
@@ -381,13 +373,13 @@ namespace RouteNavigation
             while (breeders.Count < breedersCount)
             {
                 List<RouteCalculator> contestants = new List<RouteCalculator>();
-                Parallel.For(0, tournamentSizeCount, x =>
+                for (int x = 0; x < tournamentSizeCount; x++)
                 {
                     int randomIndex = rng.Next(parents.Count);
                     RouteCalculator contestant = parents[randomIndex];
                     lock (newCalcLock)
                         contestants.Add(contestant);
-                });
+                }
                 List<RouteCalculator> winners = RunTournament(contestants);
                 foreach (RouteCalculator winner in winners)
                     breeders.Add(winner);
@@ -620,19 +612,34 @@ namespace RouteNavigation
                     int upperBound = Convert.ToInt32(Math.Round(DecayFunction() * mutationAlleleMax));
 
                     int mutationGeneQuantity = rng.Next(1, Math.Max(1, upperBound));
-                    Logger.Trace(String.Format("mutation gene quantity is {0}", mutationGeneQuantity));
-                    Parallel.For(0, mutationGeneQuantity, g =>
-                   {
-                       int displacedGeneIndex = rng.Next(mutateLocations.Count);
-                       Location displacedGene = mutateLocations[displacedGeneIndex];
-                       mutateLocations.RemoveAt(displacedGeneIndex);
+                    if (mutationGeneQuantity > mutateLocations.Count)
+                        mutationGeneQuantity = mutateLocations.Count;
 
-                       int insertGeneIndex = rng.Next(mutateLocations.Count);
-                       lock (newCalcLock)
-                           mutateLocations.Insert(insertGeneIndex, displacedGene);
-                   });
+                    Logger.Trace(String.Format("mutation gene quantity is {0}", mutationGeneQuantity));
+                    for (int x = 0; x < mutationGeneQuantity; x++)
+                    {
+                        int displacedGeneIndex;
+                        Location displacedGene;
+                        int insertGeneIndex;
+                        lock (newCalcLock)
+                            displacedGeneIndex = rng.Next(mutateLocations.Count);
+                        lock (newCalcLock)
+                            displacedGene = mutateLocations[displacedGeneIndex];
+                        lock (newCalcLock)
+                            mutateLocations.RemoveAt(displacedGeneIndex);
+                        lock (newCalcLock)
+                            insertGeneIndex = rng.Next(mutateLocations.Count);
+                        lock (newCalcLock)
+                            mutateLocations.Insert(insertGeneIndex, displacedGene);
+                    }
+
+                    if (mutateLocations.Where(m => m == null).Count() > 0)
+                    {
+                        throw new Exception("mutationList contains nulls");
+                    }
                 }
             }
+
 
             Logger.Trace(string.Format("Returning {0} mutated locations", mutateLocationsList.Count));
             return mutateLocationsList;

@@ -7,6 +7,8 @@ using System.Data;
 using NLog;
 using System.Diagnostics;
 using System.Collections;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace RouteNavigation
 {
@@ -31,7 +33,7 @@ namespace RouteNavigation
             }
         }
 
-        /*public static IList<T> Clone<T>(this IList<T> list)
+        public static IList<T> Clone<T>(this IList<T> list)
         {
             lock (listLocker)
             {
@@ -54,6 +56,12 @@ namespace RouteNavigation
             }
         }
 
+        public static List<Location> DeepClone(this List<Location> list)
+        {
+            List<Location> locations = list.ConvertAll(l => l.DeepClone(l));
+            return locations;
+        }
+
         public static List<T> Clone<T>(this IEnumerable<T> list)
         {
             lock (listLocker)
@@ -65,7 +73,7 @@ namespace RouteNavigation
                 return listCopy;
             }
         }
-        */
+        
         public static List<RouteCalculator> SortByDistanceAsc(this List<RouteCalculator> list)
         {
             lock (listLocker)

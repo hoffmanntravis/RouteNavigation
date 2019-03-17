@@ -17,7 +17,7 @@ namespace Apis
 {
     public class ApiLocation
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         public double latitude;
         public double longitude;
         private string url = System.Configuration.ConfigurationManager.AppSettings["googleGeocodeApiUrl"];

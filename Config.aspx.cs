@@ -9,7 +9,7 @@ namespace RouteNavigation
 {
     public partial class _Config : Page
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!Page.IsPostBack)
@@ -179,17 +179,6 @@ namespace RouteNavigation
                     cmd.Parameters.AddWithValue("p_genetic_algorithm_mutation_allele_max", NpgsqlTypes.NpgsqlDbType.Integer, int.Parse(txtMutationAlleleMax.Text));
                 if (!(String.IsNullOrEmpty(txtGrowthDecayExponent.Text)))
                     cmd.Parameters.AddWithValue("p_genetic_algorithm_growth_decay_exponent", NpgsqlTypes.NpgsqlDbType.Double, double.Parse(txtGrowthDecayExponent.Text));
-
-                if (!String.IsNullOrEmpty(txtPopulationSize.Text) && int.Parse(txtPopulationSize.Text) < 2 )
-                {
-                    Exception exception = new Exception("Population Size must be at least two.  Otherwise, genetic operations and crossover are not possible.  Please increase the value of this parameter.");
-                    throw exception;
-                }
-                if (!String.IsNullOrEmpty(txtBreederCount.Text) && int.Parse(txtBreederCount.Text) < 2  )
-                {
-                    Exception exception = new Exception("Breeders Count must be at least two.  Otherwise, genetic operations and crossover are not possible.  Please increase the value of this parameter.");
-                    throw exception;
-                }
 
                 DataAccess.RunStoredProcedure(cmd);
                 BindData();

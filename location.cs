@@ -11,6 +11,7 @@ using System.Web;
 
 namespace RouteNavigation
 {
+    [Serializable]
     public class Location
     {
         
@@ -34,7 +35,7 @@ namespace RouteNavigation
         public string ContactEmail { get; set; }
         public double? OilTankSize { get; set; }
         public double? OilPickupDaysUntilDue { get; set; }
-        public double? DistanceFromDepot { get; set; }
+        public double DistanceFromSource { get; set; }
         public double? DaysUntilDue { get; set; }
         public DateTime? OilPickupLastScheduledService { get; set; }
         public DateTime? GreaseTrapLastScheduledService { get; set; }
@@ -59,20 +60,22 @@ namespace RouteNavigation
         public string GreaseTrapPreferredDay { get; set; }
         public int? GreaseTrapSchedule { get; set; } = 30;
         public int? NumberOfManHoles { get; set; }
+        public Location nearestLocation { get; set; }
+        public double? distanceToNearestLocation { get; set; } = null;
 
-        public static T DeepClone<T>(T obj)
+        public Location DeepClone(Location l)
         {
             using (var ms = new MemoryStream())
             {
                 var formatter = new BinaryFormatter();
-                formatter.Serialize(ms, obj);
+                formatter.Serialize(ms, l);
                 ms.Position = 0;
 
-                return (T)formatter.Deserialize(ms);
+                return (Location)formatter.Deserialize(ms);
             }
         }
     }
- 
+    [Serializable]
     public class Coordinates
     {
         public double? Lat { get; set; }
@@ -88,7 +91,7 @@ namespace RouteNavigation
             }
         }
     }
-
+    [Serializable]
     public class CartesianCoordinates
     {
         public double? X { get; set; }
@@ -106,7 +109,7 @@ namespace RouteNavigation
             }
         }
     }
-
+    [Serializable]
     public class CoordinatesMap : EntityMap<Coordinates>
     {
         public CoordinatesMap()
@@ -115,7 +118,7 @@ namespace RouteNavigation
             Map(c => c.Lng).ToColumn("coordinates_longitude");
         }
     }
-
+    [Serializable]
     public class CartesianCoordinatesMap : EntityMap<CartesianCoordinates>
     {
         public CartesianCoordinatesMap()

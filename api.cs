@@ -14,7 +14,7 @@ namespace Apis
 {
     public class Api
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         public string response;
         private string illegalCharactersString = System.Configuration.ConfigurationManager.AppSettings["googleApiIllegalCharacters"];
         

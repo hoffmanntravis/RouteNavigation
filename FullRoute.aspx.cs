@@ -14,7 +14,7 @@ namespace RouteNavigation
 {
     public partial class _FullRoute : Page
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         private DataTable table;
         private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 

@@ -13,7 +13,7 @@ namespace RouteNavigation
 {
     public class Global : HttpApplication
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         void Application_Start(object sender, EventArgs e)
         {
             // Code that runs on application startup

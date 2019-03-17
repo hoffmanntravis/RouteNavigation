@@ -16,7 +16,7 @@ namespace RouteNavigation
 {
     public partial class _Map : Page
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
         public string routesJson;
         public double mapXCoordinate;

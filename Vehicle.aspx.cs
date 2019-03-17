@@ -5,20 +5,13 @@ using Npgsql;
 using System.Data;
 using System.IO;
 using System.Text;
-using RouteNavigation;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Web.Script.Serialization;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Threading;
 using NLog;
 
 namespace RouteNavigation
 {
     public partial class _Vehicle : Page
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
         protected void Page_Load(object sender, EventArgs e)
         {
             //initialize objects in page load since they make a sync calls that fail while the page is still starting up

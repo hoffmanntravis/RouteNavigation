@@ -18,15 +18,15 @@ namespace RouteNavigation
 {
     public partial class _Routes : Page
     {
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
-        private static object syncLock = new object();
+        private  Logger Logger = LogManager.GetCurrentClassLogger();
+        private  object syncLock = new object();
         private GeneticAlgorithm ga = new GeneticAlgorithm();
         private DataTable dataTable;
         private string conString = System.Configuration.ConfigurationManager.ConnectionStrings["RouteNavigation"].ConnectionString;
 
-        private static Object calcLock = new Object();
-        private static string calculateRoutesText = "Calculate Routes";
-        private static string calculateRoutesCancelText = "Cancel Calculations";
+        private  Object calcLock = new Object();
+        private  string calculateRoutesText = "Calculate Routes";
+        private  string calculateRoutesCancelText = "Cancel Calculations";
         protected void Page_Load(object sender, EventArgs e)
         {
             try
