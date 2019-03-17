@@ -38,7 +38,7 @@ namespace RouteNavigation
         private object newCalcLock = new object();
         private object calcLock = new object();
         private Random rng = new Random();
-        private int batchId = DataAccess.NextRouteBatchId();
+        
         private RouteCalculator bestCalc;
         public List<List<Location>> InitializePopulation(uint populationSize)
         {
@@ -61,118 +61,34 @@ namespace RouteNavigation
             {
                 try
                 {
-                    iterations = Config.GeneticAlgorithm.Iterations;
-                    DataAccess.UpdateIteration(null, iterations);
-                    populationSize = Config.GeneticAlgorithm.PopulationSize;
-                    neighborCount = Config.GeneticAlgorithm.NeighborCount;
-                    tournamentSize = Config.GeneticAlgorithm.TournamentSize;
-                    tournamentWinnerCount = Config.GeneticAlgorithm.TournamentWinnerCount;
-                    breedersCount = Config.GeneticAlgorithm.BreederCount;
-                    offSpringPoolSize = Config.GeneticAlgorithm.OffspringPoolSize;
-                    crossoverProbability = Config.GeneticAlgorithm.CrossoverProbability;
-                    elitismRatio = Config.GeneticAlgorithm.ElitismRatio;
-                    mutationProbability = Config.GeneticAlgorithm.MutationProbability;
-                    mutationAlleleMax = Config.GeneticAlgorithm.MutationAlleleMax;
-                    growthDecayExponent = Config.GeneticAlgorithm.GrowthDecayExponent;
-                    toggleIterationsExponent = Config.Features.geneticAlgorithmGrowthDecayExponent;
-
-                    Logger.Info(String.Format("Iterations: {0}", iterations));
-                    Logger.Info(String.Format("Population Size: {0}", populationSize));
-                    Logger.Info(String.Format("Neighbor Count: {0}", neighborCount));
-                    Logger.Info(String.Format("Torunament Size: {0}", tournamentSize));
-                    Logger.Info(String.Format("Tournament Winner count: {0}", tournamentWinnerCount));
-                    Logger.Info(String.Format("Breeders Count: {0}", breedersCount));
-                    Logger.Info(String.Format("Offspring Pool size: {0}", offSpringPoolSize));
-                    Logger.Info(String.Format("Crossover Probability: {0}", crossoverProbability));
-                    Logger.Info(String.Format("Elitism Ratio: {0}", elitismRatio));
-                    Logger.Info(String.Format("Mutation Probability: {0}", mutationProbability));
-                    Logger.Info(String.Format("Mutation Allele Max: {0}", mutationAlleleMax));
-                    Logger.Info(String.Format("Growth Decay Exponent Enabled: {0}", toggleIterationsExponent));
-                    Logger.Info(String.Format("Growth Decay Exponent: {0}", growthDecayExponent));
-
-                    if (Config.Calculation.origin == null)
-                    {
-                        string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
-                        Logger.Error(errorMessage);
-                        Exception e = new Exception(errorMessage);
-                        throw e;
-                    }
-
+                    GC.Collect();
+                    InitializeGeneticAlgorithm();
+                    ValidateOriginExists();
+                    availableVehicles = GetOperationalVehicles(allVehicles);
+                    possibleLocations = FilterPossibleLocations(possibleLocations);
+                    DataAccess.UpdateGreaseCutoffToConfigValue();
+                    int batchId = DataAccess.NextRouteBatchId();
                     Logger.Info(String.Format("There are {0} locations in the database that could potentially be processed.", allLocations.Count));
                     //Update the grease cutoff window to whatever is in the config for all locations
-                    DataAccess.UpdateGreaseCutoffToConfigValue();
-
-                    availableVehicles = DataAccess.Vehicles().Where(v => v.operational == true).ToList();
-                    if (availableVehicles.Count <= 0)
-                        throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
-
-                    possibleLocations = allLocations.ToList();
-
-                    possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
-                    DataAccess.UpdateDistanceFromSource(possibleLocations);
-                    possibleLocations = updateLocationDaysUntilDue(possibleLocations);
-                    possibleLocations = updateLocationLastVisited(possibleLocations);
-
-                    possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
-                    //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
-                    possibleLocations = possibleLocations.Where(l => l.Id != Config.Calculation.origin.Id).ToList();
-
-                    if (Config.Features.locationsJettingExcludeFromCalc)
-                    {
-                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("jetting"))).ToList();
-                        possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("install"))).ToList();
-                    }
-
+                    
                     Logger.Info(String.Format("After filtering locations based on distance, overdue status, unpopulated GPS coordinates, and removing the origin, {0} locations will be processed", possibleLocations.Count));
 
                     List<List<Location>> startingPopulation = InitializePopulation(populationSize);
                     //create a batch id for identifying a series of routes calculated together
                     DataAccess.InsertRouteBatch();
 
-                    List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
-
-                    Logger.Info("Threading intialized locations pool into calculation class instances");
-                    fitnessCalcs = ThreadCalculations(startingPopulation, availableVehicles);
-                    Logger.Info("location count at after threading is {0}", fitnessCalcs[0].metadata.processedLocations.Count);
-                    Logger.Info("Created random locations pool");
-
-                    fitnessCalcs.SortByFitnessAsc();
-                    double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
-
+                    List<RouteCalculator> fitnessCalcs = CreateFitnessCalcs(startingPopulation, availableVehicles);
                     int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-                    Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
+                    Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
 
-                    Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
-
-                    for (uint i = 0; i < iterations; i++)
-                    {
-                        if (DataAccess.CancellationStatus() is true)
-                            break;
-
-                        Logger.Info(string.Format("Beginning iteration {0}", i + 1));
-                        currentIteration = i;
-                        if (populationSize >= 2 && breedersCount >= 2)
-                            fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
-
-                        fitnessCalcs.SortByFitnessAsc();
-                        double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
-                        emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
-                        Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles", emptyCount));
-                        Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
-
-                        DataAccess.UpdateIteration(currentIteration, iterations);
-                    }
-
+                    fitnessCalcs = RunGeneticAlgorithmIterations(fitnessCalcs);
                     bestCalc = fitnessCalcs.First();
+                    GC.Collect();
                     //Parallel.ForEach(bestCalc.routes, r =>
                     //   bestCalc.CalculateTSPRouteTwoOpt(r));
 
-
-                    DataAccess.InsertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
-                    Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
-                    DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
+                    InsertBestCalcIntoDB(batchId, bestCalc);
                     DataAccess.UpdateIteration(null, null);
-
                     Logger.Info("Finished calculations.");
                 }
                 finally
@@ -180,6 +96,124 @@ namespace RouteNavigation
                     Monitor.Exit(calcLock);
                 }
             }
+        }
+
+        private void InsertBestCalcIntoDB(int batchId, RouteCalculator bestCalc)
+        {
+            DataAccess.InsertRoutes(batchId, bestCalc.routes, bestCalc.activityId);
+            Logger.Info(string.Format("Final output produced a distance of {0}.", bestCalc.metadata.routesLengthMiles));
+            DataAccess.UpdateRouteMetadata(batchId, bestCalc.metadata);
+        }
+
+        private List<RouteCalculator> RunGeneticAlgorithmIterations(List<RouteCalculator> fitnessCalcs)
+        {
+            for (uint i = 0; i < iterations; i++)
+            {
+                if (DataAccess.CancellationStatus() is true)
+                    break;
+
+                Logger.Info(string.Format("Beginning iteration {0}", i + 1));
+                currentIteration = i;
+                if (populationSize >= 2 && breedersCount >= 2)
+                    fitnessCalcs = GeneticAlgorithmFitness(fitnessCalcs);
+
+                fitnessCalcs.SortByFitnessAsc();
+                double shortestDistance = fitnessCalcs.First().metadata.routesLengthMiles;
+                Logger.Info(string.Format("Iteration {0} produced a shortest distance of {1}.", i + 1, shortestDistance));
+
+                DataAccess.UpdateIteration(currentIteration, iterations);
+            }
+            GC.Collect();
+            return fitnessCalcs;
+        }
+
+        private List<RouteCalculator> CreateFitnessCalcs(List<List<Location>> startingPopulation, List<Vehicle> availableVehicles)
+        {
+            List<RouteCalculator> fitnessCalcs = new List<RouteCalculator>();
+            Logger.Info("Threading intialized locations pool into calculation class instances");
+            fitnessCalcs = ThreadCalculations(startingPopulation, availableVehicles);
+            Logger.Info("location count at after threading is {0}", fitnessCalcs[0].metadata.processedLocations.Count);
+            Logger.Info("Created random locations pool");
+
+            fitnessCalcs.SortByFitnessAsc();
+            double shortestDistanceBasePopulation = fitnessCalcs.First().metadata.routesLengthMiles;
+
+            int emptyCount = fitnessCalcs.Where(c => c.metadata.routesLengthMiles is Double.NaN).Count();
+            Logger.Debug(string.Format("There are {0} empty calcs in terms of routesLengthMiles at the outset", emptyCount));
+
+            Logger.Info(string.Format("Base population shortest distance is: {0}", shortestDistanceBasePopulation));
+            return fitnessCalcs;
+        }
+
+        private List<Location> FilterPossibleLocations(List<Location> possibleLocations)
+        {
+            possibleLocations = allLocations.ToList();
+            possibleLocations = possibleLocations.Except(possibleLocations.Where(a => a.Coordinates.Lat.HasValue is false || a.Coordinates.Lng.HasValue is false)).ToList();
+            DataAccess.UpdateDistanceFromSource(possibleLocations);
+            possibleLocations = updateLocationDaysUntilDue(possibleLocations);
+            possibleLocations = updateLocationLastVisited(possibleLocations);
+
+            possibleLocations = RouteCalculator.GetPossibleLocations(availableVehicles, possibleLocations);
+            //remove the origin from all locations since it's only there for routing purposes and is not part of the set we are interested in
+            possibleLocations = possibleLocations.Where(l => l.Id != Config.Calculation.origin.Id).ToList();
+
+            if (Config.Features.locationsJettingExcludeFromCalc)
+            {
+                possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("jetting"))).ToList();
+                possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("install"))).ToList();
+            }
+            return possibleLocations;
+        }
+
+        private List<Vehicle> GetOperationalVehicles(List<Vehicle> allVehicles)
+        {
+            availableVehicles = allVehicles.Where(v => v.operational == true).ToList();
+            if (availableVehicles.Count <= 0)
+                throw new Exception("Please add some vehicles in the Vehicles tab and activate them (Operational status) before proceeding.");
+            return availableVehicles;
+        }
+
+        private void ValidateOriginExists()
+        {
+            if (Config.Calculation.origin == null)
+            {
+                string errorMessage = "Please set the origin location id in the config page before proceeding.  This should correspond to a location id in the locations page.";
+                Logger.Error(errorMessage);
+                Exception e = new Exception(errorMessage);
+                throw e;
+            }
+        }
+
+        private void InitializeGeneticAlgorithm()
+        {
+            iterations = Config.GeneticAlgorithm.Iterations;
+            DataAccess.UpdateIteration(null, iterations);
+            populationSize = Config.GeneticAlgorithm.PopulationSize;
+            neighborCount = Config.GeneticAlgorithm.NeighborCount;
+            tournamentSize = Config.GeneticAlgorithm.TournamentSize;
+            tournamentWinnerCount = Config.GeneticAlgorithm.TournamentWinnerCount;
+            breedersCount = Config.GeneticAlgorithm.BreederCount;
+            offSpringPoolSize = Config.GeneticAlgorithm.OffspringPoolSize;
+            crossoverProbability = Config.GeneticAlgorithm.CrossoverProbability;
+            elitismRatio = Config.GeneticAlgorithm.ElitismRatio;
+            mutationProbability = Config.GeneticAlgorithm.MutationProbability;
+            mutationAlleleMax = Config.GeneticAlgorithm.MutationAlleleMax;
+            growthDecayExponent = Config.GeneticAlgorithm.GrowthDecayExponent;
+            toggleIterationsExponent = Config.Features.geneticAlgorithmGrowthDecayExponent;
+
+            Logger.Info(String.Format("Iterations: {0}", iterations));
+            Logger.Info(String.Format("Population Size: {0}", populationSize));
+            Logger.Info(String.Format("Neighbor Count: {0}", neighborCount));
+            Logger.Info(String.Format("Torunament Size: {0}", tournamentSize));
+            Logger.Info(String.Format("Tournament Winner count: {0}", tournamentWinnerCount));
+            Logger.Info(String.Format("Breeders Count: {0}", breedersCount));
+            Logger.Info(String.Format("Offspring Pool size: {0}", offSpringPoolSize));
+            Logger.Info(String.Format("Crossover Probability: {0}", crossoverProbability));
+            Logger.Info(String.Format("Elitism Ratio: {0}", elitismRatio));
+            Logger.Info(String.Format("Mutation Probability: {0}", mutationProbability));
+            Logger.Info(String.Format("Mutation Allele Max: {0}", mutationAlleleMax));
+            Logger.Info(String.Format("Growth Decay Exponent Enabled: {0}", toggleIterationsExponent));
+            Logger.Info(String.Format("Growth Decay Exponent: {0}", growthDecayExponent));
         }
 
         private List<Location> updateLocationDaysUntilDue(List<Location> locations)
