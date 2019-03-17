@@ -229,7 +229,7 @@ namespace RouteNavigation
                     potentialRoute.AssignedVehicle = vehicle;
                     potentialRoute.Waypoints.ForEach(r => r.AssignedVehicle = vehicle);
                     currentVehicles.Remove(vehicle);
-                    potentialRoute.Date = currentTime;
+                    potentialRoute.Date = startTime;
 
 
                     potentialRoute.TotalTime = currentTime - startTime;
