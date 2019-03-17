@@ -17,11 +17,11 @@ namespace RouteNavigation
         
         public Coordinates Coordinates { get; set; } = new Coordinates();
         public CartesianCoordinates CartesianCoordinates { get; set; } = new CartesianCoordinates();
-        public List<Location> Neighbors { get; set; } = new List<Location>();
 
         public Vehicle AssignedVehicle { get; set; }
         public double CurrentGallonsEstimate { get; set; }
         public DateTime? IntendedPickupDate { get; set; }
+        public List<Location> Neighbors { get; set; } = new List<Location>();
 
         public int? TrackingNumber { get; set; }
         public int RouteId { get; set; }
@@ -65,6 +65,8 @@ namespace RouteNavigation
 
         public Location DeepClone(Location l)
         {
+            l.Neighbors.Clear();
+            l.nearestLocation = null;
             using (var ms = new MemoryStream())
             {
                 var formatter = new BinaryFormatter();
@@ -75,6 +77,21 @@ namespace RouteNavigation
             }
         }
     }
+
+    public class Neighbors
+    {
+        private Dictionary<Location, List<Location>> neighborsDictionary = new Dictionary<Location, List<Location>>();
+        public void AddNeighbors (Location l, List<Location> neighbors)
+        {
+            neighborsDictionary.Add(l,neighbors);
+        }
+
+        public List<Location> GetNeighbors(Location l)
+        {
+            return neighborsDictionary[l];
+        }
+    }
+
     [Serializable]
     public class Coordinates
     {

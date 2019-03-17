@@ -33,47 +33,12 @@ namespace RouteNavigation
             }
         }
 
-        public static IList<T> Clone<T>(this IList<T> list)
-        {
-            lock (listLocker)
-            {
-                List<T> listCopy = new List<T>();
-                foreach (var l in list)
-                    listCopy.Add(l);
-                return listCopy;
-            }
-        }
-
-        public static List<T> Clone<T>(this List<T> list)
-        {
-            lock (listLocker)
-            {
-                List<T> listCopy = new List<T>();
-
-                foreach (var l in list)
-                    listCopy.Add(l);
-                return listCopy;
-            }
-        }
-
         public static List<Location> DeepClone(this List<Location> list)
         {
             List<Location> locations = list.ConvertAll(l => l.DeepClone(l));
             return locations;
         }
 
-        public static List<T> Clone<T>(this IEnumerable<T> list)
-        {
-            lock (listLocker)
-            {
-                List<T> listCopy = new List<T>();
-
-                foreach (var l in list)
-                    listCopy = list.ToList();
-                return listCopy;
-            }
-        }
-        
         public static List<RouteCalculator> SortByDistanceAsc(this List<RouteCalculator> list)
         {
             lock (listLocker)
