@@ -35,6 +35,8 @@ namespace RouteNavigation
                     chkExcludeJettingLocationsCalculation.Checked = true;
                 if (Config.Features.locationsJettingRemoveOnImport)
                     chkExcludeJettingLocationsImport.Checked = true;
+                if (Config.Features.excludeGreaseLocationsOver500FromCalc)
+                    chkExcludeGreaseLocationsOver500FromCalc.Checked = true;
 
                 if (Config.Calculation.origin != null)
                 {
@@ -46,10 +48,10 @@ namespace RouteNavigation
                 txtCurrentFillLevelErrorMargin.Text = Config.Calculation.currentFillLevelErrorMarginPercent.ToString();
                 txtOilPickupAverageDuration.Text = Config.Calculation.oilPickupAverageDurationMinutes.ToString();
                 txtGreasePickupAverageDuration.Text = Config.Calculation.greasePickupAverageDurationMinutes.ToString();
-                txtMinimumDaysUntilPickup.Text = Config.Calculation.MinimumDaysUntilPickup.ToString();
+                txtOilEarlyServiceRatio.Text = Config.Calculation.OilEarlyServiceRatio.ToString();
+                txtGreaseEarlyServiceRatio.Text = Config.Calculation.GreaseEarlyServiceRatio.ToString();
                 txtMaximumDaysOverdue.Text = Config.Calculation.maximumDaysOverdue.ToString();
 
-                
                   if (Config.Calculation.workdayStartTime != TimeSpan.MinValue)
                     txtWorkDayStart.Text = Config.Calculation.workdayStartTime.ToString();
                 if (Config.Calculation.workdayEndTime != TimeSpan.MinValue)
@@ -121,6 +123,11 @@ namespace RouteNavigation
                     DataAccess.UpdateFeature("locations_jetting_exclude_from_calc", true);
                 else
                     DataAccess.UpdateFeature("locations_jetting_exclude_from_calc", false);
+                
+                if (chkExcludeGreaseLocationsOver500FromCalc.Checked)
+                    DataAccess.UpdateFeature("locations_grease_over_500_exclude_from_calc", true);
+                else
+                    DataAccess.UpdateFeature("locations_grease_over_500_exclude_from_calc", false);
 
                 if (chkExcludeJettingLocationsImport.Checked)
                     DataAccess.UpdateFeature("locations_jetting_remove_on_import", true);
@@ -131,8 +138,11 @@ namespace RouteNavigation
                 if (!(String.IsNullOrEmpty(txtOriginLocationId.Text)))
                     cmd.Parameters.AddWithValue("p_origin_location_id", NpgsqlTypes.NpgsqlDbType.Integer, txtOriginLocationId.Text);
 
-                if (!(String.IsNullOrEmpty(txtMinimumDaysUntilPickup.Text)))
-                    cmd.Parameters.AddWithValue("p_minimum_days_until_pickup", NpgsqlTypes.NpgsqlDbType.Integer, txtMinimumDaysUntilPickup.Text);
+                if (!(String.IsNullOrEmpty(txtOilEarlyServiceRatio.Text)))
+                    cmd.Parameters.AddWithValue("p_oil_pickup_early_service_ratio", NpgsqlTypes.NpgsqlDbType.Double, txtOilEarlyServiceRatio.Text);
+                if (!(String.IsNullOrEmpty(txtGreaseEarlyServiceRatio.Text)))
+                    cmd.Parameters.AddWithValue("p_grease_trap_pickup_early_service_ratio", NpgsqlTypes.NpgsqlDbType.Double, txtGreaseEarlyServiceRatio.Text);
+
                 if (!(String.IsNullOrEmpty(txtCurrentFillLevelErrorMargin.Text)))
                     cmd.Parameters.AddWithValue("p_current_fill_level_error_margin", NpgsqlTypes.NpgsqlDbType.Double, txtCurrentFillLevelErrorMargin.Text);
                 if (!(String.IsNullOrEmpty(txtMaxDistanceFromDepot.Text)))

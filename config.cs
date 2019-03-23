@@ -18,7 +18,6 @@ namespace RouteNavigation
             public static DateTime greaseTrapCutoffTime = DateTime.MinValue;
             public static double oilPickupAverageDurationMinutes = 30;
             public static double greasePickupAverageDurationMinutes = 30;
-            public static uint MinimumDaysUntilPickup = 0;
             public static uint maximumDaysOverdue = 60;
             public static double nearbyLocationDistance = 20;
             public static double averageCityTravelSpeed = 15;
@@ -27,6 +26,9 @@ namespace RouteNavigation
             public static double searchMinimumDistance = 5;
             public static double searchRadiusFraction = .25;
             public static double maxDistanceFromDepot = 100;
+
+            public static double GreaseEarlyServiceRatio = .1;
+            public static double OilEarlyServiceRatio = .05;
         }
 
         public static class GeneticAlgorithm
@@ -52,6 +54,7 @@ namespace RouteNavigation
             public static bool vehicleFillLevel = false;
             public static bool geneticAlgorithmGrowthDecayExponent = false;
             public static bool locationsJettingExcludeFromCalc = true;
+            public static bool excludeGreaseLocationsOver500FromCalc = true;
             public static bool locationsJettingRemoveOnImport = false;
         }
     }

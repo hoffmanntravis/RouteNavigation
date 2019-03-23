@@ -14,7 +14,7 @@ namespace RouteNavigation
     [Serializable]
     public class Location
     {
-        
+
         public Coordinates Coordinates { get; set; } = new Coordinates();
         public CartesianCoordinates CartesianCoordinates { get; set; } = new CartesianCoordinates();
 
@@ -60,8 +60,9 @@ namespace RouteNavigation
         public string GreaseTrapPreferredDay { get; set; }
         public int? GreaseTrapSchedule { get; set; } = 30;
         public int? NumberOfManHoles { get; set; }
-        public Location nearestLocation { get; set; }
+        public Location nearestLocation;
         public double? distanceToNearestLocation { get; set; } = null;
+
 
         public Location DeepClone(Location l)
         {
@@ -78,17 +79,34 @@ namespace RouteNavigation
         }
     }
 
-    public class Neighbors
+    public static class Neighbors
     {
-        private Dictionary<Location, List<Location>> neighborsDictionary = new Dictionary<Location, List<Location>>();
-        public void AddNeighbors (Location l, List<Location> neighbors)
+        private static object calcLock = new object();
+        private static Dictionary<int, List<Location>> neighborsDictionary = new Dictionary<int, List<Location>>();
+        public static void AddNeighbors(int id, List<Location> neighbors)
         {
-            neighborsDictionary.Add(l,neighbors);
+            lock (calcLock)
+            {
+                neighbors = neighbors.ToList();
+                neighborsDictionary.Add(id, neighbors);
+            }
         }
 
-        public List<Location> GetNeighbors(Location l)
+        public static List<Location> GetNeighbors(int id)
         {
-            return neighborsDictionary[l];
+            lock (calcLock)
+            {
+                List<Location> neighbors;
+                if (neighborsDictionary.TryGetValue(id, out neighbors))
+                {
+                    if (neighbors.Count == 0)
+                        throw new Exception("Should be adding neighbors");
+                    return neighbors;
+                }
+
+                else
+                    return null;
+            }
         }
     }
 
@@ -98,7 +116,7 @@ namespace RouteNavigation
         public double? Lat { get; set; }
         public double? Lng { get; set; }
         //created a default constructor for dapper to pass in null class objects and create a default object
-        public Coordinates() { }
+        public Coordinates() {}
         public Coordinates(Coordinates c)
         {
             if (c != null)

@@ -63,6 +63,7 @@ namespace RouteNavigation
                 {
                     GC.Collect();
                     InitializeGeneticAlgorithm();
+
                     ValidateOriginExists();
                     availableVehicles = GetOperationalVehicles(allVehicles);
                     possibleLocations = FilterPossibleLocations(possibleLocations);
@@ -162,6 +163,9 @@ namespace RouteNavigation
                 possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("jetting"))).ToList();
                 possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.Account.ToLower().Contains("install"))).ToList();
             }
+            if (Config.Features.excludeGreaseLocationsOver500FromCalc)
+                possibleLocations = possibleLocations.Except(possibleLocations.Where(p => p.GreaseTrapSize > 500)).ToList();
+
             return possibleLocations;
         }
 
@@ -325,7 +329,7 @@ namespace RouteNavigation
                 List<RouteCalculator> calcs = new List<RouteCalculator>();
                 foreach (List<Location> locations in locationsList)
                 {
-                    RouteCalculator c = new RouteCalculator(locations, availableVehicles.ToList());
+                    RouteCalculator c = new RouteCalculator(locations, availableVehicles.ToList(), allLocations.ToList());
                     calcs.Add(c);
                 }
 
@@ -350,6 +354,7 @@ namespace RouteNavigation
                 List<Location> t = possibleLocations.ToList().Shuffle(rng).ToList();
                 locationsList.Add(t);
             }
+                
             return locationsList.ToList();
         }
 
@@ -431,22 +436,20 @@ namespace RouteNavigation
             return offspring;
         }
 
-        /*public List<Location> geneticCrossover(List<Location> parentALocations, List<Location> parentBLocations)
+        public List<Location> geneticCrossover(List<Location> parentALocations, List<Location> parentBLocations)
         {
 
-        Logger.LogMessage("Performing genetic crossover from parents", "DEBUG");
+        Logger.Debug("Performing genetic crossover from parents", "DEBUG");
 
         int routeHashParentA = GenerateRouteHash(parentALocations);
         int routeHashParentB = GenerateRouteHash(parentBLocations);
 
         if (routeHashParentA != routeHashParentB)
-        {
-            Logger.LogMessage("routeHashes for ParentA and ParentB do not match");
-        }
+            Logger.Error("routeHashes for ParentA and ParentB do not match");
 
 
-        int crossoverCount = Convert.ToInt32(Math.Round(crossoverRatio * parentALocations.Count));
-        if (crossoverRatio > 0 && crossoverCount == 0)
+        int crossoverCount = Convert.ToInt32(Math.Round(crossoverProbability * parentALocations.Count));
+        if (crossoverProbability > 0 && crossoverCount == 0)
             crossoverCount = 1;
         List<Location> child = new List<Location>();
 
@@ -467,50 +470,31 @@ namespace RouteNavigation
 
             //if the location is on the left of the swath start, insert it at the beginning of the child and increment the index for the next insertion
             if (parentBLocations.IndexOf(l) <= startSwathIndex)
-            {
                 child.Insert(0, l);
-            }
             //if the location is on the right of the swath start, insert it at the beginning of the child and increment the index for the next insertion
             if (parentBLocations.IndexOf(l) > startSwathIndex)
-            {
                 child.Insert(child.Count - 1, l);
                 //wrapAround the leftside if we exceed the index on the right side
-            }
         }
 
         foreach (Location c in child)
-            if (c.address == null)
+            if (c.Address == null)
             {
                 int x = 0;
             }
 
         int childRouteHash = GenerateRouteHash(child);
-        if (routeHashParentA != childRouteHash)
-        {
-            Logger.LogMessage("routeHashes for ParentA and child do not match");
-        }
-        else
-        {
-                Logger.LogMessage("routeHashes for ParentA and child match");
-        }
 
-        if (routeHashParentB != childRouteHash)
-        {
-            Logger.LogMessage("routeHashes for ParentB and child do not match");
-        }
-        else
-        {
-            Logger.LogMessage("routeHashes for ParentB and child match");
-        }
         return child;
         }
-        */
+        
 
         public List<Location> GeneticCrossoverEdgeRecombine(List<Location> parentALocations, List<Location> parentBLocations)
         {
+            parentBLocations = parentBLocations.DeepClone();
             //Get Neighbors for the purposes of edge recombination.  Only assign neighbors here since we don't need them elsewhere.
-            parentALocations.Where(a => a.Neighbors.Count != neighborCount).ToList().ForEach(a => a.Neighbors = RouteCalculator.FindNeighbors(a, parentALocations, neighborCount));
-            parentBLocations.Where(a => a.Neighbors.Count != neighborCount).ToList().ForEach(a => a.Neighbors = RouteCalculator.FindNeighbors(a, parentBLocations, neighborCount));
+            parentALocations.ForEach(a => a.Neighbors = RouteCalculator.FindNeighbors(a, parentALocations, neighborCount));
+            parentBLocations.ForEach(a => a.Neighbors = RouteCalculator.FindNeighbors(a, parentBLocations, neighborCount));
             Logger.Trace("Performing genetic crossover from parents");
             /*
 

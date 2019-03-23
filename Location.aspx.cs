@@ -660,7 +660,6 @@ namespace RouteNavigation
                     csv.Configuration.TypeConverterCache.RemoveConverter<TimeSpan>();
                     csv.Configuration.TypeConverterCache.RemoveConverter<DateTime>();
 
-
                     csv.Configuration.TypeConverterCache.AddConverter<bool>(new CustomBooleanTypeConverterCache());
                     csv.Configuration.TypeConverterCache.AddConverter<int>(new CustomIntTypeConverterCache());
                     csv.Configuration.TypeConverterCache.AddConverter<double>(new CustomDoubleTypeConverterCache());

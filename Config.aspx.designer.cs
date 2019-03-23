@@ -67,13 +67,22 @@ namespace RouteNavigation {
         protected global::System.Web.UI.WebControls.TextBox txtOriginAddress;
         
         /// <summary>
-        /// txtMinimumDaysUntilPickup control.
+        /// txtOilEarlyServiceRatio control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtMinimumDaysUntilPickup;
+        protected global::System.Web.UI.WebControls.TextBox txtOilEarlyServiceRatio;
+        
+        /// <summary>
+        /// txtGreaseEarlyServiceRatio control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtGreaseEarlyServiceRatio;
         
         /// <summary>
         /// txtMaximumDaysOverdue control.
@@ -290,6 +299,15 @@ namespace RouteNavigation {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.CheckBox chkExcludeJettingLocationsCalculation;
+        
+        /// <summary>
+        /// chkExcludeGreaseLocationsOver500FromCalc control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkExcludeGreaseLocationsOver500FromCalc;
         
         /// <summary>
         /// chkExcludeJettingLocationsImport control.

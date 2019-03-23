@@ -13,20 +13,19 @@ namespace RouteNavigation
     public class RouteCalculator
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        public Metadata metadata = new Metadata();
-        public List<Route> routes = new List<Route>();
-        
+        public Metadata metadata { get; } = new Metadata();
+        public List<Route> routes { get; } = new List<Route>();
 
         private Task task;
         public Guid activityId;
 
         public uint neighborCount = 60;
 
-        public RouteCalculator(List<Location> locations, List<Vehicle> vehicles)
+        public RouteCalculator(List<Location> locations, List<Vehicle> vehicles, List<Location> allLocations)
         {
             try
             {
-                task = new Task(() => CalculateRoutes(locations.DeepClone(), vehicles));
+                task = new Task(() => CalculateRoutes(locations, vehicles, allLocations));
                 task.Start();
             }
             catch (AggregateException ae)
@@ -48,8 +47,10 @@ namespace RouteNavigation
             task.Wait();
         }
 
-        public void CalculateRoutes(List<Location> availableLocations, List<Vehicle> availableVehicles)
+        public void CalculateRoutes(List<Location> availableLocations, List<Vehicle> availableVehicles, List<Location> allLocations)
         {
+            List<Location> originalLocations = availableLocations.ToList();
+            availableLocations = availableLocations.DeepClone();
             Logger.Trace("Calculate Routes called");
             activityId = Trace.CorrelationManager.ActivityId;
             Trace.CorrelationManager.ActivityId = Guid.NewGuid();
@@ -88,12 +89,18 @@ namespace RouteNavigation
                     Logger.Trace("Current Time is {0}", currentTime);
 
                     //Remove any locations that would be picked up too soon to be relevent.  We'll invoke a recursive call at the end to deal with these.
-                    List<Location> availableLocationsWithPostponedLocations = availableLocations.ToList();
-                    List<Location> postPonedLocations = GetLaterDateLocations(availableLocations, currentTime).ToList();
-                    availableLocations = availableLocations.Except(postPonedLocations).ToList();
+                    //List<Location> availableLocationsWithPostponedLocations = availableLocations.ToList();
+                    List<Location> readyLocations = GetReadyLocations(availableLocations, currentTime);
+                    if (readyLocations.Count == 0)
+                    {
+                        currentTime = currentTime.AddDays(1);
+                        continue;
+                    }
+
+                    //availableLocations = readyLocations.ToList();
 
                     //If all that is left are locations that need to be processed later, advance the date accordingly
-
+                    /*
                     if (postPonedLocations.Count > 0 && availableLocations.Count == 0)
                     {
                         Location firstDueLocation = postPonedLocations.OrderBy(a => a.DaysUntilDue).First();
@@ -106,18 +113,19 @@ namespace RouteNavigation
                             currentTime = AdvanceDateToNextWeekday(currentTime);
                         continue;
                     }
+                    */
 
-                    List<Location> serviceNowLocations = GetRequireServiceNowLocations(availableLocations, currentTime);
+                    List<Location> serviceNowLocations = GetRequireServiceNowLocations(readyLocations, currentTime);
                     if (serviceNowLocations.Count > 0)
                     {
-                        availableLocations = availableLocations.Except(serviceNowLocations).ToList();
-                        availableLocations.InsertRange(0, serviceNowLocations);
+                        readyLocations = readyLocations.Except(serviceNowLocations).ToList();
+                        readyLocations.InsertRange(0, serviceNowLocations);
                     }
 
                     //sort vehicles by size descending.  We do this to ensure that large vehicles are handled first since they have a limited location list available to them.
                     currentVehicles.OrderBy(a => a.physicalSize);
                     Vehicle vehicle = currentVehicles.First();
-                    List<Location> compatibleLocations = GetCompatibleLocations(vehicle, availableLocations);
+                    List<Location> compatibleLocations = GetCompatibleLocations(vehicle, readyLocations).ToList();
                     double currentDistance = 0;
 
                     potentialRoute.AllLocations.Add(Config.Calculation.origin);
@@ -125,7 +133,6 @@ namespace RouteNavigation
                     Location previousLocation = Config.Calculation.origin;
                     while (compatibleLocations.Count() > 0)
                     {
-
                         verifyLocationOrder(potentialRoute.Waypoints);
                         DateTime potentialTime = currentTime;
                         double potentialDistance = currentDistance;
@@ -141,8 +148,6 @@ namespace RouteNavigation
                         }
 
                         compatibleLocations.Remove(nextLocation);
-                        availableLocations.Remove(nextLocation);
-
 
                         if (Config.Features.vehicleFillLevel == true)
                         {
@@ -150,7 +155,6 @@ namespace RouteNavigation
                             if (!(CheckVehicleCanAcceptMoreLiquid(vehicle, nextLocation)))
                             {
                                 Logger.Trace(String.Format("Performing a dropoff.  This will take {0} minutes.  Resetting current gallons to 0.", Config.Calculation.dropOffTime));
-
                                 vehicle.currentGallons = 0;
                                 potentialTime += Config.Calculation.dropOffTime;
                             }
@@ -208,6 +212,7 @@ namespace RouteNavigation
                         if (Config.Features.vehicleFillLevel == true)
                             vehicle.currentGallons += nextLocation.CurrentGallonsEstimate;
 
+                        availableLocations.Remove(nextLocation);
                         nextLocation.IntendedPickupDate = currentTime;
                         potentialRoute.Waypoints.Add(nextLocation);
                         currentTime = potentialTime;
@@ -241,7 +246,7 @@ namespace RouteNavigation
                     Logger.Trace("TSP calculated a shortest route 'flight' distance of " + potentialRoute.DistanceMiles);
                     potentialRoute.AverageLocationDistance = CalculateAverageLocationDistance(potentialRoute);
                     routes.Add(potentialRoute);
-                    availableLocations = availableLocationsWithPostponedLocations.Except(potentialRoute.Waypoints).ToList();
+                    //availableLocations = availableLocationsWithPostponedLocations.Except(potentialRoute.Waypoints).ToList();
                 }
 
                 foreach (Route route in routes.ToList())
@@ -261,12 +266,11 @@ namespace RouteNavigation
                     metadata.averageRouteDistanceMiles = CalculateAverageRouteDistance(routes);
                     metadata.averageRouteDistanceStdDev = CalculateRoutesStdDev(routes);
                     metadata.fitnessScore = metadata.CalculateFitnessScore();
+                    metadata.orphanedLocations = allLocations.Where(a => !metadata.processedLocations.Any(m => a.Id == m.Id)).ToList();
                 }
 
                 else
                     Logger.Error("Unable to create any routes.");
-
-                metadata.orphanedLocations = availableLocations.ToList();
             }
 
             catch (Exception e)
@@ -608,12 +612,13 @@ namespace RouteNavigation
             return currentOilEstimate + currentGreaseEstimate;
         }
 
-        private List<Location> GetLaterDateLocations(List<Location> availableLocations, DateTime currentDate)
+        private List<Location> GetReadyLocations(List<Location> availableLocations, DateTime currentDate)
         {
-            List<Location> laterDateLocations = new List<Location>();
+            List<Location> readyLocations = new List<Location>();
 
             foreach (Location l in availableLocations)
             {
+                /*
                 if (l.OilPickupNextDate != null && l.OilPickupLastScheduledService != null)
                     l.OilDaysElapsed = (currentDate - l.OilPickupLastScheduledService.Value).TotalDays;
                 if (l.GreaseTrapPickupNextDate != null && l.GreaseTrapLastScheduledService != null)
@@ -625,18 +630,40 @@ namespace RouteNavigation
                     l.DaysElapsed = l.OilDaysElapsed.Value;
                 else if (l.OilDaysElapsed == null && l.GreaseDaysElapsed != null)
                     l.DaysElapsed = l.GreaseDaysElapsed.Value;
-                else
-                    continue;
+                    */
 
-                if (l.DaysElapsed < Config.Calculation.MinimumDaysUntilPickup)
-                    laterDateLocations.Add(l);
+                bool readyForOilPickup = true;
+                bool readyForGreasePickup = true;
+                
+                if (l.OilPickupCustomer)
+                {
+                    double oilToleranceDays = Config.Calculation.OilEarlyServiceRatio * (double)l.OilPickupSchedule;
+                    double oilDaysElapsed = (l.OilPickupNextDate.Value - currentDate).TotalDays;
+                    if (oilDaysElapsed > oilToleranceDays)
+                        readyForOilPickup = false;
+                }
+                if (l.GreaseTrapCustomer)
+                {
+                    double greaseToleranceDays = (Config.Calculation.GreaseEarlyServiceRatio * (double)l.GreaseTrapSchedule);
+                    double greaseDaysElapsed = (l.GreaseTrapPickupNextDate.Value - currentDate).TotalDays;
+                    if (greaseDaysElapsed > greaseToleranceDays)
+                        readyForGreasePickup = false;
+                }
+
+                if (l.OilPickupCustomer && currentDate > l.OilPickupNextDate)
+                    readyLocations.Add(l);
+                else if(l.GreaseTrapCustomer && currentDate > l.GreaseTrapPickupNextDate)
+                    readyLocations.Add(l);
+                else if(readyForGreasePickup || readyForOilPickup)
+                    readyLocations.Add(l);
+                else if (readyForOilPickup && !l.GreaseTrapCustomer)
+                    readyLocations.Add(l);
+                else if (readyForGreasePickup && !l.OilPickupCustomer)
+                    readyLocations.Add(l);
+                else if (readyForGreasePickup && !readyForOilPickup)
+                    readyLocations.Add(l);
             }
-
-            foreach (Location l in laterDateLocations)
-                if (l.DaysElapsed > Config.Calculation.MinimumDaysUntilPickup)
-                    Logger.Error("This should be impossible!!");
-
-            return laterDateLocations;
+            return readyLocations;
         }
 
         private List<Location> GetRequireServiceNowLocations(List<Location> availableLocations, DateTime currentDate)
@@ -647,7 +674,6 @@ namespace RouteNavigation
                 if (currentDate >= l.OilPickupNextDate)
                     serviceNowLocations.Add(l);
                 else if (currentDate >= l.GreaseTrapPickupNextDate)
-
                     serviceNowLocations.Add(l);
             }
             return serviceNowLocations;
@@ -763,6 +789,10 @@ namespace RouteNavigation
 
         public static List<Location> FindNeighbors(Location source, List<Location> locations, uint neighborCount = 50)
         {
+            /*List<Location> dictionaryNeighbors = Neighbors.GetNeighbors(source.Id);
+            if (dictionaryNeighbors != null)
+                return dictionaryNeighbors;
+                */
             List<NeighborsDistance> neighborsDistance = new List<NeighborsDistance>();
 
             foreach (Location location in locations)
@@ -779,8 +809,9 @@ namespace RouteNavigation
                 neighborsDistance.Add(thisNeighborDistance);
             }
             //sort the neighbors by distance property asc
-                neighborsDistance.Sort((x, y) => x.distance.CompareTo(y.distance));
+            neighborsDistance.Sort((x, y) => x.distance.CompareTo(y.distance));
             List<Location> neighbors = neighborsDistance.Select(a => a.neighbor).Take((int)neighborCount).ToList();
+            //Neighbors.AddNeighbors(source.Id, neighbors);
             return neighbors;
         }
 

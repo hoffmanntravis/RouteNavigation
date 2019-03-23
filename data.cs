@@ -518,8 +518,10 @@ namespace RouteNavigation
                 else
                     throw new Exception("Origin location is null.  Please set on the config page before proceeding.");
 
-                if (row["minimum_days_until_pickup"] != DBNull.Value)
-                    Config.Calculation.MinimumDaysUntilPickup = uint.Parse(row["minimum_days_until_pickup"].ToString());
+                if (row["oil_pickup_early_service_ratio"] != DBNull.Value)
+                    Config.Calculation.OilEarlyServiceRatio = double.Parse(row["oil_pickup_early_service_ratio"].ToString());
+                if (row["grease_trap_pickup_early_service_ratio"] != DBNull.Value)
+                    Config.Calculation.GreaseEarlyServiceRatio = double.Parse(row["grease_trap_pickup_early_service_ratio"].ToString());
                 if (row["current_fill_level_error_margin"] != DBNull.Value)
                     Config.Calculation.currentFillLevelErrorMarginPercent = double.Parse(row["current_fill_level_error_margin"].ToString());
                 if (row["oil_pickup_average_duration"] != DBNull.Value)
@@ -580,6 +582,8 @@ namespace RouteNavigation
                     Config.Features.locationsJettingExcludeFromCalc = bool.Parse(row["enabled"].ToString());
                 if (row["feature_name"] as string == "locations_jetting_remove_on_import")
                     Config.Features.locationsJettingRemoveOnImport = bool.Parse(row["enabled"].ToString());
+                if (row["feature_name"] as string == "locations_grease_over_500_exclude_from_calc")
+                    Config.Features.excludeGreaseLocationsOver500FromCalc = bool.Parse(row["enabled"].ToString());
             }
         }
 
@@ -954,6 +958,23 @@ namespace RouteNavigation
             {
                 foreach (Location l in locations)
                 {
+                    //Override the schedule.  Apparently it is not reliable so calculate accordingly.
+                    if (l.OilPickupNextDate.HasValue && l.OilPickupLastScheduledService.HasValue)
+                    {
+                        l.OilPickupSchedule = (int)Math.Round((l.OilPickupNextDate.Value - l.OilPickupLastScheduledService.Value).TotalDays, 0);
+                        l.OilPickupCustomer = true;
+                    }
+                    else
+                        l.OilPickupCustomer = false;
+
+                    if (l.GreaseTrapPickupNextDate.HasValue && l.GreaseTrapLastScheduledService.HasValue)
+                    {
+                        l.GreaseTrapSchedule = (int)Math.Round((l.GreaseTrapPickupNextDate.Value - l.GreaseTrapLastScheduledService.Value).TotalDays, 0);
+                        l.GreaseTrapCustomer = true;
+                    }
+                    else
+                        l.GreaseTrapCustomer = false;
+                    
                     connection.Query<Location>("insert_location",
                         new
                         {
@@ -977,7 +998,6 @@ namespace RouteNavigation
                             p_grease_trap_signature_req = l.GreaseTrapSignatureRequired,
                             p_grease_trap_size = l.GreaseTrapSize,
                             p_grease_trap_units = l.GreaseTrapUnits,
-                            p_intended_pickup_date = l.IntendedPickupDate,
                             p_number_of_manholes = l.NumberOfManHoles,
                             p_oil_pickup_customer = l.OilPickupCustomer,
                             p_oil_pickup_last_scheduled_service = l.OilPickupLastScheduledService,
