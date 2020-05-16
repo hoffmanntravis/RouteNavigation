@@ -12,7 +12,9 @@
     </asp:Panel>
 
     <asp:UpdateProgress ID="loadingPanel" runat="server" DynamicLayout="false">
-    <ProgressTemplate><img src="images/spinner.gif" width="40" height="40" alt="Loading" /></ProgressTemplate>
+        <ProgressTemplate>
+            <img src="images/spinner.gif" width="40" height="40" alt="Loading" />
+        </ProgressTemplate>
     </asp:UpdateProgress>
     <asp:UpdatePanel ID="panelFullRoute" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
@@ -49,15 +51,27 @@
                                     <b>Address</b>
                                 </td>
                                 <td id="td6" runat="server">
-                                    <b>Intended Pickup Date</b>
+                                    <b>Next Oil Visit</b>
                                 </td>
                                 <td id="td7" runat="server">
-                                    <b>Days Until Due</b>
+                                    <b>Next Grease Visit</b>
+                                </td>
+                                <td id="td8" runat="server">
+                                    <b>Intended Pickup Date</b>
                                 </td>
                                 <td id="td9" runat="server">
-                                    <b>Route Date</b>
+                                    <b>Oil Days Until Due</b>
                                 </td>
                                 <td id="td10" runat="server">
+                                    <b>G.T. Days Until Due</b>
+                                </td>
+                                <td id="td11" runat="server">
+                                    <b>Route Date</b>
+                                </td>
+                                <td id="td12" runat="server">
+                                    <b>Visit Reason</b>
+                                </td>
+                                <td id="td13" runat="server">
                                     <b>Order</b>
                                 </td>
                                 <td id="tdAction" runat="server">
@@ -87,13 +101,26 @@
                                 <asp:Label ID="lblAddress" runat="server" Text='<%# Eval("address") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblLastVisited" runat="server" Text='<%# Eval("intended_pickup_date") %>'></asp:Label>
+                                <asp:Label ID="lblOilPickupNextDate" runat="server" Text='<%# Eval("oil_pickup_next_date") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
+                                <asp:Label ID="lblGreaseTrapPickupNextDate" runat="server" Text='<%# Eval("grease_trap_pickup_next_date") %>'></asp:Label>
+                            </td>
+
+                            <td>
+                                <asp:Label ID="lblIntendedPickupDate" runat="server" Text='<%# Eval("intended_pickup_date") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="lblOilPickupDaysUntilDue" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="lblGreaseTrapDaysUntilDue" runat="server" Text='<%# Eval("grease_trap_days_until_due") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblRoutedate" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="Label1" runat="server" Text='<%# Eval("reason_for_visit") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblOrder" runat="server" Text='<%# Eval("insert_order") %>'></asp:Label>
@@ -124,13 +151,26 @@
                                 <asp:Label ID="lblAddress" runat="server" Text='<%# Eval("address") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblLastVisited" runat="server" Text='<%# Eval("intended_pickup_date") %>'></asp:Label>
+                                <asp:Label ID="lblOilPickupNextDate" runat="server" Text='<%# Eval("oil_pickup_next_date") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
+                                <asp:Label ID="lblGreaseTrapPickupNextDate" runat="server" Text='<%# Eval("grease_trap_pickup_next_date") %>'></asp:Label>
+                            </td>
+
+                            <td>
+                                <asp:Label ID="lblIntendedPickupDate" runat="server" Text='<%# Eval("intended_pickup_date") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="lblOilPickupDaysUntilDue" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="lblGreaseTrapDaysUntilDue" runat="server" Text='<%# Eval("grease_trap_days_until_due") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblRoutedate" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="Label1" runat="server" Text='<%# Eval("reason_for_visit") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:TextBox ID="lblOrder" runat="server" Text='<%# Eval("insert_order") %>'></asp:TextBox>
@@ -161,13 +201,26 @@
                                 <asp:Label ID="lblAddress" runat="server" Text='<%# Eval("address") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblLastVisited" runat="server" Text='<%# Eval("intended_pickup_date") %>'></asp:Label>
+                                <asp:Label ID="lblOilPickupNextDate" runat="server" Text='<%# Eval("oil_pickup_next_date") %>'></asp:Label>
                             </td>
                             <td>
-                                <asp:Label ID="lblDaysUntilDue" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
+                                <asp:Label ID="lblGreaseTrapPickupNextDate" runat="server" Text='<%# Eval("grease_trap_pickup_next_date") %>'></asp:Label>
+                            </td>
+
+                            <td>
+                                <asp:Label ID="lblIntendedPickupDate" runat="server" Text='<%# Eval("intended_pickup_date") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="lblOilPickupDaysUntilDue" runat="server" Text='<%# Eval("oil_pickup_days_until_due") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="lblGreaseTrapDaysUntilDue" runat="server" Text='<%# Eval("grease_trap_days_until_due") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblRoutedate" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
+                            </td>
+                            <td>
+                                <asp:Label ID="Label1" runat="server" Text='<%# Eval("reason_for_visit") %>'></asp:Label>
                             </td>
                             <td>
                                 <asp:Label ID="lblOrder" runat="server" Text='<%# Eval("insert_order") %>'></asp:Label>

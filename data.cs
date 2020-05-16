@@ -137,14 +137,15 @@ namespace RouteNavigation
             }
         }
 
-        public static void InsertRouteLocation(int locationId, int insertOrder, int routeId, DateTime? intendedPickupDate = null)
+        public static void InsertRouteLocation(int locationId, int insertOrder, int routeId, DateTime? intendedPickupDate = null, string ReasonForVisit = null)
         {
             using (NpgsqlCommand cmd = new NpgsqlCommand("insert_route_location"))
             {
                 cmd.Parameters.AddWithValue("p_route_id", NpgsqlTypes.NpgsqlDbType.Integer, routeId);
                 cmd.Parameters.AddWithValue("p_location_id", NpgsqlTypes.NpgsqlDbType.Integer, locationId);
                 cmd.Parameters.AddWithValue("p_insert_order", NpgsqlTypes.NpgsqlDbType.Integer, insertOrder);
-
+                if (ReasonForVisit != null)
+                    cmd.Parameters.AddWithValue("p_reason_for_visit", NpgsqlTypes.NpgsqlDbType.Varchar, ReasonForVisit);
                 if (intendedPickupDate != null)
                     cmd.Parameters.AddWithValue("p_intended_pickup_date", NpgsqlTypes.NpgsqlDbType.Timestamp, intendedPickupDate);
                 RunStoredProcedure(cmd);
@@ -939,7 +940,7 @@ namespace RouteNavigation
                     InsertRouteLocation(Config.Calculation.origin.Id, insertOrder += 1, route.Id);
 
                     foreach (Location waypoint in route.Waypoints)
-                        InsertRouteLocation(waypoint.Id, insertOrder += 1, route.Id, waypoint.IntendedPickupDate.Value);
+                        InsertRouteLocation(waypoint.Id, insertOrder += 1, route.Id, waypoint.IntendedPickupDate.Value, waypoint.ReasonForVisit);
 
 
                     //insert the route origin since every route returns to HQ
@@ -960,21 +961,21 @@ namespace RouteNavigation
                 {
                     //Override the schedule.  Apparently it is not reliable so calculate accordingly.
                     if (l.OilPickupNextDate.HasValue && l.OilPickupLastScheduledService.HasValue)
-                    {
                         l.OilPickupSchedule = (int)Math.Round((l.OilPickupNextDate.Value - l.OilPickupLastScheduledService.Value).TotalDays, 0);
+
+                    if (l.OilPickupNextDate.HasValue)
                         l.OilPickupCustomer = true;
-                    }
                     else
                         l.OilPickupCustomer = false;
 
                     if (l.GreaseTrapPickupNextDate.HasValue && l.GreaseTrapLastScheduledService.HasValue)
-                    {
                         l.GreaseTrapSchedule = (int)Math.Round((l.GreaseTrapPickupNextDate.Value - l.GreaseTrapLastScheduledService.Value).TotalDays, 0);
+
+                    if (l.GreaseTrapPickupNextDate.HasValue)
                         l.GreaseTrapCustomer = true;
-                    }
                     else
                         l.GreaseTrapCustomer = false;
-                    
+
                     connection.Query<Location>("insert_location",
                         new
                         {

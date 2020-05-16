@@ -22,7 +22,9 @@ namespace RouteNavigation
         public double CurrentGallonsEstimate { get; set; }
         public DateTime? IntendedPickupDate { get; set; }
         public List<Location> Neighbors { get; set; } = new List<Location>();
-
+        public string ReasonForVisit { get; set; }
+        public bool ReadyForOilPickup { get; set; } = true;
+        public bool ReadyForGreasePickup { get; set; } = true;
         public int? TrackingNumber { get; set; }
         public int RouteId { get; set; }
         public int Id { get; set; } = int.MinValue;

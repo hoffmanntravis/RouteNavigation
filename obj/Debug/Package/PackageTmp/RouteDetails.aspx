@@ -35,7 +35,7 @@
                             <b>Address</b>
                         </td>
                         <td id="td5" runat="server">
-                            <b>Oil Next Visist</b>
+                            <b>Oil Next Visit</b>
                         </td>
                         <td id="td6" runat="server">
                             <b>G.T. Next Visit</b>
@@ -50,6 +50,9 @@
                             <b>G.T. Days Until Due</b>
                         </td>
                         <td id="td10" runat="server">
+                            <b>Reason</b>
+                        </td>
+                        <td id="td11" runat="server">
                             <b>Route Date</b>
                         </td>
                         <td id="itemPlaceHolder" runat="server"></td>
@@ -88,7 +91,10 @@
                         <asp:Label ID="label8" runat="server" Text='<%# Eval("grease_trap_days_until_due") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label9" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
+                        <asp:Label ID="label9" runat="server" Text='<%# Eval("reason_for_visit") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="label10" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                     </td>
                 </tr>
             </div>
@@ -124,7 +130,10 @@
                         <asp:Label ID="label8" runat="server" Text='<%# Eval("grease_trap_days_until_due") %>'></asp:Label>
                     </td>
                     <td>
-                        <asp:Label ID="label9" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
+                        <asp:Label ID="label9" runat="server" Text='<%# Eval("reason_for_visit") %>'></asp:Label>
+                    </td>
+                    <td>
+                        <asp:Label ID="label10" runat="server" Text='<%# Eval("route_date") %>'></asp:Label>
                     </td>
                 </tr>
             </div>

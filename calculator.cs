@@ -118,6 +118,7 @@ namespace RouteNavigation
                     List<Location> serviceNowLocations = GetRequireServiceNowLocations(readyLocations, currentTime);
                     if (serviceNowLocations.Count > 0)
                     {
+                        serviceNowLocations = NearestNeighbor(serviceNowLocations);
                         readyLocations = readyLocations.Except(serviceNowLocations).ToList();
                         readyLocations.InsertRange(0, serviceNowLocations);
                     }
@@ -206,6 +207,12 @@ namespace RouteNavigation
                                 Logger.Trace(String.Format("Removing location {0}.  Adding this location would put the route time at {1} which is later than {2}", nextLocation.Account, potentialTime, endTime));
                                 continue;
                             }
+                        }
+
+                        if (potentialTime.TimeOfDay > Config.Calculation.greaseTrapCutoffTime.TimeOfDay && nextLocation.GreaseTrapCustomer && !nextLocation.ReadyForOilPickup)
+                        {
+                            Logger.Trace(String.Format("Removing location {0}.  Current time of {1} is past grease trap cutoff of {2}.", nextLocation.Account, potentialTime, Config.Calculation.greaseTrapCutoffTime));
+                            continue;
                         }
 
                         //Made it past any checks that would preclude this nearest route from getting added, add it as a waypoint on the route
@@ -615,7 +622,7 @@ namespace RouteNavigation
         private List<Location> GetReadyLocations(List<Location> availableLocations, DateTime currentDate)
         {
             List<Location> readyLocations = new List<Location>();
-
+            //look one day in advance so we're not always a day late
             foreach (Location l in availableLocations)
             {
                 /*
@@ -631,37 +638,84 @@ namespace RouteNavigation
                 else if (l.OilDaysElapsed == null && l.GreaseDaysElapsed != null)
                     l.DaysElapsed = l.GreaseDaysElapsed.Value;
                     */
+                bool readyForGreasePickup = false;
+                bool readyForOilPickup = false;
 
-                bool readyForOilPickup = true;
-                bool readyForGreasePickup = true;
-                
+                if (l.OilPickupCustomer)
+                    readyForOilPickup = true;
+                if (l.GreaseTrapCustomer)
+                    readyForGreasePickup = true;
+
                 if (l.OilPickupCustomer)
                 {
-                    double oilToleranceDays = Config.Calculation.OilEarlyServiceRatio * (double)l.OilPickupSchedule;
-                    double oilDaysElapsed = (l.OilPickupNextDate.Value - currentDate).TotalDays;
-                    if (oilDaysElapsed > oilToleranceDays)
+                    //Math.Min 1 reprsents Minimum 1 day notice to pickup
+                    double oilToleranceDays = Math.Max(Config.Calculation.OilEarlyServiceRatio * (double)l.OilPickupSchedule, 2);
+                    Logger.Trace($"oilToleranceDays is {oilToleranceDays}");
+                    double oilDaysUntilPickup = (l.OilPickupNextDate.Value.Date + Config.Calculation.workdayStartTime - currentDate).TotalDays;
+                    if (oilDaysUntilPickup > oilToleranceDays)
                         readyForOilPickup = false;
                 }
                 if (l.GreaseTrapCustomer)
                 {
-                    double greaseToleranceDays = (Config.Calculation.GreaseEarlyServiceRatio * (double)l.GreaseTrapSchedule);
-                    double greaseDaysElapsed = (l.GreaseTrapPickupNextDate.Value - currentDate).TotalDays;
-                    if (greaseDaysElapsed > greaseToleranceDays)
+                    //Math.Min 1 reprsents Minimum 1 day notice to pickup
+                    double greaseToleranceDays = Math.Max(Config.Calculation.GreaseEarlyServiceRatio * (double)l.GreaseTrapSchedule, 2);
+                    Logger.Trace($"greaseToleranceDays is {greaseToleranceDays}");
+                    double greaseDaysUntilPickup = (l.GreaseTrapPickupNextDate.Value.Date + Config.Calculation.workdayStartTime - currentDate).TotalDays;
+                    if (greaseDaysUntilPickup > greaseToleranceDays)
                         readyForGreasePickup = false;
                 }
 
-                if (l.OilPickupCustomer && currentDate > l.OilPickupNextDate)
+                if (l.OilPickupCustomer && currentDate.Date == l.OilPickupNextDate.Value.Date)
+                {
+                    l.ReasonForVisit = "Oil Due Today";
                     readyLocations.Add(l);
-                else if(l.GreaseTrapCustomer && currentDate > l.GreaseTrapPickupNextDate)
+                }
+                else if (l.GreaseTrapCustomer && currentDate.Date == l.GreaseTrapPickupNextDate.Value.Date)
+                {
+                    l.ReasonForVisit = "G.T. Due Today";
                     readyLocations.Add(l);
-                else if(readyForGreasePickup || readyForOilPickup)
+                }
+                else if (l.OilPickupCustomer && currentDate > l.OilPickupNextDate.Value.Date + Config.Calculation.workdayEndTime)
+                {
+                    l.ReasonForVisit = "Oil Overdue";
                     readyLocations.Add(l);
+                }
+                else if (l.GreaseTrapCustomer && currentDate > l.GreaseTrapPickupNextDate.Value.Date + Config.Calculation.workdayEndTime)
+                {
+                    l.ReasonForVisit = "G.T. Overdue";
+                    readyLocations.Add(l);
+                }
                 else if (readyForOilPickup && !l.GreaseTrapCustomer)
+                {
+                    l.ReasonForVisit = "Oil Ready, No G.T.";
                     readyLocations.Add(l);
+                }
                 else if (readyForGreasePickup && !l.OilPickupCustomer)
+                {
+                    l.ReasonForVisit = "G.T. Ready, No Oil";
                     readyLocations.Add(l);
-                else if (readyForGreasePickup && !readyForOilPickup)
+                }
+                else if (readyForGreasePickup && readyForOilPickup)
+                {
+                    l.ReasonForVisit = "G.T. & Oil Ready";
                     readyLocations.Add(l);
+                }
+                else if (readyForGreasePickup)
+                {
+                    l.ReasonForVisit = "G.T. Ready";
+                    readyLocations.Add(l);
+                }
+                else if (readyForOilPickup)
+                {
+                    l.ReasonForVisit = "Oil Ready";
+                    readyLocations.Add(l);
+                }
+
+                if (l.OilPickupCustomer)
+                    l.ReadyForOilPickup = readyForOilPickup;
+                if (l.GreaseTrapCustomer)
+                    l.ReadyForGreasePickup = readyForGreasePickup;
+
             }
             return readyLocations;
         }

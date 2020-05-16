@@ -19,9 +19,13 @@
 
     <h3>Calculation Parameters</h3>
     <div></div>
-    <asp:Label Text="Minimum days before pickup" ToolTip="Minimum number of days that is acceptable to attempt a pickup (pickup interval - (now - last visited))" runat="server" />
+    <asp:Label Text="Oil Early Service Ratio" ToolTip="A ratio of the maximum number of days before next oil service that will be tolerated to consider a pickup (e.g. .1 of 30 days would be 3 days before service.  A pickup before 3 days early would not be allowed.)" runat="server" />
     <div></div>
-    <asp:TextBox class="tableInput" placeholder="15" ID="txtMinimumDaysUntilPickup" runat="server"></asp:TextBox>
+    <asp:TextBox class="tableInput" placeholder="15" ID="txtOilEarlyServiceRatio" runat="server"></asp:TextBox>
+    <div></div>
+    <asp:Label Text="Grease Trap Early Service Ratio" ToolTip="A ratio of the maximum number of days before next grease service that will be tolerated to consider a pickup (e.g. .1 of 30 days would be 3 days before service.  A pickup before 3 days early would not be allowed.)" runat="server" />
+    <div></div>
+    <asp:TextBox class="tableInput" placeholder="15" ID="txtGreaseEarlyServiceRatio" runat="server"></asp:TextBox>
     <div></div>
     <asp:Label Text="Maximum days overdue" ToolTip="Maximum number of days overdue that is acceptable to attempt a pickup before the location is orphaned (assumed a defunct client). Set to a very large number if you want to ignore this feature." runat="server" />
     <div></div>
@@ -123,6 +127,11 @@
     <div>
         <asp:CheckBox class="checkBox" ID="chkExcludeJettingLocationsCalculation" ToolTip="Exclude jetting locations from calculations" runat="server"></asp:CheckBox>
         Calculations - Exclude Jetting Locations
+    </div>
+
+    <div>
+        <asp:CheckBox class="checkBox" ID="chkExcludeGreaseLocationsOver500FromCalc" ToolTip="Exclude grease locations over 500 gallons from calculations" runat="server"></asp:CheckBox>
+        Calculations - Exclude Grease Locations Over 500 Gallons
     </div>
 
     <div>
